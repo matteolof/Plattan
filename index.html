@@ -550,11 +550,8 @@ for(let i=1;i<=9;i++){
   longHair.add(strand);
  }
 }
-// Hår under huvudbonad: bara de nedre slingorna ska synas genom mössans kant.
-const hangingHair=new THREE.Group();hairGroup.add(hangingHair);
-for(const strand of [...longHair.children]){
- if(strand.position.y<-.05){longHair.remove(strand);hangingHair.add(strand)}
-}
+// Hela det långa håret finns alltid kvar, även under hatt, keps och mössa.
+// Huvudbonaden ligger utanpå hårslingorna i stället för att dölja delar av dem.
 const headwearGroup=new THREE.Group();headwearGroup.position.y=1.47;avatar.add(headwearGroup);
 const hatGroup=new THREE.Group();headwearGroup.add(hatGroup);
 const crown=new THREE.Mesh(new THREE.CylinderGeometry(.215,.225,.21,16),headwearMaterial);crown.position.y=.07;hatGroup.add(crown);
@@ -573,7 +570,7 @@ function updateCharacter(){
  shortHair.visible=characterOptions.hairStyle==='short';
  longHair.visible=characterOptions.hairStyle==='long';
  hatGroup.visible=characterOptions.headwear==='hat';capGroup.visible=characterOptions.headwear==='cap';beanieGroup.visible=characterOptions.headwear==='beanie';
- hairGroup.visible=characterOptions.hairStyle!=='none';longHair.visible=characterOptions.hairStyle==='long'&&characterOptions.headwear==='none';hangingHair.visible=characterOptions.hairStyle==='long';
+ hairGroup.visible=characterOptions.hairStyle!=='none';longHair.visible=characterOptions.hairStyle==='long';
  try{localStorage.setItem('plattan-character',JSON.stringify(characterOptions))}catch{}
 }
 for(const key of Object.keys(characterDefaults)){
@@ -775,7 +772,7 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remot
  const look=p.state?.appearance||{};const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
  for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
  const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
- for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long'&&(!look.headwear||look.headwear==='none');else if(src===hangingHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else dst.visible=src.visible}
+ for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else dst.visible=src.visible}
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
 }
