@@ -27,3 +27,9 @@ Ladda upp **filerna i denna mapp** till roten av ett GitHub-repository. Skapa en
 - WebRTC använder STUN; i vissa nätverk krävs TURN-server.
 - Render Free kan somna när ingen använder servern, och serverns aktiva rum nollställs vid omstart.
 - Lösenordet är ett gemensamt inträdeslösenord, inte ett säkert personligt konto.
+
+## Version 2 – tomter och spelarfigurer
+- Fyra gröna 50×50-tomter och grå 10-rutors passager mellan tomterna.
+- Gåläge tillåter förflyttning mellan tomterna; byggsystemet är fortfarande begränsat till den egna tomtens koordinater.
+- Andra spelare visas med samma figurmodell och med synkroniserade kläder, hår och huvudbonad.
+- Uppdatera **alla** filer i GitHub-repot, framför allt `index.html` och `server.js`.

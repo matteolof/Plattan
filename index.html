@@ -9,8 +9,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 const $=x=>document.getElementById(x),scene=new THREE.Scene();scene.background=new THREE.Color(0x9ed9ff);scene.fog=new THREE.Fog(0x9ed9ff,35,90);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,130),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0x66824c,2.0));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(15,28,11);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(110,110),new THREE.MeshStandardMaterial({color:0x75bd65,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-const grid=new THREE.GridHelper(110,110,0xcee9b0,0xc6e5ac);grid.position.y=.006;scene.add(grid);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(170,170),new THREE.MeshStandardMaterial({color:0x999da2,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const grid=new THREE.GridHelper(170,170,0xb4b7ba,0xadb0b4);grid.position.y=.006;scene.add(grid);
+const plotTiles=new THREE.Group();scene.add(plotTiles);
+function refreshPlotTiles(){plotTiles.clear();const own=window.plattanSlot||1;for(let slot=1;slot<=4;slot++){const [cx,cz]=PLOT_CENTERS[slot],[ox,oz]=PLOT_CENTERS[own];const tile=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:slot===own?0x75bd65:0x84ba79,roughness:1}));tile.rotation.x=-Math.PI/2;tile.position.set(cx-ox,.012,cz-oz);tile.receiveShadow=true;plotTiles.add(tile);const g=new THREE.GridHelper(50,50,0xc4e8b8,0xa7d49c);g.position.set(cx-ox,.018,cz-oz);plotTiles.add(g)}}
+
 const objects=[],parts=[];const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let building=true,erase=false,paint=false,shape='square',hex='#42b5ef',rot=0,spin=0,sub=0,orientation='wall';
 const player={x:0,z:5,y:0,vy:0,yaw:0,pitch:0};let walkZoom=0;const keys=new Set();let pointerDown=null,lookDrag=false,hover={x:innerWidth/2,y:innerHeight/2},candidate=null;let orbitYaw=0,orbitPitch=.55,orbitDistance=9,orbitTarget=new THREE.Vector3(0,0,0),touches=new Map();
 function toast(t){$('message').textContent=t;$('message').style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>$('message').style.display='none',2400)}
@@ -637,20 +640,28 @@ const PLOT_CENTERS={1:[-30,-30],2:[30,-30],3:[-30,30],4:[30,30]};
 const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
 const remoteWorlds=new Map();
 const remotePlayers=new Map();
-function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return [cx-ox+x,cz-oz+z]}
+function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const r=PLOT_ROT[slot]-PLOT_ROT[window.plattanSlot||1];return [cx-ox+Math.cos(r)*x+Math.sin(r)*z,cz-oz-Math.sin(r)*x+Math.cos(r)*z]}
 function clearRemote(slot){const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});remoteWorlds.delete(slot)}}
 function updateRemotePlot(slot,world){if(slot===window.plattanSlot)return;clearRemote(slot);const root=new THREE.Group(),[cx,cz]=toLocalPlot(slot,0,0);root.position.set(cx,0,cz);root.rotation.y=PLOT_ROT[slot]-PLOT_ROT[window.plattanSlot||1];
  for(const d of (world.parts||[]).slice(0,1500)){if(!['square','half','small','triangle','roof'].includes(d.shape)||!Number.isFinite(d.x)||!Number.isFinite(d.z)||!Number.isFinite(d.y)||!/^#[0-9a-f]{6}$/i.test(d.color))continue;try{const g=makePanel({...d});scene.remove(g);objects.pop();root.add(g)}catch(e){console.warn('Fjärrplatta',e)}}
  for(const a of (world.animals||[]).slice(0,60)){if(!Number.isFinite(a.x)||!Number.isFinite(a.z))continue;const k=animalTypes[a.type]?.size||.6;const mat=new THREE.MeshStandardMaterial({color:a.color||0x998877});const m=new THREE.Mesh(new THREE.SphereGeometry(.45*k,10,8),mat);m.scale.set(.8,.7,1.5);m.position.set(a.x,.7*k,a.z);root.add(m)}
  scene.add(root);remoteWorlds.set(slot,root)}
-function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remotePlayers.get(p.slot);if(!m){m=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.8,4,8),new THREE.MeshStandardMaterial({color:[0,0xe89e64,0x77a8e7,0xc69bda,0x88cfa2][p.slot]}));body.position.y=.8;m.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),new THREE.MeshStandardMaterial({color:0xf0c5a1}));head.position.y=1.55;m.add(head);scene.add(m);remotePlayers.set(p.slot,m)}const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,Number(q.y)||0,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}}
-function loadOwnSlot(){
+function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remotePlayers.get(p.slot);
+ if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;scene.add(m);remotePlayers.set(p.slot,m)}
+ const look=p.state?.appearance||{};const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
+ for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
+ const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
+ for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none'&&look.headwear==='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else dst.visible=src.visible}
+ const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
+ const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
+}
+function loadOwnSlot(){refreshPlotTiles();
  for(const d of [...parts])remove(d);
  for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-animals-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const a of stored.slice(0,60)){if(animalTypes[a.type]&&Number.isFinite(a.x)&&Number.isFinite(a.z)){const v=makeAnimal(a.type,a.x,a.z,false,a.color);if(v){v.leashed=!!a.leashed;v.harness.visible=v.leashed}}}}catch(e){console.warn('Kunde inte läsa djur',e)}
 }
-function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,color:a.color,leashed:a.leashed}))}}}
+function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw},appearance:{...characterOptions},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,color:a.color,leashed:a.leashed}))}}}
 window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);clearRemote(slot)}}};
 
 updateCamera();let last=performance.now();
@@ -701,8 +712,8 @@ function frame(now){
    const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.07));
    for(let i=0;i<steps;i++){
      const sx=dx/steps,sz=dz/steps;
-     const tx=Math.max(-24.5,Math.min(24.5,player.x+sx));
-     const tz=Math.max(-24.5,Math.min(24.5,player.z+sz));
+     const tx=Math.max(-84.5,Math.min(84.5,player.x+sx));
+     const tz=Math.max(-84.5,Math.min(84.5,player.z+sz));
      if(!blocked(tx,tz)){player.x=tx;player.z=tz}
      else{
        if(!blocked(tx,player.z))player.x=tx;
