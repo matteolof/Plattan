@@ -11,3 +11,13 @@ Komplett GitHub/Render-projekt. Fyra fasta spelarplatser med 50×50 byggytor och
 Node, `npm install`, `npm start`, miljövariabel `GAME_PASSWORD=Tulle`.
 
 Ladda upp **alla filerna** från ZIP-filen till GitHub (ersätt befintliga). Detta är en kod- och syntaxkontrollerad version; flerspelartest i webbläsare rekommenderas.
+
+
+## Version 8 – säkra startpositioner
+- Vid inläsning och när gåläge startas flyttas spelaren till närmaste fria plats om startpunkten överlappar en vägg.
+- Nya och sparade djur placeras utanför väggar; en alternativ ledig plats söks om den önskade platsen är blockerad.
+- Kontroll av både väggarnas höjd och djurens storlek.
+
+
+## v9
+Långt hår syns under huvudbonader, större mössor/hattar/kepsar, färgprov med 47 % transparens och grön aktiv plattknapp. Uppdatera index.html.
