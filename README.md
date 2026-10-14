@@ -1,1 +1,1 @@
-Plattan Online v11 – Andra spelares djur visas med riktiga modeller, egna färger och synkroniserad rörelse. Ladda upp index.html till GitHub. Övriga serverfiler är oförändrade.
+Plattan Online v13 – iPad-stöd. Ersätt index.html i GitHub. Styrspak nere till vänster och hoppknapp nere till höger visas i gåläge på pekskärmar. Mindre plattpanel på iPad.
