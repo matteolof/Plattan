@@ -1,1 +1,1 @@
-Plattan Online v5 – menyuppdatering. Ersätt enbart index.html i GitHub. Serverfilerna ska behållas från föregående version. Menyn uppe till vänster innehåller Spara, Ny värld, Exportera, Importera och Förklaring.
+Plattan Online v6 – uppdatering av gränssnitt. Ersätt endast index.html i ditt befintliga GitHub-repository. Serverfilerna behålls.
