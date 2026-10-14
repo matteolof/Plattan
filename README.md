@@ -1,1 +1,1 @@
-Plattan Online v13 – iPad-stöd. Ersätt index.html i GitHub. Styrspak nere till vänster och hoppknapp nere till höger visas i gåläge på pekskärmar. Mindre plattpanel på iPad.
+Plattan Online v14 – kompakt sidomeny för byggplattor, djur och gubbe. Ersätt endast index.html i GitHub. Byggandet i gåläge är ännu inte infört; det gamla byggläget används för att placera plattor.
