@@ -1,1 +1,1 @@
-Plattan Online v10 – hela det långa håret behålls under hatt, keps och mössa, även för andra spelare. Uppdatera endast index.html på GitHub.
+Plattan Online v11 – Andra spelares djur visas med riktiga modeller, egna färger och synkroniserad rörelse. Ladda upp index.html till GitHub. Övriga serverfiler är oförändrade.
