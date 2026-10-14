@@ -1,0 +1,730 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Plattan Online</title><style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;font:14px system-ui;background:#9ed9ff}canvas{display:block;touch-action:none}#bar{position:fixed;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;max-height:34vh;overflow:auto}button,select,input{font:600 13px system-ui;border:1px solid #78958c;border-radius:8px;padding:8px;background:#fff;color:#214337}button.on{background:#256b55;color:#fff}#help{position:fixed;bottom:10px;left:10px;max-width:490px;background:#ffffffe8;padding:9px 12px;border-radius:10px;z-index:2;font-size:12px}#pad{position:fixed;right:10px;bottom:12px;display:grid;grid-template-columns:repeat(3,48px);gap:4px;z-index:3}#pad button{height:46px;touch-action:none}#message{position:fixed;left:50%;top:94px;transform:translateX(-50%);background:#173c32;color:#fff;padding:10px;border-radius:9px;display:none;z-index:5}#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;pointer-events:none;text-shadow:0 0 4px #000;font-size:23px}#error{position:fixed;inset:0;background:#fff;display:none;padding:30px;z-index:10}@media(min-width:950px){#pad{opacity:.65}}@media(max-width:650px){#help{max-width:54vw;font-size:10px}#bar{max-height:40vh}button,select{padding:6px;font-size:11px}}</style><style>.visualChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}.visualChoices button{height:64px;display:flex;align-items:center;justify-content:center;padding:5px;cursor:pointer;background:#f7fcff;border:3px solid #c2d9e3;border-radius:12px}.visualChoices button.on{border-color:#168b6c;background:#d8f7e9}.visualChoices svg{width:100%;height:100%;max-width:75px}#orientChoices button{height:76px;flex-direction:column;gap:1px}#orientChoices svg{height:48px;max-width:75px}#orientChoices .orientCaption{font-size:11px;font-weight:600;line-height:13px;color:#315b65}.visualChoices button:focus-visible{outline:3px solid #f69c18}#spinChoices{grid-template-columns:repeat(2,minmax(0,1fr))!important}#palette{width:min(340px,92vw)!important}</style><style>
+#plLogin{position:fixed;inset:0;z-index:100;background:#123b34ed;display:grid;place-items:center;font:15px system-ui;color:#fff}#plLogin .panel{width:min(390px,92vw);padding:25px;background:#245d50;border-radius:18px;box-shadow:0 10px 50px #0008}#plLogin input,#plLogin select{width:100%;margin:5px 0 12px;padding:11px}#plLogin button{width:100%;padding:12px}#plError{color:#ffe3a6;min-height:20px}#plChat{position:fixed;bottom:12px;left:12px;z-index:15;width:min(350px,65vw);background:#173d36e8;color:#fff;border-radius:12px;padding:9px;font:12px system-ui;display:none}#plMessages{height:115px;overflow-y:auto;overflow-wrap:anywhere}#plChat form{display:flex;gap:5px}#plChat input{min-width:0;flex:1}#plRoster{position:fixed;top:8px;right:10px;z-index:14;background:#123d35dc;color:#fff;border-radius:10px;padding:9px;display:none;font:12px system-ui;max-width:220px}#plChat button{padding:6px}
+</style></head><body><div id="plLogin"><div class="panel"><h1>🧲 Plattan Online</h1><p>Fyra spelare – en egen tomt var.</p><label>Spelarnamn</label><input id="plName" maxlength="18" placeholder="Ditt namn"><label>Välj spelarplats</label><select id="plSlot"><option value="1">Spelare 1 · Tomt 1</option><option value="2">Spelare 2 · Tomt 2</option><option value="3">Spelare 3 · Tomt 3</option><option value="4">Spelare 4 · Tomt 4</option></select><label>Lösenord</label><input id="plPassword" type="password" placeholder="Lösenord"><button id="plJoin">Gå in i spelet</button><p id="plError"></p><small>Bygget sparas lokalt och kan exporteras till en fil. Välj samma spelare nästa gång.</small></div></div><div id="plRoster"></div><div id="plChat"><strong>💬 Gemensam chatt</strong><div id="plMessages"></div><form id="plChatForm"><input id="plChatText" maxlength="300" placeholder="Skriv ett meddelande…"><button>Skicka</button></form></div>
+<div id="bar"><button id="mode" class="on">🧲 Byggläge</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkNear" style="display:none">🔎 Nära</button><button id="walkFar" style="display:none">🔭 Långt bort</button><button id="camleft">⟲ Kamera</button><button id="camright">Kamera ⟳</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><button id="save">💾 Spara</button><button id="reset">Ny värld</button><button id="export">Exportera</button><button id="import">Importera</button><input id="file" type="file" accept=".json" hidden></div>
+<div id="palette" style="position:fixed;top:55px;left:10px;width:min(320px,90vw);max-height:75vh;overflow:auto;z-index:5;background:#fffffff2;border:2px solid #5a9584;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0003"><strong>🧲 Välj byggplatta</strong><p style="font-size:12px">Välj form, stående/liggande och färg. Placera direkt på valfri ledig kant. Den markerade plattan används när du bygger.</p><div id="pieceChoices" class="visualChoices"><button data-shape="square" aria-label="Stor fyrkant"></button><button data-shape="half" aria-label="Halv rektangel"></button><button data-shape="small" aria-label="Liten fyrkant"></button><button data-shape="triangle" aria-label="Triangel"></button><button data-shape="roof" aria-label="Snedtak"></button></div><p><strong>Ställ eller lägg plattan</strong></p><div id="orientChoices" class="visualChoices"><button data-orient="wall" aria-label="Stående platta"></button><button data-orient="floor" aria-label="Liggande platta"></button></div><p id="spinLabel"><strong>Välj långsida eller kortsida</strong></p><div id="spinChoices" class="visualChoices"><button data-spin="0" aria-label="Triangel vänster"></button><button data-spin="4" aria-label="Spegelvänd triangel höger"></button><button data-spin="2" aria-label="Triangel vriden 180 grader"></button><button data-spin="6" aria-label="Spegelvänd triangel vriden 180 grader"></button></div><p id="spinHelp" style="font-size:12px">Välj långsida eller kortsida för halvor. Klicka sedan på en kant i bygget och välj sida med musen.</p><p style="display:none"><strong>Halvans sida</strong></p><div id="halfChoices" style="display:none" style="display:flex;gap:5px"><button data-sub="0">Halva A</button><button data-sub="1">Halva B</button></div><p><strong>Plattans färg</strong></p><input id="paletteColor" type="color" value="#42b5ef" style="width:100%;height:40px"><p style="font-size:11px">🎨 Måla: klicka på en redan placerad platta för att ge den vald färg.</p><button id="closePalette">Stäng fönster</button></div><div id="characterPanel" style="display:none;position:fixed;top:58px;right:12px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:16px;width:min(330px,92vw);max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>👕 Ändra gubben</strong><p style="font-size:12px">Välj kläder, hår och huvudbonad. Ändringarna syns direkt.</p><div id="characterFields" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px"><label for="shirtColor">Tröja</label><input id="shirtColor" type="color" value="#367dc2"><label for="pantsColor">Byxor</label><input id="pantsColor" type="color" value="#263c65"><label for="shoeColor">Skor</label><input id="shoeColor" type="color" value="#32353a"><label for="hairStyle">Hår</label><select id="hairStyle"><option value="none">Utan hår</option><option value="short">Kort hår</option><option value="long">Långt hår</option></select><label for="hairColor">Hårfärg</label><input id="hairColor" type="color" value="#543d32"><label for="headwear">Huvudbonad</label><select id="headwear"><option value="none">Ingen</option><option value="hat">Hatt</option><option value="cap">Keps</option><option value="beanie">Mössa</option></select><label for="headwearColor">Färg på huvudbonad</label><input id="headwearColor" type="color" value="#e85c62"></div><p><button id="closeCharacter">Klart ✓</button></p></div><div id="animalPanel" style="display:none;position:fixed;top:58px;right:12px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:15px;width:min(310px,92vw);max-height:75vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>🐾 Lägg till djur</strong><p style="font-size:12px">Lägg till hur många du vill (max 60). Djuren vandrar omkring själva. Använd 🗑 Riv i byggläget och klicka på ett djur för att ta bort det. I gåläge: gå nära ett djur och klicka på det för att sätta på eller ta av grimma/koppel.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><button data-animal="horse">🐴 Stor häst</button><button data-animal="foal">🐎 Föl</button><button data-animal="sheep">🐑 Får</button><button data-animal="cat">🐈 Katt</button><button data-animal="dog">🐕 Hund</button></div><p><button id="closeAnimals">Klart ✓</button></p></div><div id="cross">+</div><div id="message"></div><div id="error"></div><div id="help">Sikta på en halv kant: den streckade halvkanten visar var nästa platta fästs (turkos = möjligt, röd = upptaget). Bygg vidare även från svävande plattor. Sikta nära kanten för att bygga ut en balkong. Välj stående eller liggande och form. Små kvadrater och halvrutors fästpunkter. Maxhöjd 20 rutor. Höger musknapp + dra för att vrida kameran; mushjulet zoomar. Gåläge: upp/ned springer framåt/bakåt, vänster/höger svänger gubben och kameran följer bakifrån. Välj Nära eller Långt bort. Mellanslag för liten kub (0,5), dubbeltryck mellanslag för stor kub (1). Världen sparas lokalt.</div><div id="pad"><span></span><button data-key="w">▲</button><button id="jump">HOPP</button><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+const $=x=>document.getElementById(x),scene=new THREE.Scene();scene.background=new THREE.Color(0x9ed9ff);scene.fog=new THREE.Fog(0x9ed9ff,35,90);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,130),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x66824c,2.0));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(15,28,11);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(110,110),new THREE.MeshStandardMaterial({color:0x75bd65,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const grid=new THREE.GridHelper(110,110,0xcee9b0,0xc6e5ac);grid.position.y=.006;scene.add(grid);
+const objects=[],parts=[];const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let building=true,erase=false,paint=false,shape='square',hex='#42b5ef',rot=0,spin=0,sub=0,orientation='wall';
+const player={x:0,z:5,y:0,vy:0,yaw:0,pitch:0};let walkZoom=0;const keys=new Set();let pointerDown=null,lookDrag=false,hover={x:innerWidth/2,y:innerHeight/2},candidate=null;let orbitYaw=0,orbitPitch=.55,orbitDistance=9,orbitTarget=new THREE.Vector3(0,0,0),touches=new Map();
+function toast(t){$('message').textContent=t;$('message').style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>$('message').style.display='none',2400)}
+// Every cube face is a 1 x 1 construction surface. Two half panels or
+// two complementary right triangles can occupy the same face.
+function panelGeometry(kind,mirror=false){
+ const sh=new THREE.Shape();
+ if(kind==='triangle'){if(mirror){sh.moveTo(.5,-.5);sh.lineTo(.5,.5);sh.lineTo(-.5,-.5)}else{sh.moveTo(-.5,-.5);sh.lineTo(.5,-.5);sh.lineTo(-.5,.5)}}
+ else{const w=kind==='small'?.25:.5,h=kind==='half'||kind==='small'?.25:.5;sh.moveTo(-w,-h);sh.lineTo(w,-h);sh.lineTo(w,h);sh.lineTo(-w,h)}
+ sh.closePath();return new THREE.ShapeGeometry(sh);
+}
+function panelPose(d,group){
+ if(d.shape==='roof'){group.position.set(0,0,0);group.rotation.set(0,0,0);return}
+ group.position.set(d.x,d.y,d.z);group.rotation.set(0,0,0);
+ if(d.orient==='floor')group.rotation.x=-Math.PI/2;
+ else group.rotation.y=(d.rot%2)*Math.PI/2;
+ // Rotating in the plane leaves the wall standing and the floor flat.
+ const angle=((d.spin||0)%4)*Math.PI/2;
+ group.rotateZ(angle);
+ if(d.shape==='half' && !d.freePosition){
+   const offset=(d.sub===1?.25:-.25);
+   const localOffset=new THREE.Vector3(0,offset,0).applyQuaternion(group.quaternion);
+   group.position.add(localOffset);
+ }
+}
+function faceKey(d){return d.orient==='floor'?`f:${d.x}:${d.y}:${d.z}`:`w:${d.rot%2}:${d.x}:${d.y}:${d.z}`}
+function occupiedCells(d){
+ // Face-local coordinates; occupancy is independent of camera and mesh geometry.
+ const out=new Set(),spin=(d.spin||0)%4;
+ for(let i=0;i<16;i++)for(let j=0;j<16;j++){
+   let x=(i+.5)/16-.5,y=(j+.5)/16-.5;
+   for(let k=0;k<spin;k++){const t=x;x=y;y=-t}
+   // Triangle diagonals use a deterministic half-open partition:
+   // the two opposite rotations must never claim the same tiny cell.
+   let filled;
+   if(d.shape==='square')filled=true;
+   else if(d.shape==='half')filled=Math.abs(x)<=.5&&Math.abs(y-(d.sub===1?.25:-.25))<.25;
+   else {
+     const diagonal=x+y;
+     // For the exact diagonal, one orientation owns the boundary.
+     filled=diagonal<0;
+   }
+   if(filled)out.add(i+16*j);
+ }
+ return out;
+}
+function corners(d){
+ if(d.shape==='roof')return d.vertices.map(v=>new THREE.Vector3(...v));
+ const poly=d.shape==='triangle'?(d.mirror?[[.5,-.5],[.5,.5],[-.5,-.5]]:[[-.5,-.5],[.5,-.5],[-.5,.5]]):d.shape==='half'?[[-.5,-.25],[.5,-.25],[.5,.25],[-.5,.25]]:d.shape==='small'?[[-.25,-.25],[.25,-.25],[.25,.25],[-.25,.25]]:[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];
+ const g=new THREE.Group();panelPose(d,g);g.updateMatrixWorld(true);
+ return poly.map(([x,y])=>new THREE.Vector3(x,y,0).applyMatrix4(g.matrixWorld));
+}
+function connected(a,b){
+ const A=corners(a),B=corners(b),eps=.035;
+ // Plattor sitter ihop när de delar en faktisk kantsträcka (inte bara ett hörn).
+ for(let i=0;i<A.length;i++)for(let j=0;j<B.length;j++){
+  const p=A[i],q=A[(i+1)%A.length],r=B[j],t=B[(j+1)%B.length];
+  const u=q.clone().sub(p),v=t.clone().sub(r),len=u.length();
+  if(len<.01||u.clone().cross(v).length()>eps*len)continue;
+  if(r.clone().sub(p).cross(u).length()>eps*len)continue;
+  const axis=u.normalize(),a0=0,a1=len,b0=r.clone().sub(p).dot(axis),b1=t.clone().sub(p).dot(axis);
+  if(Math.min(a1,Math.max(b0,b1))-Math.max(a0,Math.min(b0,b1))>.08)return true;
+ }
+ return false;
+}
+function pointInPanel(p,poly){
+ const a=poly[0],u=poly[1].clone().sub(a),v=poly[poly.length-1].clone().sub(a);
+ const normal=u.clone().cross(v).normalize();if(Math.abs(p.clone().sub(a).dot(normal))>.06)return false;
+ for(let i=0;i<poly.length;i++){const e=poly[(i+1)%poly.length].clone().sub(poly[i]);const q=p.clone().sub(poly[i]);if(e.clone().cross(q).dot(normal)<-.0001)return false}return true;
+}
+function coplanarOverlap(a,b){
+ const A=corners(a),B=corners(b),n=A[1].clone().sub(A[0]).cross(A[A.length-1].clone().sub(A[0])).normalize();
+ if(B.some(p=>Math.abs(p.clone().sub(A[0]).dot(n))>.035))return false;
+ // Separating-axis theorem: touching edges are allowed, overlapping interiors are not.
+ for(const poly of [A,B])for(let i=0;i<poly.length;i++){
+  const edge=poly[(i+1)%poly.length].clone().sub(poly[i]);const axis=edge.cross(n).normalize();
+  const aa=A.map(v=>v.dot(axis)),bb=B.map(v=>v.dot(axis));
+  if(Math.min(...aa)>=Math.max(...bb)-.001||Math.min(...bb)>=Math.max(...aa)-.001)return false;
+ }
+ return true;
+}
+function available(d){
+ const poly=corners(d);
+ if(poly.some(v=>Math.abs(v.x)>25.001||Math.abs(v.z)>25.001||v.y<-.04||v.y>20.04))return false;
+ if(parts.some(p=>coplanarOverlap(d,p)))return false;
+ if(d.orient==='floor'&&poly.every(v=>Math.abs(v.y)<.08))return true;
+ return parts.some(p=>connected(d,p));
+}
+function roofGeometry(d){const [a,b,c,e]=d.vertices;const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute([...a,...b,...c,...a,...c,...e],3));geo.computeVertexNormals();return geo}
+function makePanel(d){const group=new THREE.Group(),geo=d.shape==='roof'?roofGeometry(d):panelGeometry(d.shape,!!d.mirror);const mat=new THREE.MeshPhysicalMaterial({color:d.color,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});const face=new THREE.Mesh(geo,mat);face.userData.part=d;face.castShadow=true;group.add(face);
+const edges=new THREE.EdgesGeometry(geo);const lines=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:d.color,linewidth:2}));group.add(lines);
+const edgePositions=edges.getAttribute('position');for(let i=0;i<edgePositions.count;i+=2){const a=new THREE.Vector3().fromBufferAttribute(edgePositions,i),b=new THREE.Vector3().fromBufferAttribute(edgePositions,i+1);const diff=b.clone().sub(a),mid=a.clone().add(b).multiplyScalar(.5);const bar=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,diff.length(),6),new THREE.MeshStandardMaterial({color:d.color,roughness:.35,metalness:.1}));bar.position.copy(mid);bar.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),diff.normalize());group.add(bar)}
+ panelPose(d,group);group.userData.part=d;scene.add(group);objects.push(face);return group}
+function add(d,persist=true){d.id=d.id||Math.random().toString(36).slice(2);d.mesh=makePanel(d);parts.push(d);if(persist)save(true)}
+function remove(d){scene.remove(d.mesh);d.mesh.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});const i=parts.indexOf(d);if(i>=0)parts.splice(i,1);const j=objects.indexOf(d.mesh.children[0]);if(j>=0)objects.splice(j,1);save(true)}
+function save(silent=false){try{localStorage.setItem(('plattan-online-world-slot-'+(window.plattanSlot||1)),JSON.stringify(parts.map(({mesh,...d})=>d)));if(!silent)toast('Världen sparad!')}catch(e){toast('Sparning misslyckades – exportera filen')}}
+
+function updateCamera(){
+ if(building){
+  orbitTarget.set(player.x,1.1,player.z);
+  const cp=Math.cos(orbitPitch);
+  camera.position.set(orbitTarget.x+Math.sin(orbitYaw)*orbitDistance*cp,orbitTarget.y+Math.sin(orbitPitch)*orbitDistance,orbitTarget.z+Math.cos(orbitYaw)*orbitDistance*cp);
+  camera.lookAt(orbitTarget);
+ }else{
+  const distance=walkZoom===0?3.3:7.5;
+  const height=walkZoom===0?1.85:3.65;
+  const target=new THREE.Vector3(player.x,player.y+.9,player.z);
+  camera.position.set(player.x+Math.sin(player.yaw)*distance,player.y+height+Math.sin(player.pitch)*1.2,player.z+Math.cos(player.yaw)*distance);
+  camera.lookAt(target);
+ }
+}
+const ghost=new THREE.Group();scene.add(ghost);
+function clearGhost(){while(ghost.children.length){const c=ghost.children[0];ghost.remove(c);c.geometry?.dispose();c.material?.dispose()}}
+function makeGhost(d,valid){
+ clearGhost();const geo=d.shape==='roof'?roofGeometry(d):panelGeometry(d.shape,!!d.mirror),mat=new THREE.MeshBasicMaterial({color:valid?d.color:0xff3030,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide});
+ const face=new THREE.Mesh(geo,mat);ghost.add(face);
+ const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:valid?0x22ff99:0xff3333}));ghost.add(edges);
+ panelPose(d,ghost);
+ ghost.visible=true;
+}
+function getHit(x,y){
+ const rect=renderer.domElement.getBoundingClientRect();
+ mouse.set(((x-rect.left)/rect.width)*2-1,-((y-rect.top)/rect.height)*2+1);
+ ray.setFromCamera(mouse,camera);
+ const hits=ray.intersectObjects([...objects,ground],false);
+ return hits.length?hits[0]:null;
+}
+// Markerar den kant som den nya plattan ansluts till.
+const edgeMarker=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineDashedMaterial({color:0xffe34a,dashSize:.10,gapSize:.065,depthTest:false,linewidth:2}));edgeMarker.renderOrder=20;scene.add(edgeMarker);
+function showEdge(a,b){edgeMarker.geometry.dispose();edgeMarker.geometry=new THREE.BufferGeometry().setFromPoints([a,b]);edgeMarker.computeLineDistances();edgeMarker.visible=true;}
+let lockedEdge=null;
+function snapCandidate(x,y){
+ const hit=getHit(x,y);if(!hit&&!lockedEdge){edgeMarker.visible=false;return null}
+ const support=lockedEdge?.support || hit?.object.userData.part;
+ const roundHalf=v=>Math.round(v*2)/2;
+ const snapCenter=(v,axis,sp)=>{
+  if(shape==='half') { const shortAxis=(sp%2===0?'z':'x'); return axis===shortAxis?Math.round(v*2-.5)/2+.25:Math.floor(v)+.5; }
+  if(shape==='small')return Math.round(v*2-.5)/2+.25;
+  return roundHalf(v);
+ };
+ const snapShift=(v,axis,sp,rr,orient)=>{
+  if(shape==='half' || shape==='small'){
+   // The short side must be centred at quarter-cell positions, not on a grid corner.
+   // For upright panels, 90/270 degrees moves the short side from vertical to horizontal.
+   const normal=orient==='wall'?(rr%2===0?'z':'x'):'y';
+   if(axis===normal)return Math.round(v*2)/2;
+   const short=shape==='small'||(orient==='wall'?(sp%2===0?axis==='y':axis===(rr%2===0?'x':'z')):(sp%2===0?axis==='z':axis==='x'));
+   return short?Math.round(v*2-.5)/2+.25:Math.round(v*2-.5)/2+.5;
+  }
+  return roundHalf(v);
+ };
+ const gridPenalty=d=>{if(d.shape!=='square')return 0;const half=v=>Math.abs((v-Math.floor(v))-.5);const whole=v=>Math.abs(v-Math.round(v));return d.orient==='floor'?12*(half(d.x)+half(d.z)):12*(half(d.y)+(d.rot%2===0?half(d.x)+whole(d.z):whole(d.x)+half(d.z)));};
+ const forms=shape==='square'?[0]:shape==='small'?[0]:[spin];
+ if(!support){
+  edgeMarker.visible=false;
+  if(orientation!=='floor'||shape==='roof')return null;
+  const w=shape==='small'?.25:.5;
+  const candidates=[];
+  for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)for(const sp of forms){
+   const d={x:snapCenter(hit.point.x+dx*.5,'x',sp),y:.025,z:snapCenter(hit.point.z+dz*.5,'z',sp),shape,color:hex,orient:'floor',rot:0,spin:sp,mirror:shape==='triangle'&&sp>=4,sub:0,freePosition:true};
+   if(available(d))candidates.push(d);
+  }
+  candidates.sort((a,b)=>gridPenalty(a)-gridPenalty(b)+corners(a).reduce((v,p)=>v.add(p),new THREE.Vector3()).multiplyScalar(1/corners(a).length).distanceTo(hit.point)-corners(b).reduce((v,p)=>v.add(p),new THREE.Vector3()).multiplyScalar(1/corners(b).length).distanceTo(hit.point));
+  return candidates.length?{d:candidates[0],valid:true}:null;
+ }
+ const cs=corners(support);let selected=lockedEdge?{a:lockedEdge.a.clone(),b:lockedEdge.b.clone()}:null,best=Infinity;
+ if(!lockedEdge)for(let i=0;i<cs.length;i++){
+  const a=cs[i],b=cs[(i+1)%cs.length],ab=b.clone().sub(a);
+  const t=THREE.MathUtils.clamp(hit.point.clone().sub(a).dot(ab)/ab.lengthSq(),0,1);
+  const dist=hit.point.distanceTo(a.clone().addScaledVector(ab,t));
+  if(dist<best){best=dist;selected={a,b}}
+ }
+ const full=selected.b.clone().sub(selected.a),length=full.length();
+ if(!lockedEdge && length>.51 && shape==='small'){const t=THREE.MathUtils.clamp(hit.point.clone().sub(selected.a).dot(full)/full.lengthSq(),0,.9999);const start=Math.floor(t*length/.5)*.5/length;
+  selected={a:selected.a.clone().addScaledVector(full,start),b:selected.a.clone().addScaledVector(full,Math.min(1,start+.5/length))};
+ }
+ const diagonalEdge=Math.abs(full.y)>.1 && Math.abs(full.x)+Math.abs(full.z)>.1;
+ // Snedtak: the selected sloping edge is the exact long side of a
+ // rectangular panel, sqrt(2) x 1. Move the mouse to choose roof direction.
+ if(shape==='roof'){
+  showEdge(selected.a,selected.b);
+  if(!diagonalEdge || Math.abs(length-Math.SQRT2)>.025){edgeMarker.material.color.set(0xff5757);return null}
+  const alongHorizontal=new THREE.Vector3(full.x,0,full.z).normalize();
+  const across=new THREE.Vector3(-alongHorizontal.z,0,alongHorizontal.x);
+  const variants=[];
+  for(const sign of [-1,1]){
+   const offset=across.clone().multiplyScalar(sign);
+   const a=selected.a,b=selected.b,c=b.clone().add(offset),e=a.clone().add(offset);
+   const d={x:0,y:0,z:0,shape:'roof',color:hex,orient:'roof',rot:0,spin:0,freePosition:true,vertices:[a,b,c,e].map(v=>v.toArray())};
+   const center=a.clone().add(b).add(c).add(e).multiplyScalar(.25).project(camera);
+   const rect=renderer.domElement.getBoundingClientRect();
+   const px=(center.x+1)*rect.width/2+rect.left,py=(1-center.y)*rect.height/2+rect.top;
+   variants.push({d,valid:available(d),distance:Math.hypot(px-x,py-y)});
+  }
+  variants.sort((a,b)=>(a.valid?0:10000)+a.distance-(b.valid?0:10000)-b.distance);
+  edgeMarker.material.color.set(variants[0].valid?0x20f5c8:0xff5757);
+  return {d:variants[0].d,valid:variants[0].valid};
+ }
+
+ const attachmentForms=shape==='triangle'&&diagonalEdge?[0,4,2,6,1,5,3,7]:forms;
+ const mid=selected.a.clone().add(selected.b).multiplyScalar(.5);
+ const supportCenter=cs.reduce((v,p)=>v.add(p),new THREE.Vector3()).multiplyScalar(1/cs.length);
+ const outward=mid.clone().sub(supportCenter).normalize();
+ // Both sides of a supporting panel are valid. Use the camera side to choose
+ // which way a perpendicular panel should extend from the shared edge.
+ const supportNormal=cs[1].clone().sub(cs[0]).cross(cs[cs.length-1].clone().sub(cs[0])).normalize();
+ const cameraSide=Math.sign(camera.position.clone().sub(supportCenter).dot(supportNormal))||1;
+ const variants=[];
+ for(const orient of [orientation])for(const rr of (orient==='wall'?[0,1]:[0]))for(const sp of attachmentForms){
+  const base={x:0,y:0,z:0,shape,color:hex,orient,rot:rr,spin:sp,mirror:shape==='triangle'&&sp>=4,sub:0,freePosition:true};
+  const vertices=corners(base);
+  for(let i=0;i<vertices.length;i++){
+   const a=vertices[i],b=vertices[(i+1)%vertices.length],vec=b.clone().sub(a),seg=selected.b.clone().sub(selected.a);
+   if(vec.length()<.01||vec.clone().cross(seg).length()>.015)continue;
+   if(diagonalEdge&&shape==='triangle'&&Math.abs(vec.length()-seg.length())>.02)continue;
+   // Align the candidate edge to the selected segment at half-grid increments.
+   for(const t of (shape==='triangle'?(diagonalEdge?[0,1]:(support.shape==='small'&&orient==='wall'?[0,1]:[0,.5])):(shape==='half'||shape==='small'?[0,1]:[0,.25,.5,.75,1]))){
+    const target=selected.a.clone().lerp(selected.b,t);
+    for(const v of (shape==='triangle'||shape==='half'||shape==='small'?[a,b]:[a,b,a.clone().add(b).multiplyScalar(.5)])){
+     const shift=target.clone().sub(v);
+     const exactHalf=shape==='half'||shape==='small'||shape==='triangle';
+     // Halvplattor måste få sin exakta kant på den valda kanten.
+     // Kvartsrutors mittpunkter uppstår naturligt från geometrin, även upprätt.
+     const d={...base,x:exactHalf?shift.x:snapShift(shift.x,'x',sp,rr,orient),y:exactHalf?shift.y:snapShift(shift.y,'y',sp,rr,orient)+(orient==='floor'?.025:0),z:exactHalf?shift.z:snapShift(shift.z,'z',sp,rr,orient)};
+     if(orient==='wall'&&!exactHalf)d.y=snapShift(shift.y,'y',sp,rr,orient);
+     // Child-friendly snapping: a small square or half rectangle must fit
+     // entirely within the selected straight edge. Keep the full supporting
+     // edge for half rectangles: their long edge is a whole grid unit.
+     if(shape==='small'||shape==='half'){
+      const edgeStart=a.clone().add(new THREE.Vector3(d.x,d.y,d.z));
+      const edgeEnd=b.clone().add(new THREE.Vector3(d.x,d.y,d.z));
+      const selectedVector=selected.b.clone().sub(selected.a);
+      const u=edgeStart.clone().sub(selected.a).dot(selectedVector)/selectedVector.lengthSq();
+      const w=edgeEnd.clone().sub(selected.a).dot(selectedVector)/selectedVector.lengthSq();
+      if(Math.min(u,w)<-0.001||Math.max(u,w)>1.001)continue;
+     }
+     // På en liten fyrkants kant får triangelhörn bara möta
+     // kantens ändpunkter, aldrig dess mitt (kvartsrutan).
+     // Kräver inte att hela triangeln ligger på halvrutnätet:
+     // då skulle ingen triangel kunna fästas på en liten fyrkant.
+     if(shape==='triangle'&&support.shape==='small'&&orient==='wall'){
+      const edgeVec=selected.b.clone().sub(selected.a);
+      const edgeLenSq=edgeVec.lengthSq();
+      const badQuarter=corners(d).some(p=>{
+       const u=p.clone().sub(selected.a).dot(edgeVec)/edgeLenSq;
+       if(u<=.001||u>=.999)return false;
+       const nearest=selected.a.clone().addScaledVector(edgeVec,u);
+       return p.distanceTo(nearest)<.001;
+      });
+      if(badQuarter)continue;
+     }
+     // On a small square, the triangle's straight one-unit edge can
+     // overhang by half a unit on either side. Only these two endpoint
+     // alignments are allowed, never a quarter-step or centered offset.
+     if(shape==='triangle'&&support.shape==='small'&&orient==='wall'&&!diagonalEdge){
+      const axis=selected.b.clone().sub(selected.a),den=axis.lengthSq();
+      const edgeA=a.clone().add(new THREE.Vector3(d.x,d.y,d.z));
+      const edgeB=b.clone().add(new THREE.Vector3(d.x,d.y,d.z));
+      const u=edgeA.clone().sub(selected.a).dot(axis)/den;
+      const w=edgeB.clone().sub(selected.a).dot(axis)/den;
+      const lo=Math.min(u,w),hi=Math.max(u,w);
+      if(!((Math.abs(lo+1)<.001&&Math.abs(hi-1)<.001)||
+           (Math.abs(lo)<.001&&Math.abs(hi-2)<.001)))continue;
+     }
+     const poly=corners(d);
+     const c=poly.reduce((p,q)=>p.add(q),new THREE.Vector3()).multiplyScalar(1/poly.length);
+     const side=c.clone().sub(mid).dot(outward);
+     if(!connected(d,support))continue;
+     // Do not reject the reverse side: children must be able to build
+     // a floor/roof on either side of a standing wall (and vice versa).
+     const valid=available(d);
+     const signedSide=c.clone().sub(supportCenter).dot(supportNormal)*cameraSide;
+     const cameraPreference=signedSide<-.04?2:0;
+     const diagonalPreference=diagonalEdge&&shape==='triangle'?(sp===spin?0:.03)+(Math.abs(vec.length()-seg.length())>.02?50:0):0;
+     // Once an edge is locked, move the mouse toward the desired side.
+     const projected=c.clone().project(camera);
+     const rect=renderer.domElement.getBoundingClientRect();
+     const px=(projected.x+1)*rect.width/2+rect.left,py=(1-projected.y)*rect.height/2+rect.top;
+     const mouseDistance=Math.hypot(px-x,py-y);
+     variants.push({d,valid,score:(valid?0:1000)+gridPenalty(d)+(lockedEdge?mouseDistance*.22:c.distanceTo(mid)*.3+cameraPreference+diagonalPreference-Math.abs(side)*.08)});
+    }
+   }
+  }
+ }
+ variants.sort((a,b)=>a.score-b.score);
+ const chosen=variants[0];showEdge(selected.a,selected.b);
+ edgeMarker.material.color.set(chosen?.valid?0x20f5c8:0xff5757);
+ return chosen?{d:chosen.d,valid:chosen.valid}:null;
+}
+function refreshGhost(){
+ if(!building||erase||paint){ghost.visible=false;edgeMarker.visible=false;candidate=null;return}
+ candidate=snapCandidate(hover.x,hover.y);
+ if(candidate)makeGhost(candidate.d,candidate.valid);else ghost.visible=false;
+}
+function put(x,y){
+ const hit=getHit(x,y);
+ if(paint){const d=hit?.object.userData.part;if(d){d.color=hex;d.mesh.traverse(o=>{if(o.material?.color)o.material.color.set(hex)});save(true);toast('Plattan har fått ny färg')}else toast('Klicka på en platta');return}
+ if(erase){
+  // Samma rivverktyg kan välja djur eller plattor, beroende på vad som är närmast kameran.
+  const animalHits=ray.intersectObjects(animals.map(a=>a.group),true);
+  const animalHit=animalHits[0];
+  if(animalHit && (!hit || animalHit.distance < hit.distance)){
+   const animal=animals.find(a=>{let obj=animalHit.object;while(obj){if(obj===a.group)return true;obj=obj.parent}return false});
+   if(animal){removeAnimal(animal);toast('Djuret borttaget');return}
+  }
+  const d=hit?.object.userData.part;
+  if(d)remove(d);else toast('Klicka på ett djur eller en platta för att riva');
+  return;
+ }
+ if(!lockedEdge){
+  const first=snapCandidate(x,y);
+  const hitEdge=getHit(x,y);
+  if(hitEdge?.object.userData.part && edgeMarker.visible){
+   const pts=edgeMarker.geometry.attributes.position;
+   lockedEdge={support:hitEdge.object.userData.part,a:new THREE.Vector3().fromBufferAttribute(pts,0),b:new THREE.Vector3().fromBufferAttribute(pts,1)};
+   toast('Kant vald! Flytta musen till önskad sida och klicka igen. Esc avbryter.');refreshGhost();return;
+  }
+  if(!first){toast('Sikta på marken eller en platta');return}
+  if(!first.valid){toast('Ingen ledig plats');return}
+  add(first.d);refreshGhost();return;
+ }
+ const target=snapCandidate(x,y);
+ if(!target){toast('Sikta på marken eller en platta');return}
+ if(!target.valid){toast('Plattan måste ha en ledig yta och ansluta längs en kant');return}
+ if(parts.length>=1500){toast('Max 1500 plattor i testversionen');return}
+ lockedEdge=null;add(target.d);refreshGhost();
+}
+function modeToggle(){lockedEdge=null;building=!building;$('walkNear').style.display=building?'none':'inline-block';$('walkFar').style.display=building?'none':'inline-block';$('camleft').style.display=building?'inline-block':'none';$('camright').style.display=building?'inline-block':'none';$('paletteToggle').style.display=building?'inline-block':'none';$('palette').style.display=building?$('palette').style.display:'none';$('mode').textContent=building?'🧲 Byggläge':'🚶 Gåläge';$('mode').classList.toggle('on',building);$('cross').style.display=building?'block':'none';ghost.visible=building;toast(building?'Byggläge':'Gåläge – pilar för att springa, mellanslag för hopp, dubbeltryck för högt hopp')}
+$('paletteToggle').onclick=()=>{$('palette').style.display=$('palette').style.display==='none'?'block':'none'};
+$('closePalette').onclick=()=>{$('palette').style.display='none'};
+$('paletteColor').oninput=e=>{hex=e.target.value;$('color').value=hex;refreshGhost()};
+// Formikoner saknar röd markering; fästkantsikonerna visar vald kant.
+function pieceIcon(kind,turn=0,markEdge=true){
+ const paths={roof:'M13 65 L42 23 L87 35 L58 77 Z',square:'M20 20 H80 V80 H20 Z',half:'M20 35 H80 V65 H20 Z',small:'M35 35 H65 V65 H35 Z',triangle:'M20 80 L80 80 L20 20 Z'};
+ const edges={roof:[[13,65,42,23]],square:[[20,20,80,20],[80,20,80,80],[80,80,20,80],[20,80,20,20]],half:[[20,35,80,35],[80,35,80,65],[80,65,20,65],[20,65,20,35]],small:[[35,35,65,35],[65,35,65,65],[65,65,35,65],[35,65,35,35]],triangle:[[20,80,80,80],[20,20,20,80],[20,20,80,80]]};
+ const e=edges[kind][kind==='half' && turn%2===1?1:0];
+ const redLine=markEdge?`<line x1="${e[0]}" y1="${e[1]}" x2="${e[2]}" y2="${e[3]}" stroke="#ed3030" stroke-width="7" stroke-dasharray="9 5" stroke-linecap="round"/>`:"";
+ return `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(${(turn%4)*90} 50 50) ${kind==='triangle'&&turn>=4?'translate(100 0) scale(-1 1)':''}"><path d="${paths[kind]}" fill="#8bd5f2" fill-opacity=".65" stroke="#247ea5" stroke-width="4" stroke-linejoin="round"/>${redLine}</g></svg>`;
+}
+document.querySelectorAll('[data-shape]').forEach(b=>b.innerHTML=pieceIcon(b.dataset.shape,0,false));
+document.querySelectorAll('[data-spin]').forEach(b=>b.innerHTML=pieceIcon('half',+b.dataset.spin));
+document.querySelector('[data-orient="wall"]').innerHTML='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 15 L72 25 V85 L30 75 Z" fill="#8bd5f2" stroke="#247ea5" stroke-width="4"/></svg><span class="orientCaption">Stående</span>';
+document.querySelector('[data-orient="floor"]').innerHTML='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M8 75 L65 61 L93 70 L36 84 Z" fill="#8bd5f2" stroke="#247ea5" stroke-width="4"/></svg><span class="orientCaption">Liggande</span>';
+function syncPalette(){document.querySelectorAll('[data-spin]')[1].dataset.spin=shape==='half'?'1':'4';document.querySelectorAll('[data-spin]').forEach(b=>b.innerHTML=pieceIcon(shape==='triangle'?'triangle':'half',+b.dataset.spin,false));document.querySelectorAll('[data-shape]').forEach(b=>b.classList.toggle('on',b.dataset.shape===shape));document.querySelectorAll('[data-orient]').forEach(b=>b.classList.toggle('on',b.dataset.orient===orientation));document.querySelectorAll('[data-spin]').forEach(b=>b.classList.toggle('on',+b.dataset.spin===spin));document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',+b.dataset.sub===sub));$('halfChoices').style.display='none';$('spinChoices').style.display=(shape==='half'||shape==='triangle')?'grid':'none';$('spinLabel').style.display=(shape==='half'||shape==='triangle')?'block':'none';document.querySelectorAll('[data-spin]').forEach(b=>b.style.display=(shape==='triangle'||+b.dataset.spin<2)?'flex':'none');$('spinLabel').innerHTML=shape==='roof'?'<strong>Snedtak</strong>':shape==='triangle'?'<strong>Välj triangelns riktning</strong>':'<strong>Välj långsida eller kortsida</strong>';$('spinHelp').textContent=shape==='roof'?'Snedtak 1 × √2: klicka på en stående triangels sneda kant, flytta musen för att välja sida och klicka igen.':shape==='triangle'?'Välj en av fyra stående trianglar. Varje rad visar två spegelvända former. Klicka på fästkanten och välj sida med musen.':'Välj liggande eller stående rektangel utan röd markering. Klicka sedan på en kant i bygget och välj sida med musen.';refreshGhost()}
+document.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{lockedEdge=null;shape=b.dataset.shape;if(shape==='half'&&spin>1)spin=0;if(shape==='triangle'&&![0,4,2,6].includes(spin))spin=0;syncPalette()});
+document.querySelectorAll('[data-orient]').forEach(b=>b.onclick=()=>{lockedEdge=null;orientation=b.dataset.orient;syncPalette()});
+document.querySelectorAll('[data-spin]').forEach(b=>b.onclick=()=>{spin=+b.dataset.spin;syncPalette()});
+
+document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{sub=+b.dataset.sub;syncPalette()});
+$('paint').onclick=()=>{paint=!paint;if(paint&&erase){erase=false;$('delete').classList.remove('on');$('delete').textContent='🗑 Riv: av'}$('paint').textContent='🎨 Måla: '+(paint?'på':'av');$('paint').classList.toggle('on',paint);refreshGhost()};syncPalette();
+$('mode').onclick=modeToggle;$('shape').onchange=e=>{shape=e.target.value;refreshGhost()};$('color').oninput=e=>{hex=e.target.value;refreshGhost()};$('rotate').onclick=()=>{rot=(rot+1)%4;refreshGhost();toast('Vridning '+rot*90+'°')};$('orient').onclick=()=>{orientation=orientation==='wall'?'floor':'wall';$('orient').textContent=orientation==='wall'?'Vägg / golv':'Golv / vägg';refreshGhost();toast(orientation==='wall'?'Vägg':'Golv/tak')};$('delete').onclick=()=>{erase=!erase;if(erase&&paint){paint=false;$('paint').textContent='🎨 Måla: av';$('paint').classList.remove('on')}$('delete').textContent='🗑 Riv: '+(erase?'på':'av');$('delete').classList.toggle('on',erase);refreshGhost()};$('save').onclick=()=>save();$('reset').onclick=()=>{if(confirm('Radera hela byggvärlden?')){[...parts].forEach(remove);save();toast('Ny tom värld')}};
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify(parts.map(({mesh,...d})=>d),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='plattan-mitt-bygge.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
+$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(!Array.isArray(data))throw Error();[...parts].forEach(remove);data.slice(0,1500).forEach(d=>{if(['square','half','triangle','small','roof'].includes(d.shape)&& (d.shape!=='roof'||(Array.isArray(d.vertices)&&d.vertices.length===4&&d.vertices.every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite))))&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)});save();toast('Världen importerad')}catch(err){toast('Kunde inte läsa världsfilen')}e.target.value=''};
+$('walkNear').onclick=()=>{walkZoom=0;updateWalkZoomButtons()};
+$('walkFar').onclick=()=>{walkZoom=1;updateWalkZoomButtons()};
+function updateWalkZoomButtons(){$('walkNear').classList.toggle('on',walkZoom===0);$('walkFar').classList.toggle('on',walkZoom===1)}
+updateWalkZoomButtons();
+$('camleft').onclick=()=>{orbitYaw-=Math.PI/8;refreshGhost()};
+$('camright').onclick=()=>{orbitYaw+=Math.PI/8;refreshGhost()};
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+// Högerklick utan drag avbryter vald fästkant; högerdrag roterar kameran som förut.
+
+renderer.domElement.addEventListener('wheel',e=>{if(building){e.preventDefault();orbitDistance=Math.max(3,Math.min(25,orbitDistance+Math.sign(e.deltaY)*.7))}},{passive:false});
+renderer.domElement.addEventListener('pointerdown',e=>{
+ touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ pointerDown={x:e.clientX,y:e.clientY,button:e.button,id:e.pointerId};lookDrag=false;
+ renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ hover={x:e.clientX,y:e.clientY};if(lockedEdge)refreshGhost();
+ if(!pointerDown){return}
+ const old=touches.get(e.pointerId)||{x:e.clientX,y:e.clientY};
+ touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const dx=e.clientX-old.x,dy=e.clientY-old.y;
+ const orbit=building&&(pointerDown.button===2||touches.size>=2||e.shiftKey);
+ if(orbit||!building){
+  if(Math.abs(e.clientX-pointerDown.x)+Math.abs(e.clientY-pointerDown.y)>5)lookDrag=true;
+  if(building){orbitYaw-=dx*.009;orbitPitch=Math.max(.15,Math.min(1.45,orbitPitch+dy*.009))}
+  else{player.yaw-=dx*.005;player.pitch=Math.max(-1.2,Math.min(1.2,player.pitch-dy*.005))}
+ }
+});
+renderer.domElement.addEventListener('pointerup',e=>{
+ if(pointerDown&&pointerDown.id===e.pointerId&&!lookDrag&&building&&touches.size===1){
+  if(e.button===2){if(lockedEdge){lockedEdge=null;refreshGhost();toast('Fästkant släppt')}}
+  else if(e.button===0)put(e.clientX,e.clientY);
+ }
+ touches.delete(e.pointerId);pointerDown=null;
+});
+renderer.domElement.addEventListener('pointercancel',e=>{touches.delete(e.pointerId);pointerDown=null});
+// Gåläge: ett hopp når en halv ruta, dubbeltryck når en hel ruta.
+let lastSpace=-1000, jumpStart=0, runCycle=0;
+function floorHeight(x,z){
+ let best=0;
+ for(const p of parts){
+  if(p.orient!=='floor')continue;
+  const v=corners(p);if(v.length<3)continue;
+  let inside=false;
+  for(let i=0,j=v.length-1;i<v.length;j=i++){
+   if(((v[i].z>z)!==(v[j].z>z))&&(x<(v[j].x-v[i].x)*(z-v[i].z)/(v[j].z-v[i].z)+v[i].x))inside=!inside;
+  }
+  if(inside&&v[0].y<=player.y+.18&&v[0].y>best)best=v[0].y;
+ }
+ return best;
+}
+function jump(){
+ if(building)return;
+ const now=performance.now(),double=now-lastSpace<340;
+ lastSpace=now;
+ const ground=floorHeight(player.x,player.z);
+ if(double){
+  // Andra trycket förstärker första hoppet, även i luften.
+  if(now-jumpStart<450){player.vy=Math.max(player.vy,Math.sqrt(2*15*1.42));jumpStart=now;toast('Dubbelhopp – stor kub!');}
+ }else if(player.y<=ground+.08){
+  player.vy=Math.sqrt(2*15*.68);jumpStart=now;
+ }
+}
+addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&lockedEdge){lockedEdge=null;refreshGhost();toast('Kantval avbrutet');return}
+ if(e.target.closest('input,select,button,textarea'))return;
+ const k=e.key.toLowerCase();
+ if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
+ if(k===' '&&!e.repeat)jump();
+ keys.add(k);
+});
+addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+addEventListener('blur',()=>keys.clear());
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(k)});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>keys.delete(k)))});
+$('jump').onclick=jump;
+const avatar=new THREE.Group();
+const shirt=new THREE.MeshStandardMaterial({color:0x367dc2}),skin=new THREE.MeshStandardMaterial({color:0xe8ad80}),pants=new THREE.MeshStandardMaterial({color:0x263c65}),shoe=new THREE.MeshStandardMaterial({color:0x32353a});
+function limb(parent,material,w,h,d,x,y,z){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);parent.add(mesh);return mesh}
+limb(avatar,shirt,.38,.48,.23,0,.83,0);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),skin);head.position.y=1.31;avatar.add(head);
+const hairMaterial=new THREE.MeshStandardMaterial({color:0x543d32});
+const headwearMaterial=new THREE.MeshStandardMaterial({color:0xe85c62});
+const hairGroup=new THREE.Group();head.add(hairGroup);
+const shortHair=new THREE.Mesh(new THREE.SphereGeometry(.196,14,10,0,Math.PI*2,0,Math.PI*.43),hairMaterial);shortHair.position.y=.025;hairGroup.add(shortHair);
+const longHair=new THREE.Group();longHair.position.y=.025;hairGroup.add(longHair);
+// Långt hår: varje slinga böjer sig in över hjässan i stället för ett extra lager hårtussar.
+// Ingen slät hårkappa under långhårsslingorna; bara de böjda slingorna syns.
+// Nio sammanhängande slingor, utan de yttersta vid ansiktet.
+// Tre överlappande delar per slinga ger en mjuk böj uppåt och in mot mitten.
+for(let i=1;i<=9;i++){
+ const angle=-Math.PI*.78+i*(Math.PI*1.56/10);
+ const sx=Math.sin(angle),sz=Math.cos(angle);
+ const segments=[
+  {r:.163,y:-.108,wide:.055,tall:.147,depth:.066},
+  {r:.153,y:-.007,wide:.060,tall:.118,depth:.070},
+  {r:.109,y:.086,wide:.064,tall:.085,depth:.075},
+  {r:.056,y:.125,wide:.066,tall:.054,depth:.074}
+ ];
+ for(const seg of segments){
+  const strand=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),hairMaterial);
+  strand.scale.set(seg.wide,seg.tall,seg.depth);
+  strand.position.set(sx*seg.r,seg.y,sz*seg.r);
+  strand.rotation.z=-sx*.17;
+  longHair.add(strand);
+ }
+}
+const headwearGroup=new THREE.Group();headwearGroup.position.y=1.47;avatar.add(headwearGroup);
+const hatGroup=new THREE.Group();headwearGroup.add(hatGroup);
+const crown=new THREE.Mesh(new THREE.CylinderGeometry(.18,.19,.18,16),headwearMaterial);crown.position.y=.07;hatGroup.add(crown);
+const brim=new THREE.Mesh(new THREE.CylinderGeometry(.29,.29,.025,20),headwearMaterial);brim.position.y=-.025;hatGroup.add(brim);
+const capGroup=new THREE.Group();headwearGroup.add(capGroup);
+const capTop=new THREE.Mesh(new THREE.SphereGeometry(.205,16,10,0,Math.PI*2,0,Math.PI*.54),headwearMaterial);capGroup.add(capTop);
+const visor=new THREE.Mesh(new THREE.BoxGeometry(.30,.025,.23),headwearMaterial);visor.position.set(0,-.01,-.19);capGroup.add(visor);
+const beanieGroup=new THREE.Group();headwearGroup.add(beanieGroup);
+const beanieTop=new THREE.Mesh(new THREE.SphereGeometry(.21,16,10,0,Math.PI*2,0,Math.PI*.57),headwearMaterial);beanieGroup.add(beanieTop);
+const beanieBand=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.085,16),headwearMaterial);beanieBand.position.y=-.025;beanieGroup.add(beanieBand);
+const characterDefaults={shirtColor:'#367dc2',pantsColor:'#263c65',shoeColor:'#32353a',hairStyle:'short',hairColor:'#543d32',headwear:'none',headwearColor:'#e85c62'};
+let characterOptions={...characterDefaults};try{characterOptions={...characterDefaults,...JSON.parse(localStorage.getItem('plattan-character')||'{}')}}catch{}
+function updateCharacter(){
+ shirt.color.set(characterOptions.shirtColor);pants.color.set(characterOptions.pantsColor);shoe.color.set(characterOptions.shoeColor);
+ hairMaterial.color.set(characterOptions.hairColor);headwearMaterial.color.set(characterOptions.headwearColor);
+ shortHair.visible=characterOptions.hairStyle==='short';
+ longHair.visible=characterOptions.hairStyle==='long';
+ hatGroup.visible=characterOptions.headwear==='hat';capGroup.visible=characterOptions.headwear==='cap';beanieGroup.visible=characterOptions.headwear==='beanie';
+ hairGroup.visible=characterOptions.hairStyle!=='none' && characterOptions.headwear==='none';
+ try{localStorage.setItem('plattan-character',JSON.stringify(characterOptions))}catch{}
+}
+for(const key of Object.keys(characterDefaults)){
+ const field=$(key);field.value=characterOptions[key];field.addEventListener('input',()=>{characterOptions[key]=field.value;updateCharacter()});field.addEventListener('change',()=>{characterOptions[key]=field.value;updateCharacter()});
+}
+$('customize').onclick=()=>{$('characterPanel').style.display=$('characterPanel').style.display==='none'?'block':'none'};
+$('closeCharacter').onclick=()=>{$('characterPanel').style.display='none'};
+updateCharacter();
+const leftArm=new THREE.Group(),rightArm=new THREE.Group(),leftLeg=new THREE.Group(),rightLeg=new THREE.Group();
+leftArm.position.set(-.27,1.02,0);rightArm.position.set(.27,1.02,0);leftLeg.position.set(-.115,.59,0);rightLeg.position.set(.115,.59,0);
+limb(leftArm,shirt,.13,.40,.14,0,-.20,0);limb(rightArm,shirt,.13,.40,.14,0,-.20,0);
+limb(leftLeg,pants,.16,.44,.17,0,-.22,0);limb(rightLeg,pants,.16,.44,.17,0,-.22,0);
+limb(leftLeg,shoe,.18,.10,.25,0,-.45,-.05);limb(rightLeg,shoe,.18,.10,.25,0,-.45,-.05);
+avatar.add(leftArm,rightArm,leftLeg,rightLeg);scene.add(avatar);
+
+// Frigående djur med egna enkla modeller och koppel/grimma.
+const animals=[];const animalTypes={horse:{size:1.35,color:0x9b6540},foal:{size:.87,color:0xb98657},sheep:{size:.76,color:0xece9d9},cat:{size:.42,color:0xb99469},dog:{size:.65,color:0x9b7655}};
+// Varje nytt djur får en slumpad pälsfärg. Färgen sparas så att den inte ändras vid omladdning.
+const animalPalettes={
+ horse:[0xf0eee5,0xc8c7c4,0x929394,0x514b48,0x211e1d,0xe0c7a4,0xb99b76,0x8d6247,0x67412f,0xa97950],
+ foal:[0xf3eee2,0xc7c5c0,0x999797,0x514c49,0x292321,0xe5caa5,0xc5a17b,0x9b7656,0x76513c],
+ sheep:[0xffffff,0xeae7df,0xbfc0be,0x8c8985,0x34302e,0xe3d1b4,0xbda482,0x765b47],
+ cat:[0xf4f0e9,0xbcbec0,0x777879,0x252526,0xe9caa3,0xc49b70,0x9c6d47,0x684938],
+ dog:[0xf5f0e7,0xb9b8b4,0x858585,0x302c2a,0xe2c7a3,0xb58c61,0x8c6548,0x624632]
+};
+function randomAnimalColor(type){const colors=animalPalettes[type];return colors[Math.floor(Math.random()*colors.length)]}
+function shadeAnimalColor(color,factor){const c=new THREE.Color(color);c.multiplyScalar(factor);return c.getHex()}
+function animalPart(parent,geometry,color,x,y,z){const mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.85}));mesh.position.set(x,y,z);mesh.castShadow=true;parent.add(mesh);return mesh}
+function makeAnimal(type,x,z,saveIt=true,savedColor=null){
+ if(!animalTypes[type]||animals.length>=60)return;
+ const cfg=animalTypes[type],k=cfg.size,furColor=Number.isInteger(savedColor)&&savedColor>=0&&savedColor<=0xffffff?savedColor:randomAnimalColor(type),g=new THREE.Group(),body=new THREE.Group();g.add(body);
+ const wool=type==='sheep',equine=type==='horse'||type==='foal';
+ const torso=animalPart(body,new THREE.SphereGeometry(1,14,10),furColor,0,.76*k,0);torso.scale.set(equine?.31*k:.38*k,equine?.265*k:.30*k,equine?.59*k:.62*k);
+ const walkingLegs=[];
+ for(const side of [-1,1])for(const end of [-1,1]){
+  const pivot=new THREE.Group();pivot.position.set(side*(equine?.20:.24)*k,.61*k,end*.39*k);body.add(pivot);
+  const leg=animalPart(body,new THREE.CylinderGeometry(.09*k,.075*k,.54*k,8),wool?0x49443d:furColor,0,-.24*k,0);pivot.add(leg);body.remove(leg);
+  if(equine)animalPart(body,new THREE.BoxGeometry(.19*k,.12*k,.23*k),0x4b3a32,0,-.53*k,0);
+  if(equine){const hoof=body.children[body.children.length-1];pivot.add(hoof);body.remove(hoof)}
+  walkingLegs.push({pivot,side,end});
+ }
+ const neck=animalPart(body,new THREE.SphereGeometry(1,12,9),furColor,0,1.01*k,-.46*k);neck.scale.set(equine?.185*k:.22*k,.39*k,equine?.19*k:.23*k);
+ const headMesh=animalPart(body,new THREE.SphereGeometry(1,14,10),equine?shadeAnimalColor(furColor,.93):wool?shadeAnimalColor(furColor,.53):furColor,0,1.26*k,-.59*k);headMesh.scale.set(.24*k,.25*k,.29*k);
+ if(equine){const muzzle=animalPart(body,new THREE.SphereGeometry(1,12,9),shadeAnimalColor(furColor,1.12),0,1.14*k,-.84*k);muzzle.scale.set(.19*k,.15*k,.24*k)}
+ for(const side of [-1,1]){
+  const ear=animalPart(body,new THREE.ConeGeometry(.095*k,.27*k,7),wool?shadeAnimalColor(furColor,.53):furColor,side*.17*k,1.54*k,-.59*k);ear.rotation.z=side*.23;
+  animalPart(body,new THREE.SphereGeometry(.045*k,8,6),0x191817,side*.17*k,1.29*k,-.80*k);
+ }
+ if(wool){for(let i=0;i<16;i++){const a=i*2.399,y=.76*k+Math.sin(i*1.8)*.17*k,z=Math.cos(a)*.45*k,x=Math.sin(a)*.27*k;const puff=animalPart(body,new THREE.SphereGeometry(.22*k,9,7),shadeAnimalColor(furColor,1.045),x,y,z);puff.scale.set(1.2,1,1.1)}}
+ if(equine){for(let i=0;i<7;i++){const strand=animalPart(body,new THREE.SphereGeometry(1,9,8),shadeAnimalColor(furColor,.48),(i%2?-.045:.045)*k,(1.33-i*.085)*k,(-.40+i*.035)*k);strand.scale.set(.075*k,.16*k,.09*k)}}
+ if(equine){
+  // En enda fyllig svans mitt på baken, utan separata yttertofsar.
+  // Hårslingorna överlappar tätt och bildar en sammanhängande lodrät svans.
+  for(let i=0;i<5;i++){
+   const offset=i-2;
+   const strand=animalPart(body,new THREE.SphereGeometry(1,11,10),shadeAnimalColor(furColor,.48),offset*.016*k,(.655-Math.abs(offset)*.015)*k,.515*k);
+   strand.scale.set((i===2?.112:.082)*k,(i===2?.335:.295)*k,.088*k);
+   strand.rotation.z=offset*.028;
+  }
+ }else{
+  const tail=animalPart(body,new THREE.ConeGeometry(.10*k,.42*k,8),furColor,0,.84*k,.69*k);tail.rotation.x=Math.PI*.42;
+ }
+ const harness=new THREE.Group();body.add(harness);
+ const collar=animalPart(harness,new THREE.TorusGeometry(.225*k,.028*k,6,18),0xd63b45,0,1.20*k,-.60*k);collar.rotation.x=Math.PI/2;
+ const leadMaterial=new THREE.MeshStandardMaterial({color:0xff172e,emissive:0x79000c,emissiveIntensity:.38,roughness:.65});const leadPoints=[new THREE.Vector3(0,1.16*k,-.77*k),new THREE.Vector3(0,.83*k,-1.06*k),new THREE.Vector3(0,.32*k,-1.22*k)];const leadCurve=new THREE.CatmullRomCurve3(leadPoints);const lead=new THREE.Mesh(new THREE.TubeGeometry(leadCurve,20,.032*k,8,false),leadMaterial);harness.add(lead);harness.visible=false;
+ g.position.set(x,0,z);scene.add(g);
+ const a={type,x,z,groundY:0,yaw:Math.random()*Math.PI*2,dir:Math.random()*Math.PI*2,turn:0,speed:.5,stuck:0,leashed:false,color:furColor,group:g,body,harness,walkingLegs,phase:Math.random()*7};animals.push(a);if(saveIt)saveAnimals();return a;
+}
+function removeAnimal(a){
+ const i=animals.indexOf(a);if(i<0)return;
+ animals.splice(i,1);scene.remove(a.group);
+ a.group.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});
+ saveAnimals();
+}
+function saveAnimals(){try{localStorage.setItem(('plattan-animals-slot-'+(window.plattanSlot||1)),JSON.stringify(animals.map(a=>({type:a.type,x:a.x,z:a.z,leashed:a.leashed,color:a.color}))))}catch{}}
+
+$('animalToggle').onclick=()=>{$('animalPanel').style.display=$('animalPanel').style.display==='none'?'block':'none';$('characterPanel').style.display='none'};
+$('closeAnimals').onclick=()=>{$('animalPanel').style.display='none'};
+document.querySelectorAll('[data-animal]').forEach(b=>b.onclick=()=>{
+ const origin=building?orbitTarget:player;
+ let x=0,z=0,found=false;
+ for(let attempt=0;attempt<80;attempt++){
+  const angle=Math.random()*Math.PI*2,dist=2.5+Math.random()*5;
+  x=Math.max(-23,Math.min(23,origin.x+Math.cos(angle)*dist));
+  z=Math.max(-23,Math.min(23,origin.z+Math.sin(angle)*dist));
+  const radius=animalTypes[b.dataset.animal].size*.75;
+  if(animals.every(a=>Math.hypot(a.x-x,a.z-z)>radius+animalTypes[a.type].size*.75+.5)&&Math.hypot(player.x-x,player.z-z)>1.2){found=true;break}
+ }
+ if(!found){toast('Ingen ledig plats nära dig för ett nytt djur');return}
+ if(animals.length>=60){toast('Max 60 djur i världen');return}
+ makeAnimal(b.dataset.animal,x,z);toast('Djur tillagt! Gå nära och klicka för grimma/koppel.');
+});
+renderer.domElement.addEventListener('click',e=>{
+ if(building)return;
+ const m=new THREE.Vector2(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1);
+ ray.setFromCamera(m,camera);
+ const hits=ray.intersectObjects(animals.map(a=>a.group),true);
+ if(!hits.length)return;
+ const a=animals.find(a=>{let o=hits[0].object;while(o){if(o===a.group)return true;o=o.parent}return false});
+ if(!a)return;
+ if(Math.hypot(a.x-player.x,a.z-player.z)>2.3){toast('Gå lite närmare djuret!');return}
+ a.leashed=!a.leashed;a.harness.visible=a.leashed;saveAnimals();toast(a.leashed?'Grimma/koppel på! Djuret följer dig.':'Grimma/koppel av! Djuret går fritt.');
+});
+function animateAnimals(dt){
+ for(const a of animals){
+  a.turn-=dt;
+  let speed=a.speed;
+  if(a.leashed){const dx=player.x-a.x,dz=player.z-a.z,dist=Math.hypot(dx,dz);if(dist>1.45){a.dir=Math.atan2(-dx,-dz);speed=Math.min(2.7,dist*1.2)}else speed=0}
+  else if(a.turn<=0){a.turn=1.5+Math.random()*3;a.dir+=(Math.random()-.5)*1.2;a.speed=.35+Math.random()*.35;speed=a.speed}
+  const dx=-Math.sin(a.dir)*speed*dt,dz=-Math.cos(a.dir)*speed*dt;
+  const nx=a.x+dx,nz=a.z+dz;
+  if(Math.abs(nx)<24&&Math.abs(nz)<24){
+   // Djuren vänder när en stående byggplatta blockerar vägen.
+   const blocked=parts.some(p=>{if(p.orient!=='wall')return false;const v=corners(p);if(Math.max(...v.map(q=>q.y))<a.groundY+.08||Math.min(...v.map(q=>q.y))>a.groundY+animalTypes[a.type].size*1.6)return false;let min=Infinity;for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++){const q=v[i],r=v[j],vx=r.x-q.x,vz=r.z-q.z,L=vx*vx+vz*vz,t=L?Math.max(0,Math.min(1,((nx-q.x)*vx+(nz-q.z)*vz)/L)):0;min=Math.min(min,Math.hypot(nx-q.x-t*vx,nz-q.z-t*vz))}return min<.42*animalTypes[a.type].size});
+   if(!blocked){a.x=nx;a.z=nz;a.stuck=0}else{if(a.stuck===0){a.dir+=Math.PI*(.7+Math.random()*.35);a.turn=1.0+Math.random()*.8}a.stuck++;speed=0}
+  }else{a.dir+=Math.PI*(.65+Math.random()*.65);a.turn=.5+Math.random();speed=0}
+  // Använd djurets egen marknivå, inte spelarens höjd. Tak ovanför djuret får inte lyfta upp det.
+  let animalGround=0;
+  for(const p of parts){
+   if(p.orient!=='floor')continue;
+   const v=corners(p);if(v.length<3||v[0].y>a.groundY+.24||v[0].y<=animalGround)continue;
+   let inside=false;for(let i=0,j=v.length-1;i<v.length;j=i++){if(((v[i].z>a.z)!==(v[j].z>a.z))&&(a.x<(v[j].x-v[i].x)*(a.z-v[i].z)/(v[j].z-v[i].z)+v[i].x))inside=!inside}
+   if(inside)animalGround=v[0].y;
+  }
+  a.groundY=animalGround;
+  a.group.position.set(a.x,a.groundY,a.z);
+  // Mjuk vridning så att djuren inte rycker till när de möter ett hinder.
+  const angle=Math.atan2(Math.sin(a.dir-a.group.rotation.y),Math.cos(a.dir-a.group.rotation.y));
+  a.group.rotation.y+=angle*Math.min(1,dt*5);
+  const moving=speed>.04;
+  if(moving)a.phase+=dt*Math.min(speed,2.7)*(a.type==='horse'||a.type==='foal'?6.5:8);
+  const amplitude=moving?Math.min(.48,.22+speed*.10):0;
+  for(const leg of a.walkingLegs){
+   // Diagonala benpar rör sig växelvis, med mjuk återgång när djuret stannar.
+   const offset=(leg.side*leg.end>0?0:Math.PI);
+   const target=amplitude*Math.sin(a.phase+offset);
+   leg.pivot.rotation.x+=(target-leg.pivot.rotation.x)*Math.min(1,dt*13);
+  }
+  a.body.position.y=moving?Math.sin(a.phase*2)*.012:0;
+ }
+}
+
+
+// Plattan Online: safe read-only snapshots of other plots, own plot remains in local coordinates.
+const PLOT_CENTERS={1:[-30,-30],2:[30,-30],3:[-30,30],4:[30,30]};
+const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
+const remoteWorlds=new Map();
+const remotePlayers=new Map();
+function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return [cx-ox+x,cz-oz+z]}
+function clearRemote(slot){const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});remoteWorlds.delete(slot)}}
+function updateRemotePlot(slot,world){if(slot===window.plattanSlot)return;clearRemote(slot);const root=new THREE.Group(),[cx,cz]=toLocalPlot(slot,0,0);root.position.set(cx,0,cz);root.rotation.y=PLOT_ROT[slot]-PLOT_ROT[window.plattanSlot||1];
+ for(const d of (world.parts||[]).slice(0,1500)){if(!['square','half','small','triangle','roof'].includes(d.shape)||!Number.isFinite(d.x)||!Number.isFinite(d.z)||!Number.isFinite(d.y)||!/^#[0-9a-f]{6}$/i.test(d.color))continue;try{const g=makePanel({...d});scene.remove(g);objects.pop();root.add(g)}catch(e){console.warn('Fjärrplatta',e)}}
+ for(const a of (world.animals||[]).slice(0,60)){if(!Number.isFinite(a.x)||!Number.isFinite(a.z))continue;const k=animalTypes[a.type]?.size||.6;const mat=new THREE.MeshStandardMaterial({color:a.color||0x998877});const m=new THREE.Mesh(new THREE.SphereGeometry(.45*k,10,8),mat);m.scale.set(.8,.7,1.5);m.position.set(a.x,.7*k,a.z);root.add(m)}
+ scene.add(root);remoteWorlds.set(slot,root)}
+function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remotePlayers.get(p.slot);if(!m){m=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.8,4,8),new THREE.MeshStandardMaterial({color:[0,0xe89e64,0x77a8e7,0xc69bda,0x88cfa2][p.slot]}));body.position.y=.8;m.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),new THREE.MeshStandardMaterial({color:0xf0c5a1}));head.position.y=1.55;m.add(head);scene.add(m);remotePlayers.set(p.slot,m)}const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,Number(q.y)||0,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}}
+function loadOwnSlot(){
+ for(const d of [...parts])remove(d);
+ for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
+ try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
+ try{const stored=JSON.parse(localStorage.getItem('plattan-animals-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const a of stored.slice(0,60)){if(animalTypes[a.type]&&Number.isFinite(a.x)&&Number.isFinite(a.z)){const v=makeAnimal(a.type,a.x,a.z,false,a.color);if(v){v.leashed=!!a.leashed;v.harness.visible=v.leashed}}}}catch(e){console.warn('Kunde inte läsa djur',e)}
+}
+function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,color:a.color,leashed:a.leashed}))}}}
+window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);clearRemote(slot)}}};
+
+updateCamera();let last=performance.now();
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(!building){
+  const f=(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0);
+  const turn=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
+  player.yaw-=turn*dt*2.5;
+  const moving=!!f;
+  if(moving){
+   const speed=4.4;
+   const dx=-Math.sin(player.yaw)*f*dt*speed;
+   const dz=-Math.cos(player.yaw)*f*dt*speed;
+   const nx=Math.max(-84.5,Math.min(84.5,player.x+dx)),nz=Math.max(-84.5,Math.min(84.5,player.z+dz));
+   // Kontinuerlig kollision: flytta i små steg så att kroppen aldrig passerar genom en tunn vägg.
+   // Separera också gubben från väggen om han redan råkat hamna för nära.
+   const radius=.30; // Kroppens kollisionscylinder omfattar även huvud och hår (höjd 1,62).
+   const walls=parts.filter(p=>p.orient==='wall').map(p=>{
+     const v=corners(p),low=Math.min(...v.map(q=>q.y)),high=Math.max(...v.map(q=>q.y));
+     let a=v[0],b=v[0],longest=-1;
+     for(const q of v)for(const r of v){const d=(q.x-r.x)**2+(q.z-r.z)**2;if(d>longest){longest=d;a=q;b=r}}
+     return {a,b,low,high};
+   });
+   function closest(w,x,z){
+     const vx=w.b.x-w.a.x,vz=w.b.z-w.a.z,len=vx*vx+vz*vz;
+     const t=len>1e-8?Math.max(0,Math.min(1,((x-w.a.x)*vx+(z-w.a.z)*vz)/len)):0;
+     return {x:w.a.x+t*vx,z:w.a.z+t*vz};
+   }
+   function blocked(x,z){return walls.some(w=>{
+     if(player.y>=w.high||player.y+1.62<=w.low)return false;
+     const q=closest(w,x,z);return (x-q.x)**2+(z-q.z)**2<radius*radius;
+   })}
+   // Återställ en säker position om spelaren redan överlappar en vägg.
+   for(let iteration=0;iteration<5;iteration++){
+     let pushed=false;
+     for(const w of walls){
+       if(player.y>=w.high||player.y+1.62<=w.low)continue;
+       const q=closest(w,player.x,player.z),vx=player.x-q.x,vz=player.z-q.z,d=Math.hypot(vx,vz);
+       if(d<radius){
+         let ux=vx/d,uz=vz/d;
+         if(d<1e-6){const wx=w.b.x-w.a.x,wz=w.b.z-w.a.z,L=Math.hypot(wx,wz)||1;ux=-wz/L;uz=wx/L}
+         player.x+=ux*(radius-d+.012);player.z+=uz*(radius-d+.012);pushed=true;
+       }
+     }
+     if(!pushed)break;
+   }
+   const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.07));
+   for(let i=0;i<steps;i++){
+     const sx=dx/steps,sz=dz/steps;
+     const tx=Math.max(-24.5,Math.min(24.5,player.x+sx));
+     const tz=Math.max(-24.5,Math.min(24.5,player.z+sz));
+     if(!blocked(tx,tz)){player.x=tx;player.z=tz}
+     else{
+       if(!blocked(tx,player.z))player.x=tx;
+       if(!blocked(player.x,tz))player.z=tz;
+     }
+   }
+   avatar.rotation.y=player.yaw;
+   runCycle+=dt*13;
+  }
+  const ground=floorHeight(player.x,player.z);
+  player.y+=player.vy*dt;
+  player.vy-=15*dt;
+  if(player.y<=ground){player.y=ground;player.vy=0}
+  const swing=moving?Math.sin(runCycle)*.65:0;
+  leftLeg.rotation.x=swing;rightLeg.rotation.x=-swing;
+  leftArm.rotation.x=-swing*.75;rightArm.rotation.x=swing*.75;
+  avatar.rotation.y=player.yaw;
+  avatar.position.set(player.x,player.y-.11,player.z);
+ }
+ animateAnimals(dt);updateCamera();if(building)refreshGhost();renderer.render(scene,camera);requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+window.addEventListener('beforeunload',()=>save(true));toast('Välkommen till din riktiga 3D-byggvärld!');
+</script><script src="/online.js" defer></script><script src="/voicechat.js" defer></script></body></html>

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: plattan-online
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: GAME_PASSWORD
+        sync: false
