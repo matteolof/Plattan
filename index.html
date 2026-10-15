@@ -554,7 +554,7 @@ function put(x,y){
  if(parts.length>=1500){toast('Max 1500 plattor i testversionen');return}
  lockedEdge=null;add(target.d);refreshGhost();
 }
-function setGameMode(nextBuilding){if(building===nextBuilding)return;lockedEdge=null;building=nextBuilding;document.getElementById('plTouchControls').classList.toggle('walking',!building);if(!building)ensureSafePlayerStart();$('walkNear').style.display=building?'none':'inline-block';$('walkFar').style.display=building?'none':'inline-block';$('paletteToggle').style.display=building?'inline-block':'none';$('paint').style.display=building?'inline-block':'none';$('delete').style.display=building?'inline-block':'none';$('palette').style.display=building?$('palette').style.display:'none';$('modeBuild').classList.toggle('on',building);$('modeWalk').classList.toggle('on',!building);$('cross').style.display='block';ghost.visible=true;syncPaletteButton();toast(building?'Byggläge':'Gåläge – pilar för att gå, mellanslag för hopp')}
+function setGameMode(nextBuilding){if(building===nextBuilding)return;lockedEdge=null;building=nextBuilding;document.getElementById('plTouchControls').classList.toggle('walking',!building);if(!building)ensureSafePlayerStart();$('walkNear').style.display=building?'none':'inline-block';$('walkFar').style.display=building?'none':'inline-block';$('paletteToggle').style.display=building?'inline-block':'none';$('paint').style.display=building?'inline-block':'none';$('delete').style.display=building?'inline-block':'none';$('palette').style.display=building?$('palette').style.display:'none';$('modeBuild').classList.toggle('on',building);$('modeWalk').classList.toggle('on',!building);$('cross').style.display='block';ghost.visible=true;syncPaletteButton();toast(building?'Byggläge':'Gåläge – vänsterklick för att bygga, högerdrag för att titta')}
 function modeToggle(){setGameMode(!building)}
 function syncPaletteButton(){$('paletteToggle').classList.toggle('on',$('palette').style.display!=='none'&&building)}
 function closeSidePanels(){for(const id of ['palette','characterPanel','animalPanel','plMenu'])$(id).style.display='none';syncPaletteButton()}
@@ -670,7 +670,8 @@ renderer.domElement.addEventListener('pointermove',e=>{
  }
  if(!pointerDown||pointerDown.id!==e.pointerId)return;
  const orbit=building&&(pointerDown.button===2||e.shiftKey);
- if(orbit||!building){
+ const walkLook=!building&&pointerDown.button===2;
+ if(orbit||walkLook){
   if(Math.abs(e.clientX-pointerDown.x)+Math.abs(e.clientY-pointerDown.y)>5){lookDrag=true;cancelPlHold()}
   if(building){orbitYaw-=dx*.009;orbitPitch=Math.max(.15,Math.min(1.45,orbitPitch+dy*.009));}
   else{player.yaw-=dx*.005;player.pitch=Math.max(-1.2,Math.min(1.2,player.pitch-dy*.005));}
@@ -687,9 +688,15 @@ renderer.domElement.addEventListener('pointerup',e=>{
   return;
  }
  cancelPlHold();if(plHoldDone){plHoldDone=false;touches.delete(e.pointerId);pointerDown=null;return}
- if(pointerDown&&pointerDown.id===e.pointerId&&!lookDrag&&building&&touches.size===1){
-  if(e.button===2){if(lockedEdge){lockedEdge=null;refreshGhost();toast('Fästkant släppt')}}
-  else if(e.button===0)put(e.clientX,e.clientY);
+ if(pointerDown&&pointerDown.id===e.pointerId&&!lookDrag&&touches.size===1){
+  if(building){
+   if(e.button===2){if(lockedEdge){lockedEdge=null;refreshGhost();toast('Fästkant släppt')}}
+   else if(e.button===0)put(e.clientX,e.clientY);
+  }else if(e.button===0){
+   walkPlace();
+  }else if(e.button===2&&lockedEdge){
+   lockedEdge=null;refreshGhost();toast('Fästkant släppt');
+  }
  }
  touches.delete(e.pointerId);pointerDown=null;
 });
