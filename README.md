@@ -1,1 +1,1 @@
-Plattan Online v21 – iPad: låst webbsideszoom, långtryck och dra för att rotera i byggläge, nyp med två fingrar för kamerazoom. Ersätt index.html i GitHub.
+Plattan Online v28: Färgpaletter och frisyr-/huvudbonadsval stängs vid tryck utanför. Färgbyte bygger inte längre om gubbmenyn. Ersätt index.html i befintligt GitHub-projekt.

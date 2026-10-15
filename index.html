@@ -1193,6 +1193,22 @@ function showSwatches(inputId,anchor){
  document.body.append(grid);
  const r=anchor.getBoundingClientRect();const width=grid.offsetWidth;grid.style.left=Math.min(window.innerWidth-width-5,r.right+8)+'px';grid.style.top=Math.max(5,Math.min(r.top,window.innerHeight-grid.offsetHeight-5))+'px';
 }
+// Stäng klädval och färgpaletter vid tryck utanför, även på iPad.
+document.addEventListener('pointerdown',event=>{
+ const palette=document.querySelector('.plSwatches');
+ const strips=[...document.querySelectorAll('.plClothesOptions')];
+ const clothingButtons=[...$('qItems').querySelectorAll('[data-clothing]')];
+ const insidePalette=palette?.contains(event.target);
+ const insideStrip=strips.some(el=>el.contains(event.target));
+ const insideClothingButton=clothingButtons.some(el=>el.contains(event.target));
+ if(insidePalette||insideStrip||insideClothingButton)return;
+ if(palette)palette.remove();
+ if(opened==='clothes'){
+  strips.forEach(el=>el.remove());
+  opened=null;
+  renderClothingActive();
+ }
+},true);
 function showClothing(key){
  selected=key;restore();opened='clothes';$('qFly').hidden=true;
  $('qVariants').hidden=true;document.querySelectorAll('.plClothesOptions,.plSwatches').forEach(x=>x.remove());
@@ -1209,7 +1225,7 @@ function showClothing(key){
 }
 function renderClothingActive(){[...$('qItems').children].forEach(b=>{if(b.dataset.clothing)b.classList.toggle('active',b.dataset.clothing===selected&&mode==='gubbe')})}
 function variantIcon(kind,orientation,spin){const path={square:'M9 9H39V39H9Z',small:'M16 16H32V32H16Z',half:'M7 16H41V32H7Z',roof:'M6 35L24 8L42 35L42 40H6Z',triangle:'M7 40L41 40L7 6Z'}[kind];const transform='rotate('+(kind==='triangle'?(spin%4)*90:0)+' 24 24) '+(kind==='triangle'&&spin>=4?'translate(48 0) scale(-1 1)':'');const plane=orientation==='floor'?'translate(0 12) scale(1 .56)':'';return '<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="'+plane+'"><g transform="'+transform+'"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2.5"/></g></g></svg>'}
-function selectVariant(key,orientation,spin){const shapeBtn=document.querySelector('[data-shape="'+key+'"]');if(shapeBtn)shapeBtn.click();const orientBtn=document.querySelector('[data-orient="'+orientation+'"]');if(orientBtn)orientBtn.click();if(key==='triangle'){const spinBtn=document.querySelector('[data-spin="'+spin+'"]');if(spinBtn)spinBtn.click()}chosenVariant[key]=orientation+':'+spin;chosenVariant.active=key+':'+orientation+':'+spin;render()}
+function selectVariant(key,orientation,spin){if($('delete').classList.contains('on'))$('delete').click();const shapeBtn=document.querySelector('[data-shape="'+key+'"]');if(shapeBtn)shapeBtn.click();const orientBtn=document.querySelector('[data-orient="'+orientation+'"]');if(orientBtn)orientBtn.click();if(key==='triangle'){const spinBtn=document.querySelector('[data-spin="'+spin+'"]');if(spinBtn)spinBtn.click()}chosenVariant[key]=orientation+':'+spin;chosenVariant.active=key+':'+orientation+':'+spin;render()}
 function currentSpin(){return document.querySelector('[data-spin].on')?.dataset.spin*1||0}
 function renderVariants(){
  const v=$('qVariants');v.replaceChildren();v.hidden=mode!=='bygga';if(v.hidden)return;
@@ -1237,7 +1253,13 @@ if(mode==='bygga'){
 $('qClose').onclick=close;
 window.plQuickIcon=kind=>{const path={square:'M5 5H29V29H5Z',triangle:'M5 29L29 29L5 5Z',half:'M4 10H30V22H4Z',small:'M10 10H22V22H10Z',roof:'M3 23L16 5L29 23L29 28H3Z'}[kind];return '<svg viewBox="0 0 34 34"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2"/></svg>'};
 for(const id of ['palette','characterPanel','animalPanel'])$(id).style.display='none';
-for(const id of ['shoeColor','pantsColor','shirtColor','hairColor','headwearColor','paletteColor'])$(id)?.addEventListener('input',render);
+// Klädfärger ska inte rendera om knapparna: då försvinner öppna frisyr-/hattval.
+for(const id of ['shoeColor','pantsColor','shirtColor','hairColor','headwearColor'])$(id)?.addEventListener('input',()=>{
+ const key=id==='headwearColor'?'headwear':id==='hairColor'?'hairStyle':id;
+ const btn=[...$('qItems').children].find(el=>el.dataset.clothing===key);
+ if(btn){const garment=btn.querySelector('.qgarment');if(garment)garment.style.setProperty('--garment',$(id).value)}
+});
+$('paletteColor')?.addEventListener('input',render);
 $('customize').onclick=()=>{mode='gubbe';showClothing('headwear')};
 $('animalToggle').onclick=()=>{mode='djur';showAnimal('horse','Stor häst')};
 $('paletteToggle').onclick=()=>{mode='bygga';showShape('square')};
