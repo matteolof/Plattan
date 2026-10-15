@@ -1,5 +1,5 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Plattan Online</title><style>
-*{box-sizing:border-box}body{margin:0;overflow:hidden;font:14px system-ui;background:#9ed9ff}canvas{display:block;touch-action:none}#bar{position:fixed;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;max-height:34vh;overflow:auto}button,select,input{font:600 13px system-ui;border:1px solid #78958c;border-radius:8px;padding:8px;background:#fff;color:#214337}button.on{background:#256b55;color:#fff}#help{position:fixed;bottom:10px;left:10px;max-width:490px;background:#ffffffe8;padding:9px 12px;border-radius:10px;z-index:2;font-size:12px}#pad{position:fixed;right:10px;bottom:12px;display:grid;grid-template-columns:repeat(3,48px);gap:4px;z-index:3}#pad button{height:46px;touch-action:none}#message{position:fixed;left:50%;top:94px;transform:translateX(-50%);background:#173c32;color:#fff;padding:10px;border-radius:9px;display:none;z-index:5}#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;pointer-events:none;text-shadow:0 0 4px #000;font-size:23px}#error{position:fixed;inset:0;background:#fff;display:none;padding:30px;z-index:10}@media(min-width:950px){#pad{opacity:.65}}@media(max-width:650px){#help{max-width:54vw;font-size:10px}#bar{max-height:40vh}button,select{padding:6px;font-size:11px}}
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover"><title>Plattan Online</title><style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;font:14px system-ui;background:#9ed9ff}html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-text-size-adjust:100%}canvas{display:block;touch-action:none}#bar{position:fixed;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;max-height:34vh;overflow:auto}button,select,input{font:600 13px system-ui;border:1px solid #78958c;border-radius:8px;padding:8px;background:#fff;color:#214337}button.on{background:#256b55;color:#fff}#help{position:fixed;bottom:10px;left:10px;max-width:490px;background:#ffffffe8;padding:9px 12px;border-radius:10px;z-index:2;font-size:12px}#pad{position:fixed;right:10px;bottom:12px;display:grid;grid-template-columns:repeat(3,48px);gap:4px;z-index:3}#pad button{height:46px;touch-action:none}#message{position:fixed;left:50%;top:94px;transform:translateX(-50%);background:#173c32;color:#fff;padding:10px;border-radius:9px;display:none;z-index:5}#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;pointer-events:none;text-shadow:0 0 4px #000;font-size:23px}#error{position:fixed;inset:0;background:#fff;display:none;padding:30px;z-index:10}@media(min-width:950px){#pad{opacity:.65}}@media(max-width:650px){#help{max-width:54vw;font-size:10px}#bar{max-height:40vh}button,select{padding:6px;font-size:11px}}
 /* v19: gemensam byggmatris, fyra kolumner och åtta rader */
 #plQuick .qmatrix{display:grid;grid-template-columns:repeat(4,39px);grid-template-rows:24px repeat(7,39px);gap:4px;align-content:start;width:max-content;max-height:calc(100dvh - 70px);overflow-y:auto;overflow-x:hidden;padding:4px;background:#294b3bdc;border:1px solid #8ab29a;border-radius:10px}
 #plQuick .qmatrix[hidden]{display:none!important}
@@ -171,6 +171,17 @@
 #plQuick .qstyleChoices button.active{background:#287e50!important;border:2px solid #d0ffd5!important}
 #plQuick .qfly #characterFields select{display:none!important}
 #plQuick .qfly #characterFields input[type=color].qshown{height:52px!important;width:64px!important;max-width:64px!important}
+</style><style id="plV20Styles">
+#plQuick .qmatrix .qmatrixAction{width:100%!important;min-width:0!important}
+.plSwatches{position:fixed;z-index:120;display:grid;grid-template-columns:repeat(5,30px);gap:5px;padding:8px;border:2px solid #7b9f87;border-radius:10px;background:#294b3bf5;box-shadow:0 5px 18px #0007;width:max-content}
+.plSwatch,.plSwatchMore{width:30px;height:30px;border:2px solid #ffffffaa;border-radius:5px;cursor:pointer}
+.plSwatch.active{outline:3px solid #8bea9e;outline-offset:1px}
+.plSwatchMore{background:#526b5d;color:white;font-size:22px}
+.plClothesOptions{display:flex;gap:4px;padding:5px;background:#294b3bf0;border:1px solid #7b9f87;border-radius:8px;position:absolute;left:calc(100% + 5px);top:0;z-index:20}
+#plQuick #qItems{position:relative}
+.plClothesOptions button{width:34px;height:38px;background:#526b5d;color:white;border:1px solid #8ba898;border-radius:6px;font-size:20px;cursor:pointer}
+.plClothesOptions button.active{background:#287e50;border:2px solid #d0ffd5}
+@media(pointer:coarse){.plSwatches{grid-template-columns:repeat(5,27px);gap:4px}.plSwatch,.plSwatchMore{width:27px;height:27px}.plClothesOptions button{width:29px;height:33px;font-size:17px}}
 </style></head><body><div id="plTouchControls" aria-label="Pekskärmskontroller"><div id="plStickBase" aria-label="Styrspak"><div id="plStickKnob"></div></div><button type="button" id="plJump" aria-label="Hoppa">HOPPA</button></div><div id="plLogin"><div class="panel"><h1>🧲 Plattan Online</h1><p>Fyra spelare – en egen tomt var.</p><label>Spelarnamn</label><input id="plName" maxlength="18" placeholder="Ditt namn"><label>Välj en ledig tomt i spelvärlden</label><div id="plSlotMap" role="group" aria-label="Fyra spelarplatser"><button type="button" class="plPlot" data-slot="1"><b>Tomt 1</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="2"><b>Tomt 2</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="3"><b>Tomt 3</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="4"><b>Tomt 4</b><span>Kontrollerar…</span></button></div><input type="hidden" id="plSlot" value="1"><small id="plSlotHint">Grå passager mellan tomterna är 10 rutor breda.</small><label>Lösenord</label><input id="plPassword" type="password" placeholder="Lösenord"><button id="plJoin">Gå in i spelet</button><p id="plError"></p><small>Bygget sparas lokalt och kan exporteras till en fil. Välj samma spelare nästa gång.</small></div></div><div id="plRoster"></div><div id="plChat"><strong>💬 Gemensam chatt</strong><div id="plMessages"></div><form id="plChatForm"><input id="plChatText" maxlength="300" placeholder="Skriv ett meddelande…"><button>Skicka</button></form></div>
 <div id="bar"><button id="menuToggle" title="Meny">☰ Meny</button><button id="modeBuild" class="on">▣ Byggläge</button><button id="modeWalk">🚶 Gåläge</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkNear" style="display:none">🔎 Nära</button><button id="walkFar" style="display:none">🔭 Långt bort</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><input id="file" type="file" accept=".json" hidden></div>
 <div id="palette" style="position:fixed;top:55px;left:10px;width:min(320px,90vw);max-height:75vh;overflow:auto;z-index:5;background:#fffffff2;border:2px solid #5a9584;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0003"><strong>🧲 Välj byggplatta</strong><p style="font-size:12px">Välj form, stående/liggande och färg. Placera direkt på valfri ledig kant. Den markerade plattan används när du bygger.</p><div id="pieceChoices" class="visualChoices"><button data-shape="square" aria-label="Stor fyrkant"></button><button data-shape="half" aria-label="Halv rektangel"></button><button data-shape="small" aria-label="Liten fyrkant"></button><button data-shape="triangle" aria-label="Triangel"></button><button data-shape="roof" aria-label="Snedtak"></button></div><p><strong>Ställ eller lägg plattan</strong></p><div id="orientChoices" class="visualChoices"><button data-orient="wall" aria-label="Stående platta"></button><button data-orient="floor" aria-label="Liggande platta"></button></div><p id="spinLabel"><strong>Välj långsida eller kortsida</strong></p><div id="spinChoices" class="visualChoices"><button data-spin="0" aria-label="Triangel vänster"></button><button data-spin="4" aria-label="Spegelvänd triangel höger"></button><button data-spin="2" aria-label="Triangel vriden 180 grader"></button><button data-spin="6" aria-label="Spegelvänd triangel vriden 180 grader"></button></div><p id="spinHelp" style="font-size:12px">Välj långsida eller kortsida för halvor. Klicka sedan på en kant i bygget och välj sida med musen.</p><p style="display:none"><strong>Halvans sida</strong></p><div id="halfChoices" style="display:none" style="display:flex;gap:5px"><button data-sub="0">Halva A</button><button data-sub="1">Halva B</button></div><p><strong>Plattans färg</strong></p><div id="plColorPreview" aria-label="Förhandsvisning av genomskinlig platta"><div id="plColorShape"></div></div><button id="plChooseColor" type="button">🎨 Byt färg</button><input id="paletteColor" type="color" value="#42b5ef" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-label="Välj plattfärg"><p style="font-size:11px">🎨 Måla: klicka på en redan placerad platta för att ge den vald färg.</p><button id="closePalette">Stäng fönster</button></div><div id="characterPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:16px;width:min(330px,92vw);max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>👕 Ändra gubben</strong><p style="font-size:12px">Välj kläder, hår och huvudbonad. Ändringarna syns direkt.</p><div id="characterFields" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px"><label for="shirtColor">Tröja</label><input id="shirtColor" type="color" value="#367dc2"><label for="pantsColor">Byxor</label><input id="pantsColor" type="color" value="#263c65"><label for="shoeColor">Skor</label><input id="shoeColor" type="color" value="#32353a"><label for="hairStyle">Hår</label><select id="hairStyle"><option value="none">Utan hår</option><option value="short">Kort hår</option><option value="long">Långt hår</option></select><label for="hairColor">Hårfärg</label><input id="hairColor" type="color" value="#543d32"><label for="headwear">Huvudbonad</label><select id="headwear"><option value="none">Ingen</option><option value="hat">Hatt</option><option value="cap">Keps</option><option value="beanie">Mössa</option></select><label for="headwearColor">Färg på huvudbonad</label><input id="headwearColor" type="color" value="#e85c62"></div><p><button id="closeCharacter">Klart ✓</button></p></div><div id="animalPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:15px;width:min(310px,92vw);max-height:75vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>🐾 Lägg till djur</strong><p style="font-size:12px">Lägg till hur många du vill (max 60). Djuren vandrar omkring själva. Använd 🗑 Riv i byggläget och klicka på ett djur för att ta bort det. I gåläge: gå nära ett djur och klicka på det för att sätta på eller ta av grimma/koppel.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><button data-animal="horse">🐴 Stor häst</button><button data-animal="foal">🐎 Föl</button><button data-animal="sheep">🐑 Får</button><button data-animal="cat">🐈 Katt</button><button data-animal="dog">🐕 Hund</button></div><div id="animalCreator"><strong id="animalCreatorTitle">Välj färger</strong><div id="animalPreview"></div><div id="animalCreatorFields"><label for="animalFur">Päls / kropp</label><input type="color" id="animalFur" value="#9b6540"><label class="equineColor" for="animalMane">Man</label><input class="equineColor" type="color" id="animalMane" value="#4a3022"><label class="equineColor" for="animalLegs">Nedre delen av benen</label><input class="equineColor" type="color" id="animalLegs" value="#4b3a32"><label class="equineColor" for="animalTail">Svans</label><input class="equineColor" type="color" id="animalTail" value="#4a3022"></div><div id="animalCreatorActions"><button id="animalCreatorCancel">Tillbaka</button><button id="animalCreatorAdd" class="on">✓ Skapa djur</button></div></div><p><button id="closeAnimals">Klart ✓</button></p></div><div id="cross">+</div><div id="message"></div><div id="error"></div><div id="plMenu" style="display:none" role="dialog" aria-label="Spelmeny"><strong>☰ Plattan – meny</strong><div class="plMenuActions"><button id="save">💾 Spara</button><button id="reset">🌱 Ny värld</button><button id="export">📤 Exportera</button><button id="import">📥 Importera</button><button id="showInstructions" aria-expanded="false">❔ Förklaring</button></div><div id="plInstructions" hidden><strong>Så fungerar spelet</strong><p>Bygg: välj platta och klicka på en kant, välj sedan sida och klicka igen. Håll vänster musknapp på en egen platta i två sekunder för att riva den.</p><p>Gå: piltangenter eller WASD, mellanslag för hopp. Högerklick avbryter en vald byggkant.</p></div><button id="closeMenu">Stäng meny</button></div>
@@ -517,7 +528,7 @@ function syncPaletteButton(){$('paletteToggle').classList.toggle('on',$('palette
 function closeSidePanels(){for(const id of ['palette','characterPanel','animalPanel','plMenu'])$(id).style.display='none';syncPaletteButton()}
 $('paletteToggle').onclick=()=>{const opening=$('palette').style.display==='none';closeSidePanels();if(opening)$('palette').style.display='block';syncPaletteButton()};
 $('closePalette').onclick=()=>{$('palette').style.display='none';syncPaletteButton()};
-$('plChooseColor').onclick=()=>$('paletteColor').click();$('paletteColor').oninput=e=>{hex=e.target.value;$('color').value=hex;refreshGhost();updatePlColorPreview()};
+$('plChooseColor').onclick=()=>showSwatches('paletteColor',color);$('paletteColor').oninput=e=>{hex=e.target.value;$('color').value=hex;refreshGhost();updatePlColorPreview()};
 // Formikoner saknar röd markering; fästkantsikonerna visar vald kant.
 function pieceIcon(kind,turn=0,markEdge=true){
  const paths={roof:'M13 65 L42 23 L87 35 L58 77 Z',square:'M20 20 H80 V80 H20 Z',half:'M20 35 H80 V65 H20 Z',small:'M35 35 H65 V65 H35 Z',triangle:'M20 80 L80 80 L20 20 Z'};
@@ -554,40 +565,95 @@ function updateWalkZoomButtons(){$('walkNear').classList.toggle('on',walkZoom===
 updateWalkZoomButtons();
 
 
+// Prevent Safari page pinch/double-tap zoom; game canvas gestures remain enabled.
+for(const eventName of ['gesturestart','gesturechange','gestureend']){
+ document.addEventListener(eventName,e=>e.preventDefault(),{passive:false});
+}
+let plLastTouchEnd=0;
+document.addEventListener('touchend',e=>{
+ if(e.changedTouches.length!==1)return;
+ const now=Date.now();
+ if(now-plLastTouchEnd<300 && e.target.closest('canvas,#plStickBase,#plJump'))e.preventDefault();
+ plLastTouchEnd=now;
+},{passive:false});
 renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 // Högerklick utan drag avbryter vald fästkant; högerdrag roterar kameran som förut.
 
 renderer.domElement.addEventListener('wheel',e=>{if(building){e.preventDefault();orbitDistance=Math.max(3,Math.min(25,orbitDistance+Math.sign(e.deltaY)*.7))}},{passive:false});
 let plHoldTimer=null,plHoldDone=false;
+let plBuildTouch=null,plPinchDistance=null,plTouchGestureUsed=false;
 function cancelPlHold(){if(plHoldTimer!==null){clearTimeout(plHoldTimer);plHoldTimer=null}}
+function plTouchDistance(){
+ const pts=[...touches.values()];
+ return pts.length>=2?Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y):null;
+}
 renderer.domElement.addEventListener('pointerdown',e=>{
- cancelPlHold();plHoldDone=false;
- if(building&&e.button===0&&e.pointerType!=='touch'){
-  const hit=getHit(e.clientX,e.clientY),d=hit?.object?.userData?.part;
-  if(d&&parts.includes(d)){
-   plHoldTimer=setTimeout(()=>{plHoldTimer=null;if(!pointerDown||lookDrag||!building)return;
-    if(parts.includes(d)){remove(d);lockedEdge=null;plHoldDone=true;refreshGhost();toast('Plattan borttagen')}
-   },2000);
+ if(e.pointerType==='touch')e.preventDefault();
+ if(e.pointerType!=='touch'){
+  cancelPlHold();plHoldDone=false;
+  if(building&&e.button===0){
+   const hit=getHit(e.clientX,e.clientY),d=hit?.object?.userData?.part;
+   if(d&&parts.includes(d)){
+    plHoldTimer=setTimeout(()=>{plHoldTimer=null;if(!pointerDown||lookDrag||!building)return;
+     if(parts.includes(d)){remove(d);lockedEdge=null;plHoldDone=true;refreshGhost();toast('Plattan borttagen')}
+    },2000);
+   }
   }
  }
  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
- pointerDown={x:e.clientX,y:e.clientY,button:e.button,id:e.pointerId};lookDrag=false;
+ if(e.pointerType==='touch'){
+  if(touches.size===1){
+   plTouchGestureUsed=false;
+   plBuildTouch={id:e.pointerId,x:e.clientX,y:e.clientY,down:performance.now(),orbit:false,moved:false};
+  }else{
+   plTouchGestureUsed=true;plBuildTouch=null;plPinchDistance=plTouchDistance();
+  }
+ }else{
+  pointerDown={x:e.clientX,y:e.clientY,button:e.button,id:e.pointerId};lookDrag=false;
+ }
  renderer.domElement.setPointerCapture(e.pointerId);
 });
 renderer.domElement.addEventListener('pointermove',e=>{
  hover={x:e.clientX,y:e.clientY};if(lockedEdge)refreshGhost();
- if(!pointerDown){return}
- const old=touches.get(e.pointerId)||{x:e.clientX,y:e.clientY};
+ const old=touches.get(e.pointerId);
+ if(!old)return;
  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
  const dx=e.clientX-old.x,dy=e.clientY-old.y;
- const orbit=building&&(pointerDown.button===2||touches.size>=2||e.shiftKey);
+ if(e.pointerType==='touch'){
+  e.preventDefault();
+  if(building&&touches.size>=2){
+   plTouchGestureUsed=true;
+   const dist=plTouchDistance();
+   if(plPinchDistance&&dist){orbitDistance=Math.max(3,Math.min(25,orbitDistance*plPinchDistance/dist));}
+   plPinchDistance=dist;
+  }else if(building&&plBuildTouch&&plBuildTouch.id===e.pointerId){
+   const travel=Math.hypot(e.clientX-plBuildTouch.x,e.clientY-plBuildTouch.y);
+   if(travel>9)plBuildTouch.moved=true;
+   if(!plBuildTouch.orbit&&performance.now()-plBuildTouch.down>=280&&travel<22){plBuildTouch.orbit=true;plTouchGestureUsed=true;}
+   if(plBuildTouch.orbit){orbitYaw-=dx*.009;orbitPitch=Math.max(.15,Math.min(1.45,orbitPitch+dy*.009));}
+  }else if(!building){
+   player.yaw-=dx*.005;player.pitch=Math.max(-1.2,Math.min(1.2,player.pitch-dy*.005));
+  }
+  return;
+ }
+ if(!pointerDown||pointerDown.id!==e.pointerId)return;
+ const orbit=building&&(pointerDown.button===2||e.shiftKey);
  if(orbit||!building){
   if(Math.abs(e.clientX-pointerDown.x)+Math.abs(e.clientY-pointerDown.y)>5){lookDrag=true;cancelPlHold()}
-  if(building){orbitYaw-=dx*.009;orbitPitch=Math.max(.15,Math.min(1.45,orbitPitch+dy*.009))}
-  else{player.yaw-=dx*.005;player.pitch=Math.max(-1.2,Math.min(1.2,player.pitch-dy*.005))}
+  if(building){orbitYaw-=dx*.009;orbitPitch=Math.max(.15,Math.min(1.45,orbitPitch+dy*.009));}
+  else{player.yaw-=dx*.005;player.pitch=Math.max(-1.2,Math.min(1.2,player.pitch-dy*.005));}
  }
 });
 renderer.domElement.addEventListener('pointerup',e=>{
+ if(e.pointerType==='touch'){
+  e.preventDefault();
+  const t=plBuildTouch;
+  if(building&&t&&t.id===e.pointerId&&!plTouchGestureUsed&&!t.orbit&&!t.moved&&touches.size===1){put(e.clientX,e.clientY);}
+  touches.delete(e.pointerId);
+  plBuildTouch=null;
+  if(touches.size<2)plPinchDistance=null;
+  return;
+ }
  cancelPlHold();if(plHoldDone){plHoldDone=false;touches.delete(e.pointerId);pointerDown=null;return}
  if(pointerDown&&pointerDown.id===e.pointerId&&!lookDrag&&building&&touches.size===1){
   if(e.button===2){if(lockedEdge){lockedEdge=null;refreshGhost();toast('Fästkant släppt')}}
@@ -595,7 +661,10 @@ renderer.domElement.addEventListener('pointerup',e=>{
  }
  touches.delete(e.pointerId);pointerDown=null;
 });
-renderer.domElement.addEventListener('pointercancel',e=>{cancelPlHold();touches.delete(e.pointerId);pointerDown=null});
+renderer.domElement.addEventListener('pointercancel',e=>{
+ cancelPlHold();touches.delete(e.pointerId);pointerDown=null;
+ plBuildTouch=null;if(touches.size<2)plPinchDistance=null;
+});
 // Gåläge: ett hopp når en halv ruta, dubbeltryck når en hel ruta.
 let lastSpace=-1000, jumpStart=0, runCycle=0;
 function floorHeight(x,z){
@@ -1087,22 +1156,34 @@ const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['s
 let mode='bygga',selected='square',opened=null,chosenVariant={};
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=click;parent.append(b);return b}
 function restore(){for(const id of ['palette','characterPanel','animalPanel']){const el=$(id);if(el&&el.parentElement===$('qContent')){document.body.append(el);el.style.display='none'}}}
-function close(){restore();opened=null;$('qFly').hidden=true;$('qContent').replaceChildren();render()}
+function close(){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());restore();opened=null;$('qFly').hidden=true;$('qContent').replaceChildren();render()}
 function openPanel(id,title){restore();const fly=$('qFly'),content=$('qContent'),panel=$(id);content.replaceChildren();content.append(panel);panel.style.display='block';$('qTitle').textContent=title;fly.hidden=false;opened=id}
 function colorIcon(id,emoji){const value=$(id).value;return '<span class="qgarment" style="--garment:'+value+'">'+emoji+'</span>'}
-function showClothing(key){
- selected=key;openPanel('characterPanel',clothing.find(c=>c[0]===key)?.[2]||'Gubbe');
- const fields=$('characterFields');fields.querySelectorAll('.qshown').forEach(el=>el.classList.remove('qshown'));
- fields.querySelectorAll('.qstyleChoices').forEach(el=>el.remove());
- if(key==='headwear'||key==='hairStyle'){
-  const sel=$(key), choices=key==='headwear'?[['none','✕','Ingen'],['hat','🎩','Hatt'],['cap','🧢','Keps'],['beanie','🧶','Mössa']]:[['none','✕','Ingen'],['short','👦','Kort'],['long','👩','Långt']];
-  const strip=document.createElement('div');strip.className='qstyleChoices';
-  for(const [value,icon,label] of choices){const b=document.createElement('button');b.type='button';b.title=label;b.setAttribute('aria-label',label);b.textContent=icon;b.classList.toggle('active',sel.value===value);b.onclick=()=>{sel.value=value;sel.dispatchEvent(new Event('change',{bubbles:true}));strip.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b))};strip.append(b)}
-  fields.prepend(strip);
- }
- const colorKey=key==='headwear'?'headwearColor':key==='hairStyle'?'hairColor':key;
- $(colorKey).classList.add('qshown');render();
+const swatchColors=['#ffffff','#e5d2b8','#f6c2a9','#e85c62','#e73736','#f39a37','#f5d74e','#92c84e','#2c9b63','#39b8b3','#42b5ef','#367dc2','#313b8c','#9d71cb','#ed9fc6','#9b6540','#543d32','#32353a','#000000','#a6adb1'];
+function showSwatches(inputId,anchor){
+ document.querySelectorAll('.plSwatches').forEach(x=>x.remove());
+ const grid=document.createElement('div');grid.className='plSwatches';grid.setAttribute('aria-label','Välj färg');
+ const input=$(inputId);
+ for(const c of swatchColors){const b=document.createElement('button');b.type='button';b.title='Välj färg';b.style.background=c;b.className='plSwatch'+(input.value.toLowerCase()===c?' active':'');b.onclick=()=>{input.value=c;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));grid.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active')};grid.append(b)}
+ const more=document.createElement('button');more.type='button';more.className='plSwatchMore';more.textContent='+';more.title='Fler färger';more.onclick=()=>input.click();grid.append(more);
+ document.body.append(grid);
+ const r=anchor.getBoundingClientRect();const width=grid.offsetWidth;grid.style.left=Math.min(window.innerWidth-width-5,r.right+8)+'px';grid.style.top=Math.max(5,Math.min(r.top,window.innerHeight-grid.offsetHeight-5))+'px';
 }
+function showClothing(key){
+ selected=key;restore();opened='clothes';$('qFly').hidden=true;
+ $('qVariants').hidden=true;document.querySelectorAll('.plClothesOptions,.plSwatches').forEach(x=>x.remove());
+ const target=[...$('qItems').children].find(x=>x.dataset.clothing===key);
+ if(!target)return;
+ const colorKey=key==='headwear'?'headwearColor':key==='hairStyle'?'hairColor':key;
+ if(key==='headwear'||key==='hairStyle'){
+  const strip=document.createElement('div');strip.className='plClothesOptions';
+  const sel=$(key),choices=key==='headwear'?[['none','✕'],['hat','🎩'],['cap','🧢'],['beanie','🧶']]:[['none','✕'],['short','👦'],['long','👩']];
+  for(const [value,icon] of choices){const b=document.createElement('button');b.type='button';b.textContent=icon;b.className=sel.value===value?'active':'';b.onclick=()=>{sel.value=value;sel.dispatchEvent(new Event('change',{bubbles:true}));strip.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b))};strip.append(b)}
+  const color=document.createElement('button');color.type='button';color.textContent='🎨';color.title='Välj färg';color.onclick=()=>showSwatches(colorKey,color);strip.append(color);target.after(strip);strip.style.top=target.offsetTop+'px';
+ }else{showSwatches(colorKey,target)}
+ renderClothingActive();
+}
+function renderClothingActive(){[...$('qItems').children].forEach(b=>{if(b.dataset.clothing)b.classList.toggle('active',b.dataset.clothing===selected&&mode==='gubbe')})}
 function variantIcon(kind,orientation,spin){const path={square:'M9 9H39V39H9Z',small:'M16 16H32V32H16Z',half:'M7 16H41V32H7Z',roof:'M6 35L24 8L42 35L42 40H6Z',triangle:'M7 40L41 40L7 6Z'}[kind];const transform='rotate('+(kind==='triangle'?(spin%4)*90:0)+' 24 24) '+(kind==='triangle'&&spin>=4?'translate(48 0) scale(-1 1)':'');const plane=orientation==='floor'?'translate(0 12) scale(1 .56)':'';return '<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="'+plane+'"><g transform="'+transform+'"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2.5"/></g></g></svg>'}
 function selectVariant(key,orientation,spin){const shapeBtn=document.querySelector('[data-shape="'+key+'"]');if(shapeBtn)shapeBtn.click();const orientBtn=document.querySelector('[data-orient="'+orientation+'"]');if(orientBtn)orientBtn.click();if(key==='triangle'){const spinBtn=document.querySelector('[data-spin="'+spin+'"]');if(spinBtn)spinBtn.click()}chosenVariant[key]=orientation+':'+spin;render()}
 function currentSpin(){return document.querySelector('[data-spin].on')?.dataset.spin*1||0}
@@ -1114,19 +1195,19 @@ function renderVariants(){
  const cell=(key,orient,spin,row,col)=>{const b=button(v,(orient==='wall'?'Stående ':'Liggande ')+shapes.find(x=>x[0]===key)[1],variantIcon(key,orient,spin),()=>selectVariant(key,orient,spin),shape===key&&orientation===orient&&(key!=='triangle'||spin===currentSpin()),true);b.style.gridRow=String(row);b.style.gridColumn=String(col);b.classList.toggle('active',shape===key&&orientation===orient&&(key!=='triangle'||spin===currentSpin()));return b};
  cell('square','wall',0,2,1);cell('square','floor',0,2,3);
  const spins=[0,4,2,6];spins.forEach((spin,j)=>{cell('triangle','wall',spin,3+Math.floor(j/2),1+j%2);cell('triangle','floor',spin,3+Math.floor(j/2),3+j%2)});
- for(const [key,row] of [['half',5],['small',6],['roof',7]]){cell(key,'wall',0,row,1);cell(key,'floor',0,row,3)}
- const color=button(v,'Välj plattfärg','🎨',()=>$('paletteColor').click(),false,true);color.classList.add('qmatrixAction');color.style.gridColumn='1 / 3';color.style.gridRow='8';
+ cell('half','wall',0,5,1);cell('roof','wall',0,5,2);cell('half','floor',0,5,3);cell('roof','floor',0,5,4);cell('small','wall',0,6,2);cell('small','floor',0,6,3);
+ const color=button(v,'Välj plattfärg','🎨',()=>showSwatches('paletteColor',color),false,true);color.classList.add('qmatrixAction');color.style.gridColumn='1 / 3';color.style.gridRow='8';
  const del=button(v,'Riv platta','🗑',()=>{$('delete').click();render()},$('delete').classList.contains('on'),true);del.classList.add('qmatrixAction');del.style.gridColumn='3 / 5';del.style.gridRow='8';
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const m=$('qModes'),i=$('qItems');m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{mode=key;selected=key==='bygga'?'square':key==='djur'?'horse':'headwear';close()},mode===key);
+function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{mode=key;selected=key==='bygga'?'square':key==='djur'?'horse':'headwear';close()},mode===key);
 if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
 }else if(mode==='djur'){
  for(const [key,icon,label] of animals)button(i,label,icon,()=>showAnimal(key,label),selected===key&&opened==='animalPanel',true);
 }else{
- for(const [key,icon,label] of clothing){const iconHtml=icon;button(i,label,iconHtml,()=>showClothing(key),selected===key&&opened==='characterPanel',true)}
+ for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
 }renderVariants()}
 $('qClose').onclick=close;
 window.plQuickIcon=kind=>{const path={square:'M5 5H29V29H5Z',triangle:'M5 29L29 29L5 5Z',half:'M4 10H30V22H4Z',small:'M10 10H22V22H10Z',roof:'M3 23L16 5L29 23L29 28H3Z'}[kind];return '<svg viewBox="0 0 34 34"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2"/></svg>'};
