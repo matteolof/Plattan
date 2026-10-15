@@ -341,9 +341,9 @@ function getHit(x,y){
  // I gåläge siktar vi från gubbens ögon, inte från kameran bakom gubben.
  // Annars träffar hårkorset marken vid gubbens fötter i stället för bygget framför.
  if(!building && Math.abs(x-innerWidth/2)<2 && Math.abs(y-innerHeight/2)<2){
-  const direction=new THREE.Vector3(-Math.sin(player.yaw),-.12,-Math.cos(player.yaw)).normalize();
+  const direction=new THREE.Vector3(-Math.sin(player.yaw),-.35,-Math.cos(player.yaw)).normalize();
   ray.set(new THREE.Vector3(player.x,player.y+1.35,player.z),direction);
-  ray.far=8;
+  ray.far=10;
  }else{
   mouse.set(((x-rect.left)/rect.width)*2-1,-((y-rect.top)/rect.height)*2+1);
   ray.setFromCamera(mouse,camera);
@@ -380,7 +380,7 @@ function snapCandidate(x,y){
  const forms=shape==='square'?[0]:shape==='small'?[0]:[spin];
  if(!support){
   edgeMarker.visible=false;
-  if(orientation!=='floor'||shape==='roof')return null;
+  if((orientation!=='floor'&&building)||shape==='roof')return null;
   const w=shape==='small'?.25:.5;
   const candidates=[];
   for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)for(const sp of forms){
@@ -516,13 +516,13 @@ function snapCandidate(x,y){
 }
 function refreshGhost(){
  if(erase||paint){ghost.visible=false;edgeMarker.visible=false;candidate=null;return}
- candidate=snapCandidate(hover.x,hover.y);
- if(!building){const h=getHit(hover.x,hover.y);if(!lockedEdge&&(!h||h.distance>8))candidate=null;}
+ candidate=snapCandidate(building?hover.x:innerWidth/2,building?hover.y:innerHeight/2);
+ if(!building){const h=getHit(hover.x,hover.y);if(!lockedEdge&&(!h||h.distance>10))candidate=null;}
  if(candidate)makeGhost(candidate.d,candidate.valid);else ghost.visible=false;
 }
 function put(x,y){
  const hit=getHit(x,y);
- if(!building && !lockedEdge && (!hit || hit.distance>8)){toast('Gå närmare platsen du vill bygga på');return;}
+ if(!building && !lockedEdge && (!hit || hit.distance>10)){toast('Gå närmare platsen du vill bygga på');return;}
  if(paint){const d=hit?.object.userData.part;if(d){d.color=hex;d.mesh.traverse(o=>{if(o.material?.color)o.material.color.set(hex)});save(true);toast('Plattan har fått ny färg')}else toast('Klicka på en platta');return}
  if(erase){
   // Samma rivverktyg kan välja djur eller plattor, beroende på vad som är närmast kameran.
@@ -710,7 +710,7 @@ function walkPlace(){
  if(building)return;
  const x=innerWidth/2,y=innerHeight/2;
  const hit=getHit(x,y);
- if(!lockedEdge && (!hit || hit.distance>8)){toast('Gå närmare och sikta på en kant eller marken');return}
+ if(!lockedEdge && (!hit || hit.distance>10)){toast('Gå närmare och sikta på en kant eller marken');return}
  put(x,y);
 }
 document.getElementById('plWalkPlace').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();walkPlace()});
