@@ -1673,7 +1673,7 @@ function buildAdventurePark(g,cub){
  for(let i=0;i<175;i++){
   const t=i/175,p=coasterTrack.getPointAt(t),tan=coasterTrack.getTangentAt(t);
   const sleeper=cub(g,1.6,.12,.22,p.x,p.y-.12,p.z,wood);
-  sleeper.rotation.y=Math.atan2(tan.x,tan.z)+Math.PI/2; // v101: vrid träsliprarna 90° mellan rälerna
+  sleeper.rotation.y=Math.atan2(tan.x,tan.z); // v103: träsliperns längdriktning går tvärs över rälerna
   if(i%4===0){
    cub(g,.24,Math.max(.3,p.y-.18),.24,p.x,(p.y-.18)/2,p.z,steel);
    cub(g,1.6,.14,1.6,p.x,.09,p.z,steel);
