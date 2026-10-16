@@ -1136,19 +1136,19 @@ function rebuildTownBuildings(){
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
  const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
  function cub(g,w,h,d,x,y,z,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
- function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,3.6,-15.10);g.add(m)}
+ function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,3.6,15.46);g.add(m)}
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
-  // 30 x 30 rutor, fyra rutor höga väggar. Framsidan är -Z.
+  // 30 x 30 rutor, fyra rutor höga väggar. Framsidan är +Z, mot vägkorset.
   cub(g,30,.15,30,0,.075,0,new THREE.MeshStandardMaterial({color:0xbab7a7}));
-  cub(g,30,4,.35,0,2,15,wallMat);
+  cub(g,30,4,.35,0,2,-15,wallMat);
   cub(g,.35,4,30,-15,2,0,wallMat);cub(g,.35,4,30,15,2,0,wallMat);
-  // 2 x 2 öppen ingång i mitten av framsidan.
-  cub(g,14,4,.35,-8,2,-15,wallMat);cub(g,14,4,.35,8,2,-15,wallMat);
-  cub(g,2,2,.35,0,3,-15,wallMat);
-  cub(g,.18,2,.5,-1,1,-15,trimMat);cub(g,.18,2,.5,1,1,-15,trimMat);
-  cub(g,2,.18,.5,0,2,-15,trimMat);
+  // 2 x 2 öppen ingång i mitten av framsidan, mot vägkorset.
+  cub(g,14,4,.35,-8,2,15,wallMat);cub(g,14,4,.35,8,2,15,wallMat);
+  cub(g,2,2,.35,0,3,15,wallMat);
+  cub(g,.18,2,.5,-1,1,15,trimMat);cub(g,.18,2,.5,1,1,15,trimMat);
+  cub(g,2,.18,.5,0,2,15,trimMat);
   // Sadeltak med nock längs Z, svarta takfall och röda gavlar.
   const roofRise=5, half=15.8, slope=Math.hypot(half,roofRise);
   for(const side of [-1,1]){
@@ -1173,7 +1173,7 @@ function rebuildTownBuildings(){
   label(g,name);
   if(name==='Leklandet')buildPlayland(g,cub);
  }
- // Entréerna vetter mot varsin vägarm. Husens närmaste vägg är 60 rutor från mitten, helt utanför 50x50-tomterna (som slutar vid 55).
+ // Entréerna och skyltarna vetter inåt mot vägkorset. Husens närmaste vägg är 60 rutor från mitten, helt utanför 50x50-tomterna (som slutar vid 55).
  house('Djuraffär',0,-75,0);
  house('Inredningsbutik',75,0,-Math.PI/2);
  house('Disco',0,75,Math.PI);
