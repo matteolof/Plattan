@@ -1141,7 +1141,8 @@ function rebuildTownBuildings(){
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
-  // 30 x 30 rutor, fyra rutor höga väggar. Framsidan är +Z, mot vägkorset.
+  const wallHeight=name==='Leklandet'?10:5;
+  // 30 x 30 rutor. Leklandet har tio plattors vägghöjd, övriga hus fem. Framsidan är +Z.
   cub(g,30,.15,30,0,.075,0,new THREE.MeshStandardMaterial({color:0xbab7a7}));
   // Varje vägg består av separata 1 x 1-plattor, med synliga fogar
   // och samma tunna, tvåsidiga känsla som spelarens byggplattor.
@@ -1154,12 +1155,12 @@ function rebuildTownBuildings(){
    return tile;
   }
   function windowHole(v){return [-11,-6,6,11].some(q=>Math.abs(v-q)<1.5)}
-  for(let iy=0;iy<4;iy++)for(let i=-15;i<15;i++){
+  for(let iy=0;iy<wallHeight;iy++)for(let i=-15;i<15;i++){
    const v=i+.5,y=iy+.5;
    // Dörren är två rutor bred och två rutor hög på framsidan.
-   if(!(iy<2&&Math.abs(v)<1) && !(iy>=1&&iy<=2&&windowHole(v)))wallTile(v,y,15,false);
-   if(!(iy>=1&&iy<=2&&windowHole(v)))wallTile(v,y,-15,false);
-   const sideHole=iy>=1&&iy<=2&&[-10,-4,4,10].some(q=>Math.abs(v-q)<1.5);
+   if(!(iy<2&&Math.abs(v)<1) && !((iy>=1&&iy<=2 || name==='Leklandet'&&[5,7,8].includes(iy))&&windowHole(v)))wallTile(v,y,15,false);
+   if(!((iy>=1&&iy<=2 || name==='Leklandet'&&[5,7,8].includes(iy))&&windowHole(v)))wallTile(v,y,-15,false);
+   const sideHole=(iy>=1&&iy<=2 || name==='Leklandet'&&[5,7,8].includes(iy))&&[-10,-4,4,10].some(q=>Math.abs(v-q)<1.5);
    if(!sideHole){wallTile(-15,y,v,true);wallTile(15,y,v,true)}
   }
   // Tunn dörrkarm, utan vägg framför öppningen.
@@ -1169,7 +1170,7 @@ function rebuildTownBuildings(){
   // Rutindelade 1x1-takplattor så huset hör till Plattans byggvärld.
   for(let ix=0;ix<31;ix++)for(let iz=0;iz<31;iz++){
    const x=ix-15,z=iz-15;
-   cub(g,1,.5,1,x,4.25,z,roofMat);
+   cub(g,1,.5,1,x,wallHeight+.25,z,roofMat);
   }
   // Fönster på framsida, baksida och båda långsidor.
   function windowAt(x,y,z,side){
@@ -1182,6 +1183,13 @@ function rebuildTownBuildings(){
   }
   for(const x of [-11,-6,6,11]){windowAt(x,2.15,-15.25,false);windowAt(x,2.15,15.25,false)}
   for(const z of [-10,-4,4,10]){windowAt(-15.25,2.15,z,true);windowAt(15.25,2.15,z,true)}
+  // Höga fönster även på Leklandets övre våningar.
+  if(name==='Leklandet'){
+   for(const y of [5.5,8.0]){
+    for(const x of [-11,-6,6,11]){windowAt(x,y,-15.25,false);windowAt(x,y,15.25,false)}
+    for(const z of [-10,-4,4,10]){windowAt(-15.25,y,z,true);windowAt(15.25,y,z,true)}
+   }
+  }
   label(g,name);
   if(name==='Leklandet')buildPlayland(g,cub);
   if(name==='Disco')buildDisco(g,cub);
@@ -1243,6 +1251,7 @@ window.plDanceMoves=danceNames;
 window.plDanceSelect=i=>{danceMove=i===danceMove?-1:i;danceStarted=performance.now();document.dispatchEvent(new CustomEvent('plDanceSelected',{detail:{move:danceMove}}))};
 function animateDance(now){
  if(danceMove<0)return;
+ if(now-danceStarted>=3000){window.plDanceSelect(-1);return;}
  const t=(now-danceStarted)/1000,fast=t*7,slow=t*3;
  // Rörelserna läggs ovanpå gånganimationen och återställs nästa bildruta.
  const sway=Math.sin(fast),bounce=Math.abs(Math.sin(fast));
@@ -1500,7 +1509,7 @@ function frame(now){
   player.yaw-=turn*dt*2.5;
   const moving=Math.abs(f)>.05;
   if(moving){
-   const speed=4.4;
+   const speed=keys.has('r')?17.6:4.4; // Håll R för att springa fyra gånger snabbare
    const dx=-Math.sin(player.yaw)*f*dt*speed;
    const dz=-Math.cos(player.yaw)*f*dt*speed;
    const nx=Math.max(-150,Math.min(150,player.x+dx)),nz=Math.max(-150,Math.min(150,player.z+dz));
@@ -1583,7 +1592,7 @@ function frame(now){
      }
    }
    avatar.rotation.y=player.yaw;
-   runCycle+=dt*13;
+   runCycle+=dt*(keys.has('r')?52:13);
   }
   const ground=floorHeight(player.x,player.z);
   player.y+=player.vy*dt;
@@ -1612,7 +1621,7 @@ const $=id=>document.getElementById(id);
 const root=document.createElement('div');root.id='plQuick';
 root.innerHTML='<div class="qcol" id="qModes"></div><div class="qcol" id="qItems"></div><div class="qcol" id="qFurnitureTools" hidden></div><div class="qvariants" id="qVariants" hidden></div><div id="qDescription" role="status" aria-live="polite">Välj en knapp för att se vad den gör</div><div class="qfly" id="qFly" hidden><div class="qhead"><span id="qTitle"></span><button class="qclose" id="qClose" type="button" aria-label="Stäng">✕</button></div><div id="qContent"></div></div>';
 document.body.append(root);
-const modes=[['bygga','▣','Bygg'],['inred','🛋','Inred'],['djur','🐾','Djur'],['gubbe','👤','Gubbe']];
+const modes=[['gubbe','👤','Gubbe'],['bygga','▣','Bygg'],['inred','🛋','Inred'],['djur','🐾','Djur']];
 const shapes=[['square','Stor fyrkant'],['triangle','Triangel'],['half','Rektangel'],['small','Liten fyrkant'],['roof','Takplatta']];
 const furnishings=[['door','🚪','Dörr'],['window','🪟','Fönster'],['table','🍽','Köksbord'],['chair','🪑','Köksstol'],['stool','🪑','Pall'],['stove','♨️','Spis'],['cabinet','🗄','Köksskåp'],['sofa','🛋','Soffa'],['coffee','☕','Soffbord'],['bed','🛏','Säng'],['nightstand','🗃','Sängbord']];
 window.plFurnitureSelected='door';window.plFurnitureMode=false;
@@ -1715,13 +1724,18 @@ function renderVariants(){
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const zone=window.plZone||'plot';const m=$('qModes'),i=$('qItems'),t=$('qFurnitureTools');t.replaceChildren();t.hidden=mode!=='inred';document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');for(const [key,icon,label] of modes.filter(x=>zone==='plot'||x[0]==='gubbe'))button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
-if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);
- if(zone!=='plot'){
-  const danceToggle=button(m,'Dansrörelser','🪩',()=>{danceOpen=!danceOpen;render()},danceOpen||zone==='disco',true);
-  if(zone==='disco')danceOpen=true;
-  if(danceOpen){for(let d=0;d<window.plDanceMoves.length;d++)button(i,window.plDanceMoves[d],danceIcons[d],()=>{window.plDanceSelect(d);render()},window.plDanceCurrent===d,true)}
-  else if(mode==='gubbe'){for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}}
+function render(){const zone=window.plZone||'plot';const m=$('qModes'),i=$('qItems'),t=$('qFurnitureTools');t.replaceChildren();t.hidden=mode!=='inred'||zone!=='plot'||danceOpen;document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');
+ if(zone==='disco')danceOpen=true;
+ // Gubbe och Dans visas alltid överst. Bygg, Inred och Djur bara på den egna tomten.
+ const avatarMode=modes.find(x=>x[0]==='gubbe');
+ button(m,avatarMode[2],avatarMode[1],()=>{danceOpen=false;const next=mode==='gubbe'?null:'gubbe';setQuickMode(next);selected=next?'headwear':null;close()},mode==='gubbe'&&!danceOpen);
+ const danceToggle=button(m,'Dansrörelser','🪩',()=>{danceOpen=!danceOpen;if(danceOpen&&mode!=='gubbe')setQuickMode(null);render()},danceOpen,true);
+ if(zone==='plot')for(const [key,icon,label] of modes.filter(x=>x[0]!=='gubbe'))button(m,label,icon,()=>{danceOpen=false;const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':null;close()},mode===key&&!danceOpen);
+ if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);
+ if(zone==='disco')danceOpen=true;
+ if(danceOpen){for(let d=0;d<window.plDanceMoves.length;d++)button(i,window.plDanceMoves[d],danceIcons[d],()=>{window.plDanceSelect(d);render()},window.plDanceCurrent===d,true);
+ }else if(mode==='gubbe'){
+ for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
  }else if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
 }else if(mode==='inred'){
@@ -1737,7 +1751,7 @@ if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);
  const animalDelete=button(i,'Ta bort djur','🗑',()=>{const del=$('delete');del.click();animalDelete.classList.toggle('active',del.classList.contains('on'));close()},$('delete').classList.contains('on'),true);animalDelete.classList.add('qAnimalDelete');animalDelete.title='Aktivera rivning och tryck sedan på djuret';
 }else if(mode==='gubbe'){
  for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
-}if(zone==='plot')renderVariants();else $('qVariants').hidden=true;updateButtonDescription()}
+}if(zone==='plot'&&!danceOpen)renderVariants();else $('qVariants').hidden=true;updateButtonDescription()}
 window.addEventListener('plZoneChanged',e=>{const zone=e.detail.zone;danceOpen=zone==='disco';if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);close();});
 window.addEventListener('plDanceSelected',e=>{window.plDanceCurrent=e.detail.move;render()});
 window.addEventListener('resize',updateButtonDescription);$('qClose').onclick=close;
