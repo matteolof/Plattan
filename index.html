@@ -1129,7 +1129,7 @@ const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
 const townBuildings=new THREE.Group();scene.add(townBuildings);
 const townFadeHouses=[];
 function rebuildTownBuildings(){
- townBuildings.clear();townFadeHouses.length=0;
+ townBuildings.clear();townFadeHouses.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
  const wallMat=new THREE.MeshStandardMaterial({color:0xb73932,roughness:.86});
  const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.85,side:THREE.DoubleSide});
@@ -1173,6 +1173,7 @@ function rebuildTownBuildings(){
   for(const z of [-10,-4,4,10]){windowAt(-15.25,2.15,z,true);windowAt(15.25,2.15,z,true)}
   label(g,name);
   if(name==='Leklandet')buildPlayland(g,cub);
+  if(name==='Disco')buildDisco(g,cub);
   // Väggar och tak blir diskret genomskinliga när spelaren går in.
   // Egen materialinstans per hus, så att de andra husen inte påverkas.
   const fadeMeshes=[];
@@ -1194,6 +1195,59 @@ function rebuildTownBuildings(){
  house('Leklandet',-75,0,Math.PI/2);
 }
 
+// Diskolampor i taket och mörkt dansgolv, enbart inne i discot.
+const discoLights=[];
+function buildDisco(g,cub){
+ const dark=new THREE.MeshStandardMaterial({color:0x111224,roughness:.45});
+ cub(g,27,.025,27,0,.17,0,dark);
+ const colors=[0xff2878,0x00eaff,0xffd333,0x9c52ff,0x34ff88,0xff6633];
+ for(let i=0;i<12;i++){
+  const x=-10+(i%4)*6.7,z=-9+Math.floor(i/4)*9;
+  const color=colors[i%colors.length];
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshBasicMaterial({color}));
+  bulb.position.set(x,3.55,z);g.add(bulb);
+  const light=new THREE.PointLight(color,0,9,1.7);light.position.set(x,3.35,z);g.add(light);
+  discoLights.push({light,bulb,phase:i*1.31});
+ }
+ for(let i=0;i<4;i++){
+  const p=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.12,12),new THREE.MeshStandardMaterial({color:0x222338,metalness:.6}));
+  p.position.set(-9+i*6,3.8,0);g.add(p);
+ }
+}
+function updateDiscoLights(now){
+ const active=window.plZone==='disco';
+ for(const b of discoLights){const beat=.5+.5*Math.sin(now*.007+b.phase);b.light.intensity=active?(1.2+beat*2.8):(.3+beat*1.2);b.bulb.scale.setScalar(.8+beat*.4)}
+}
+function updatePlZone(){
+ const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
+ const wx=player.x+ox,wz=player.z+oz;
+ const disco=Math.abs(wx)<14.7&&Math.abs(wz-75)<14.7;
+ const own=Math.abs(player.x)<25&&Math.abs(player.z)<25;
+ const zone=disco?'disco':own?'plot':'outside';
+ if(window.plZone!==zone){window.plZone=zone;document.dispatchEvent(new CustomEvent('plZoneChanged',{detail:{zone}}))}
+}
+const danceNames=['Snurra','Twerka','Skaka rumpan','Moonwalk','Robot','Discofeber','Hoppa','Vågen','Sidosteg','Fågeldansen'];
+let danceMove=-1,danceStarted=0;
+window.plDanceMoves=danceNames;
+window.plDanceSelect=i=>{danceMove=i===danceMove?-1:i;danceStarted=performance.now();document.dispatchEvent(new CustomEvent('plDanceSelected',{detail:{move:danceMove}}))};
+function animateDance(now){
+ if(danceMove<0)return;
+ const t=(now-danceStarted)/1000,fast=t*7,slow=t*3;
+ // Rörelserna läggs ovanpå gånganimationen och återställs nästa bildruta.
+ const sway=Math.sin(fast),bounce=Math.abs(Math.sin(fast));
+ switch(danceMove){
+ case 0: avatar.rotation.y+=t*5;leftArm.rotation.z=-1;rightArm.rotation.z=1;break;
+ case 1: avatar.rotation.x=Math.sin(fast)*.22;avatar.rotation.z=Math.sin(slow)*.13;break;
+ case 2: avatar.rotation.z=sway*.23;avatar.rotation.x=.15;break;
+ case 3: avatar.position.z+=Math.sin(slow)*.35;leftLeg.rotation.x=sway*.65;rightLeg.rotation.x=-sway*.65;break;
+ case 4: leftArm.rotation.x=sway*.8;rightArm.rotation.x=-sway*.8;leftArm.rotation.z=-.6;rightArm.rotation.z=.6;break;
+ case 5: leftArm.rotation.z=-1.9+Math.sin(fast)*.2;rightArm.rotation.z=1.9-Math.sin(fast)*.2;avatar.rotation.z=sway*.15;break;
+ case 6: avatar.position.y+=bounce*.27;leftArm.rotation.z=-.8;rightArm.rotation.z=.8;break;
+ case 7: leftArm.rotation.z=-.9-sway*.8;rightArm.rotation.z=.9+sway*.8;break;
+ case 8: avatar.position.x+=Math.sin(slow)*.24;avatar.rotation.z=sway*.12;break;
+ case 9: leftArm.rotation.z=-.9+sway*.55;rightArm.rotation.z=.9-sway*.55;avatar.position.y+=bounce*.08;break;
+ }
+}
 // Mjuk övergång vid entrén: husets skal tonas ned, men möbler, skyltar
 // och hinderbanan förblir tydliga. Alla koordinater räknas i världens mittsystem.
 function animateTownFade(dt){
@@ -1526,6 +1580,7 @@ function frame(now){
   if(player.y<=ground){player.y=ground;player.vy=0}
   animatePlayland(now);
   const swing=moving?Math.sin(runCycle)*.65:0;
+  avatar.rotation.x=0;avatar.rotation.z=0;leftArm.rotation.z=0;rightArm.rotation.z=0;
   leftLeg.rotation.x=swing;rightLeg.rotation.x=-swing;
   leftArm.rotation.x=-swing*.75;rightArm.rotation.x=swing*.75;
   avatar.rotation.y=player.yaw;
@@ -1534,7 +1589,7 @@ function frame(now){
  animateAnimals(dt);animateRemoteAnimals(dt);
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
- animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
+ updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
@@ -1553,6 +1608,7 @@ window.plFurnitureSelected='door';window.plFurnitureMode=false;
 const animals=[['horse','🐴','Stor häst'],['foal','🐎','Föl'],['sheep','🐑','Får'],['cat','🐈','Katt'],['dog','🐕','Hund']];
 const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['shirtColor','👕','Tröja'],['pantsColor','👖','Byxor'],['shoeColor','👟','Skor']];
 let mode='bygga',selected='square',opened=null,chosenVariant={};
+let danceOpen=false;const danceIcons=['🌀','🍑','💃','🌙','🤖','🪩','🦘','🌊','↔️','🐦'];
 window.plQuickBuildActive=true;
 function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';window.plFurnitureMode=mode==='inred';if(mode!=='inred')window.plFurnitureSetEditing?.(false);if(mode!=='inred')window.plFurnitureClearSelection?.();if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=(event)=>{showButtonDescription(b);click(event)};b.addEventListener('pointerenter',()=>showButtonDescription(b));b.addEventListener('focus',()=>showButtonDescription(b));parent.append(b);return b}
@@ -1648,8 +1704,14 @@ function renderVariants(){
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const m=$('qModes'),i=$('qItems'),t=$('qFurnitureTools');t.replaceChildren();t.hidden=mode!=='inred';document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
-if(mode==='bygga'){
+function render(){const zone=window.plZone||'plot';const m=$('qModes'),i=$('qItems'),t=$('qFurnitureTools');t.replaceChildren();t.hidden=mode!=='inred';document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');for(const [key,icon,label] of modes.filter(x=>zone==='plot'||x[0]==='gubbe'))button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
+if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);
+ if(zone!=='plot'){
+  const danceToggle=button(m,'Dansrörelser','🪩',()=>{danceOpen=!danceOpen;render()},danceOpen||zone==='disco',true);
+  if(zone==='disco')danceOpen=true;
+  if(danceOpen){for(let d=0;d<window.plDanceMoves.length;d++)button(i,window.plDanceMoves[d],danceIcons[d],()=>{window.plDanceSelect(d);render()},window.plDanceCurrent===d,true)}
+  else if(mode==='gubbe'){for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}}
+ }else if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
 }else if(mode==='inred'){
  i.classList.add('qFurnitureGrid');
@@ -1664,7 +1726,9 @@ if(mode==='bygga'){
  const animalDelete=button(i,'Ta bort djur','🗑',()=>{const del=$('delete');del.click();animalDelete.classList.toggle('active',del.classList.contains('on'));close()},$('delete').classList.contains('on'),true);animalDelete.classList.add('qAnimalDelete');animalDelete.title='Aktivera rivning och tryck sedan på djuret';
 }else if(mode==='gubbe'){
  for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
-}renderVariants();updateButtonDescription()}
+}if(zone==='plot')renderVariants();else $('qVariants').hidden=true;updateButtonDescription()}
+window.addEventListener('plZoneChanged',e=>{const zone=e.detail.zone;danceOpen=zone==='disco';if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);close();});
+window.addEventListener('plDanceSelected',e=>{window.plDanceCurrent=e.detail.move;render()});
 window.addEventListener('resize',updateButtonDescription);$('qClose').onclick=close;
 window.plQuickIcon=kind=>{const path={square:'M5 5H29V29H5Z',triangle:'M5 29L29 29L5 5Z',half:'M4 10H30V22H4Z',small:'M10 10H22V22H10Z',roof:'M3 23L16 5L29 23L29 28H3Z'}[kind];return '<svg viewBox="0 0 34 34"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2"/></svg>'};
 for(const id of ['palette','characterPanel','animalPanel'])$(id).style.display='none';
@@ -1710,4 +1774,10 @@ render();
  }
  const obs=new MutationObserver(()=>{obs.disconnect();tidy();obs.observe(roster,{subtree:true,childList:true,characterData:true})});
  tidy();obs.observe(roster,{subtree:true,childList:true,characterData:true});
-})();</script></body></html>
+})();</script><style id="plV59Style">
+#plQuick .qbtn[aria-label="Dansrörelser"]{background:#51337e;color:#fff}
+body.plInDisco::after{content:"";position:fixed;inset:0;pointer-events:none;background:rgba(5,3,22,.23);z-index:2}
+body.plInDisco #plQuick{z-index:30}
+</style>
+<script id="plV59DiscoUI">document.addEventListener('plZoneChanged',e=>document.body.classList.toggle('plInDisco',e.detail.zone==='disco'));</script>
+</body></html>
