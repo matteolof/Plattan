@@ -220,6 +220,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 const $=x=>document.getElementById(x),scene=new THREE.Scene();scene.background=new THREE.Color(0x9ed9ff);scene.fog=new THREE.Fog(0x9ed9ff,35,90);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,130),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0x66824c,2.0));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(15,28,11);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
+const nightStars=new THREE.Group();scene.add(nightStars);const starMat=new THREE.MeshBasicMaterial({color:0xfff7df,fog:false,depthTest:false});const starGeo=new THREE.SphereGeometry(.16,5,4);for(let i=0;i<100;i++){const a=i*2.39996,h=.24+((i*37)%71)/100,r=70;const s=new THREE.Mesh(starGeo,starMat);s.position.set(Math.cos(a)*r*Math.sqrt(1-h*h),h*r,Math.sin(a)*r*Math.sqrt(1-h*h));nightStars.add(s)}const moon=new THREE.Mesh(new THREE.SphereGeometry(3.1,20,14),new THREE.MeshBasicMaterial({color:0xfff5d4,fog:false,depthTest:false}));moon.position.set(-35,55,-48);scene.add(moon);moon.visible=false;nightStars.visible=false;const ambient=scene.children.find(x=>x.isHemisphereLight);window.plSetNight=night=>{scene.background.setHex(night?0x09132d:0x9ed9ff);scene.fog.color.setHex(night?0x09132d:0x9ed9ff);sun.intensity=night?.24:2;ambient.intensity=night?.65:2;moon.visible=night;nightStars.visible=night;};
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(170,170),new THREE.MeshStandardMaterial({color:0x999da2,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 const grid=new THREE.GridHelper(170,170,0xb4b7ba,0xadb0b4);grid.position.y=.006;scene.add(grid);
 const plotTiles=new THREE.Group();scene.add(plotTiles);
@@ -710,7 +711,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
  if(e.pointerType==='touch'){
   e.preventDefault();
   const t=plBuildTouch;
-  if(building&&t&&t.id===e.pointerId&&!plTouchGestureUsed&&!t.orbit&&!t.moved&&touches.size===1){put(e.clientX,e.clientY);}
+  if(building&&t&&t.id===e.pointerId&&!plTouchGestureUsed&&!t.orbit&&!t.moved&&touches.size===1){if(!window.plFurniturePlace?.(e.clientX,e.clientY))put(e.clientX,e.clientY);}
   touches.delete(e.pointerId);
   plBuildTouch=null;
   if(touches.size<2)plPinchDistance=null;
@@ -720,9 +721,9 @@ renderer.domElement.addEventListener('pointerup',e=>{
  if(pointerDown&&pointerDown.id===e.pointerId&&!lookDrag&&touches.size===1){
   if(building){
    if(e.button===2){if(lockedEdge){lockedEdge=null;refreshGhost();toast('Fästkant släppt')}}
-   else if(e.button===0)put(e.clientX,e.clientY);
+   else if(e.button===0){if(!window.plFurniturePlace?.(e.clientX,e.clientY))put(e.clientX,e.clientY);}
   }else if(e.button===0){
-   walkPlace(e.clientX,e.clientY);
+   if(!window.plFurniturePlace?.(e.clientX,e.clientY))walkPlace(e.clientX,e.clientY);
   }else if(e.button===2&&lockedEdge){
    lockedEdge=null;refreshGhost();toast('Fästkant släppt');
   }
@@ -1174,6 +1175,29 @@ function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:playe
 window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
 
 updateCamera();let last=performance.now();
+// Inredning: föremål i samma världskoordinater som magnetplattorna.
+const furnitureItems=[];
+const furnitureMaterials={wood:new THREE.MeshStandardMaterial({color:0xa8794c,roughness:.8}),dark:new THREE.MeshStandardMaterial({color:0x58422e}),fabric:new THREE.MeshStandardMaterial({color:0x507da0}),white:new THREE.MeshStandardMaterial({color:0xe9e6dc}),metal:new THREE.MeshStandardMaterial({color:0x46484a,metalness:.35,roughness:.5}),glass:new THREE.MeshStandardMaterial({color:0x92cdec,transparent:true,opacity:.5,side:THREE.DoubleSide})};
+function furnitureModel(type){const g=new THREE.Group(),M=furnitureMaterials;
+ function box(w,h,d,x,y,z,mat=M.wood){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);return mesh}
+ function legs(w,d,h,mat=M.wood){for(const x of [-w/2+.09,w/2-.09])for(const z of [-d/2+.09,d/2-.09])box(.10,h,.10,x,h/2,z,mat)}
+ if(type==='table'){legs(.95,.85,.72);box(1,.08,.88,0,.76,0)}
+ if(type==='chair'){legs(.52,.5,.43);box(.58,.08,.55,0,.45,0);box(.58,.53,.08,0,.75,.25)}
+ if(type==='stool'){legs(.46,.46,.44);box(.50,.09,.50,0,.47,0)}
+ if(type==='stove'){box(1,.77,.5,0,.385,0,M.white);box(.95,.045,.52,0,.80,0,M.metal);for(const x of [-.24,.24])for(const z of [-.12,.12]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.10,.018,6,16),M.dark);ring.rotation.x=-Math.PI/2;ring.position.set(x,.83,z);g.add(ring)}box(.65,.36,.012,0,.38,.257,M.metal)}
+ if(type==='cabinet'){box(1,.78,.5,0,.39,0,M.white);box(1.04,.06,.53,0,.81,0,M.wood);box(.015,.59,.02,0,.39,.265,M.dark);for(const x of [-.1,.1])box(.035,.13,.04,x,.4,.29,M.metal)}
+ if(type==='sofa'){box(1.7,.32,.78,0,.30,0,M.fabric);box(1.7,.55,.18,0,.62,.35,M.fabric);for(const x of [-.78,.78])box(.15,.46,.79,x,.48,0,M.fabric)}
+ if(type==='coffee'){legs(.95,.58,.37);box(1.02,.07,.62,0,.41,0)}
+ if(type==='bed'){box(1.15,.22,1.85,0,.31,0,M.wood);box(1.09,.17,1.48,0,.51,-.16,M.fabric);box(1.15,.72,.10,0,.42,.93,M.wood);box(.72,.08,.31,0,.62,.56,M.white)}
+ if(type==='nightstand'){box(.48,.46,.45,0,.25,0,M.wood);box(.45,.015,.03,0,.31,.237,M.dark)}
+ if(type==='door'){box(.08,1.7,1,0,.85,0,M.wood);box(.11,.065,.07,.09,.87,.31,M.metal)}
+ if(type==='window'){box(.07,1,1,0,1.05,0,M.white);box(.085,.85,.85,.015,1.05,0,M.glass);box(.1,.05,1,0,1.05,0,M.white);box(.1,1,.05,0,1.05,0,M.white)}
+ return g}
+function furnitureSave(){try{localStorage.setItem('plattan-furniture-'+(window.plattanSlot||1),JSON.stringify(furnitureItems.map(x=>({type:x.type,x:x.group.position.x,z:x.group.position.z,rot:x.group.rotation.y}))))}catch(e){}}
+function furnitureAdd(type,x,z,rot=0,persist=true){const group=furnitureModel(type);group.position.set(x,0,z);group.rotation.y=rot;scene.add(group);furnitureItems.push({type,group});if(persist)furnitureSave()}
+window.plFurniturePlace=(x,y)=>{if(!window.plFurnitureMode)return false;const hit=getHit(x,y);if(!hit)return true;const type=window.plFurnitureSelected||'table';let px=hit.point.x,pz=hit.point.z;if(!Number.isFinite(px)||!Number.isFinite(pz))return true;px=Math.round(px*2)/2;pz=Math.round(pz*2)/2;if(Math.abs(px)>24.5||Math.abs(pz)>24.5){toast('Placera inredningen på din egen tomt');return true}furnitureAdd(type,px,pz);toast('Inredning placerad: '+type);return true};
+window.plFurnitureDelete=()=>{const item=furnitureItems.pop();if(item){scene.remove(item.group);furnitureSave()}};
+try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false)}catch(e){}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  if(!building){
@@ -1245,7 +1269,7 @@ function frame(now){
  animateAnimals(dt);animateRemoteAnimals(dt);
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
- updateCamera();refreshGhost();renderer.render(scene,camera);requestAnimationFrame(frame);
+ updateCamera();refreshGhost();if(window.plFurnitureMode)ghost.visible=false;renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
@@ -1257,13 +1281,15 @@ const $=id=>document.getElementById(id);
 const root=document.createElement('div');root.id='plQuick';
 root.innerHTML='<div class="qcol" id="qModes"></div><div class="qcol" id="qItems"></div><div class="qvariants" id="qVariants" hidden></div><div class="qfly" id="qFly" hidden><div class="qhead"><span id="qTitle"></span><button class="qclose" id="qClose" type="button" aria-label="Stäng">✕</button></div><div id="qContent"></div></div>';
 document.body.append(root);
-const modes=[['bygga','▣','Bygg'],['djur','🐾','Djur'],['gubbe','👤','Gubbe']];
+const modes=[['bygga','▣','Bygg'],['inred','🛋','Inred'],['djur','🐾','Djur'],['gubbe','👤','Gubbe']];
 const shapes=[['square','Stor fyrkant'],['triangle','Triangel'],['half','Rektangel'],['small','Liten fyrkant'],['roof','Takplatta']];
+const furnishings=[['door','🚪','Dörr'],['window','🪟','Fönster'],['table','🍽','Köksbord'],['chair','🪑','Köksstol'],['stool','🪑','Pall'],['stove','♨️','Spis'],['cabinet','🗄','Köksskåp'],['sofa','🛋','Soffa'],['coffee','☕','Soffbord'],['bed','🛏','Säng'],['nightstand','🗃','Sängbord']];
+window.plFurnitureSelected='door';window.plFurnitureMode=false;
 const animals=[['horse','🐴','Stor häst'],['foal','🐎','Föl'],['sheep','🐑','Får'],['cat','🐈','Katt'],['dog','🐕','Hund']];
 const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['shirtColor','👕','Tröja'],['pantsColor','👖','Byxor'],['shoeColor','👟','Skor']];
 let mode='bygga',selected='square',opened=null,chosenVariant={};
 window.plQuickBuildActive=true;
-function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
+function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';window.plFurnitureMode=mode==='inred';if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=click;parent.append(b);return b}
 function restore(){for(const id of ['palette','characterPanel','animalPanel']){const el=$(id);if(el&&el.parentElement===$('qContent')){document.body.append(el);el.style.display='none'}}}
 function close(){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());restore();opened=null;$('qFly').hidden=true;$('qContent').replaceChildren();render()}
@@ -1335,9 +1361,11 @@ function renderVariants(){
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
+function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
 if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
+}else if(mode==='inred'){
+ for(const [key,icon,label] of furnishings)button(i,label,icon,()=>{selected=key;window.plFurnitureSelected=key;render();},selected===key,true);
 }else if(mode==='djur'){
  for(const [key,icon,label] of animals)button(i,label,icon,()=>showAnimal(key,label),selected===key&&opened==='animalPanel',true);
  const animalDelete=button(i,'Ta bort djur','🗑',()=>{const del=$('delete');del.click();animalDelete.classList.toggle('active',del.classList.contains('on'));close()},$('delete').classList.contains('on'),true);animalDelete.classList.add('qAnimalDelete');animalDelete.title='Aktivera rivning och tryck sedan på djuret';
@@ -1360,4 +1388,4 @@ $('paletteToggle').onclick=()=>{setQuickMode('bygga');showShape('square')};
 $('closeCharacter').onclick=close;$('closeAnimals').onclick=close;$('closePalette').onclick=close;
 render();
 })();
-</script><script id="plV22VoiceLayout">(()=>{const update=()=>{const r=document.getElementById('plRoster');if(!r)return;const rect=r.getBoundingClientRect();document.documentElement.style.setProperty('--pl-voice-top',((getComputedStyle(r).display==='none'?80:rect.bottom+8))+'px')};const r=document.getElementById('plRoster');if(r)new MutationObserver(update).observe(r,{attributes:true,childList:true,subtree:true});addEventListener('resize',update);update()})();</script></body></html>
+</script><script id="plV22VoiceLayout">(()=>{const update=()=>{const r=document.getElementById('plRoster');if(!r)return;const rect=r.getBoundingClientRect();document.documentElement.style.setProperty('--pl-voice-top',((getComputedStyle(r).display==='none'?80:rect.bottom+8))+'px')};const r=document.getElementById('plRoster');if(r)new MutationObserver(update).observe(r,{attributes:true,childList:true,subtree:true});addEventListener('resize',update);update()})();</script><style>#plDayNight{position:fixed;top:8px;right:270px;z-index:19;background:#245e50;color:#fff;border:1px solid #a7d4bd;border-radius:9px;padding:10px;min-height:43px;font:600 13px system-ui;cursor:pointer}@media(max-width:750px){#plDayNight{right:225px;padding:9px 7px;font-size:12px}}#plQuick .qcol{max-height:calc(100dvh - 76px);overflow-y:auto;scrollbar-width:thin}</style><button id="plDayNight" type="button" aria-label="Växla mellan dag och natt">☀️ Dag</button><script>(()=>{const b=document.getElementById('plDayNight');let night=false;b.addEventListener('click',()=>{night=!night;b.textContent=night?'🌙 Natt':'☀️ Dag';window.plSetNight?.(night);});})();</script></body></html>
