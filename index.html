@@ -260,14 +260,14 @@
 #plRoster{top:64px!important;right:10px!important;box-sizing:border-box!important;padding-top:10px!important;min-height:74px!important}
 #plRoster::before{box-sizing:border-box;min-height:28px;padding-right:103px!important;white-space:nowrap}
 /* Voice control is aligned within the heading row of the online box. */
-#brVoice{position:fixed!important;top:73px!important;right:17px!important;bottom:auto!important;left:auto!important;width:94px!important;max-width:94px!important;z-index:96!important;margin:0!important}
+#brVoice{position:fixed!important;top:67px!important;right:17px!important;bottom:auto!important;left:auto!important;width:94px!important;max-width:94px!important;z-index:96!important;margin:0!important}
 #brVoice button{font-size:11px!important;max-width:100%}
 #brVoiceControls{top:calc(100% + 6px)!important;bottom:auto!important}
 #plCoinsInventory{top:62px!important;right:10px!important;left:auto!important;max-height:calc(100dvh - 75px)!important}
 @media(max-width:750px){
  #plCoinUI{top:7px!important;right:7px!important;left:auto!important}
  #plRoster{top:58px!important;right:7px!important;width:205px!important}
- #brVoice{top:67px!important;right:13px!important;width:85px!important;max-width:85px!important}
+ #brVoice{top:61px!important;right:13px!important;width:85px!important;max-width:85px!important}
  #plRoster::before{padding-right:90px!important}
  #plCoinsInventory{top:56px!important;right:7px!important;left:auto!important}
 }
@@ -1762,7 +1762,7 @@ function updateCoaster(now){
 }
 // Hinderbanans fysiska plattor och stationer, i parkens lokala koordinater.
 const pinkCourseFloors=[],pinkCourseWalls=[];
-const pinkCourse={action:null,started:0,visited:false};
+const pinkCourse={action:null,started:0,visited:false,last:0,glider:null};
 function buildPinkCourse(g,cub){
  pinkCourseFloors.length=0;pinkCourseWalls.length=0;
  const pink=new THREE.MeshStandardMaterial({color:0xf15baf,roughness:.56,metalness:.04,side:THREE.DoubleSide});
@@ -1788,71 +1788,116 @@ function buildPinkCourse(g,cub){
  tile(12,10,6.3,2.6,2.6,pale);
  // Riktig synlig hänglina: en pendlande lina från en hög balk med handtag.
  // Figuren följer en båge och håller armarna uppåt under färden.
- const anchor=new THREE.Vector3(15,11.6,10),start=new THREE.Vector3(12,7.5,10);
+ const anchor=new THREE.Vector3(15.6,11.6,10),start=new THREE.Vector3(12.0,8.1,10);
  const end=new THREE.Vector3(19,7.7,10);
  const beam=cub(g,8,.18,.18,15.5,11.7,10,steel);
  for(const x of [11.6,19.4])cub(g,.18,1,.18,x,11.25,10,steel);
- const ropeGeo=new THREE.CylinderGeometry(.047,.047,4.35,8);
+ const ropeGeo=new THREE.CylinderGeometry(.047,.047,4.4,8);
  const ropeMesh=new THREE.Mesh(ropeGeo,ropeMat);
- ropeMesh.position.set(13.5,9.55,10);ropeMesh.rotation.z=-.24;g.add(ropeMesh);
- const handle=cub(g,.75,.12,.12,start.x,7.4,start.z,steel);
- pinkCourse.ropeMesh=ropeMesh;pinkCourse.ropeHandle=handle;
+ ropeMesh.position.set(13.8,9.85,10);g.add(ropeMesh);
+ const handle=cub(g,.75,.12,.12,start.x,8.1,start.z,steel);
+ pinkCourse.ropeMesh=ropeMesh;pinkCourse.ropeHandle=handle;pinkRopePose(12,7.0);
  tile(19.4,10,7.2,2.8,2.8,pale);
  // Två rutor långt smalt järnrör, svårare att balansera på än plattorna.
  const beamZ=10;
- cub(g,2.0,.16,.27,22,7.22,beamZ,steel);
- pinkCourseFloors.push({x:22,z:beamZ,y:7.3,w:2,d:.27});
+ cub(g,6.0,.16,.27,22,7.22,beamZ,steel);
+ pinkCourseFloors.push({x:22,z:beamZ,y:7.3,w:6,d:.27});
  tile(24,10,7.35,2.0,2.0,pale);
  // Fler uppåtgående hopp mot den högsta punkten.
  tile(25,12.5,8.0,1.55,1.55);
  tile(23.2,14.2,8.65,1.55,1.55);
  tile(20.7,14.2,9.3,2.7,2.7,pale);
- // Rutschkana av lutande rosa takplattor, landar inom samma 20x20-yta.
- const a=new THREE.Vector3(20.7,9.3,15.5),b=new THREE.Vector3(20.7,.18,17.1);
- const length=a.distanceTo(b);
- const slide=cub(g,2.4,.16,length,20.7,(a.y+b.y)/2,(a.z+b.z)/2,pink);
- slide.rotation.x=Math.atan2(a.y-b.y,b.z-a.z);
- for(const x of [19.42,21.98]){const rail=cub(g,.15,.55,length,x,(a.y+b.y)/2+.2,(a.z+b.z)/2,edge);rail.rotation.x=slide.rotation.x}
- // Triangelformade sidostycken under rutschkanans lutande tak.
- for(const z of [15.9,16.6]){const h=a.y+(b.y-a.y)*(z-a.z)/(b.z-a.z);const sh=new THREE.Shape();sh.moveTo(-.65,0);sh.lineTo(.65,0);sh.lineTo(0,.8);sh.closePath();const tr=new THREE.Mesh(new THREE.ShapeGeometry(sh),pale);tr.position.set(19.3,h-.4,z);tr.rotation.y=Math.PI/2;g.add(tr)}
+ // Slutplattform: ett paraply som blir en styrbar glidflykt vid Ja.
+ const canopy=new THREE.Mesh(new THREE.ConeGeometry(1.3,.52,12),new THREE.MeshStandardMaterial({color:0xfde46a,roughness:.65,side:THREE.DoubleSide}));
+ canopy.position.set(20.7,12.25,14.2);g.add(canopy);
+ cub(g,.07,2.0,.07,20.7,10.95,14.2,steel);
+ // En tydlig startmarkering på den sista plattformen.
+ cub(g,.8,.025,.8,20.7,9.32,14.2,pink);
 }
 function pinkCourseNear(p,x,z,r=1.8){return Math.hypot(p.x-x,p.z-z)<r}
 function pinkCourseCan(action){
  const p=parkLocal(player.x,player.z);
  if(action==='swing')return pinkCourseNear(p,12,10,1.8)&&player.y>5.7;
  
- if(action==='slide')return pinkCourseNear(p,20.7,14.2,1.9)&&player.y>8.3;
+ if(action==='glide')return pinkCourseNear(p,20.7,14.2,1.9)&&player.y>8.3;
  return false;
+}
+function pinkGliderVisible(show){
+ if(show&&!pinkCourse.glider){
+  const group=new THREE.Group();
+  const cloth=new THREE.Mesh(new THREE.ConeGeometry(1.5,.65,12),new THREE.MeshStandardMaterial({color:0xffdf63,side:THREE.DoubleSide,roughness:.65}));
+  cloth.position.y=2.9;group.add(cloth);
+  const cordMat=new THREE.MeshStandardMaterial({color:0xf8f4e5});
+  for(const x of [-.9,.9])for(const z of [-.35,.35]){
+   const top=new THREE.Vector3(x,2.65,z),bottom=new THREE.Vector3(0,1.45,0);
+   const diff=top.clone().sub(bottom),rope=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,diff.length(),6),cordMat);
+   rope.position.copy(top.add(bottom).multiplyScalar(.5));rope.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),diff.normalize());group.add(rope);
+  }
+  pinkCourse.glider=group;avatar.add(group);
+ }
+ if(pinkCourse.glider)pinkCourse.glider.visible=show;
+}
+function pinkRopePose(x,y){
+ const anchor=new THREE.Vector3(15.6,11.6,10),hand=new THREE.Vector3(x,y+1.15,10);
+ const delta=hand.clone().sub(anchor),mesh=pinkCourse.ropeMesh;
+ if(!mesh)return;
+ mesh.position.copy(anchor.clone().add(hand).multiplyScalar(.5));
+ mesh.scale.y=delta.length()/4.4;
+ mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.clone().normalize());
+ pinkCourse.ropeHandle.position.copy(hand);
 }
 function pinkCourseBegin(action){
  if(!pinkCourseCan(action)||pinkCourse.action||coasterRider.active||parkRide.type)return;
- pinkCourse.action=action;pinkCourse.started=performance.now();
+ pinkCourse.action=action;pinkCourse.started=performance.now();pinkCourse.last=pinkCourse.started;
+ if(action==='glide'){pinkGliderVisible(true);player.vy=0;}
  document.getElementById('plCourseQuestion').style.display='none';
- document.getElementById('plCourseExit').style.display='block';
- toast(action==='slide'?'Du sitter i rutschkanan!':action==='bars'?'Armgång över hindret!':'Du svingar dig över!');
+ document.getElementById('plCourseExit').style.display='block';document.getElementById('plCourseExit').textContent=action==='glide'?'Fäll ihop paraplyet':'Avsluta lianen';
+ toast(action==='glide'?'Styr med piltangenterna eller styrspaken!':'Du svingar dig i lianen!');
 }
 function pinkCourseStop(){
  if(!pinkCourse.action)return;
- pinkCourse.action=null;document.getElementById('plCourseExit').style.display='none';
- const p=parkWorld(new THREE.Vector3(20.7,0,17.6));player.x=p.x;player.z=p.z;player.y=.15;player.vy=0;
+ pinkCourse.action=null;pinkGliderVisible(false);document.getElementById('plCourseExit').style.display='none';
+ player.vy=0;
 }
 document.getElementById('plCourseYes').addEventListener('click',()=>pinkCourseBegin(document.getElementById('plCourseQuestion').dataset.action));
 document.getElementById('plCourseNo').addEventListener('click',()=>{pinkCourse.visited=true;document.getElementById('plCourseQuestion').style.display='none'});
 document.getElementById('plCourseExit').addEventListener('click',pinkCourseStop);
 function pinkCourseUpdate(now){
  if(pinkCourse.action){
-  const type=pinkCourse.action,duration=type==='slide'?2800:2500;
-  const t=Math.min(1,(now-pinkCourse.started)/duration),smooth=t*t*(3-2*t);
-  let x,z,y;
-  if(type==='swing'){const theta=-.55+1.10*smooth;x=15+4.2*Math.sin(theta);z=10;y=11.6-4.2*Math.cos(theta);if(pinkCourse.ropeMesh){pinkCourse.ropeMesh.position.set((15+x)/2,(11.6+y)/2,10);pinkCourse.ropeMesh.rotation.z=-theta;pinkCourse.ropeHandle.position.set(x,y-.2,10)}}
-  else{x=20.7;z=15.5+1.6*smooth;y=9.3+(.18-9.3)*smooth;}
+  const type=pinkCourse.action;
+  if(type==='glide'){
+   // Styrbar fallskärm: hälften av normal ungefärlig fallhastighet,
+   // men fyra gånger vanlig gånghastighet framåt. Fungerar med styrspak på iPad.
+   const dt=Math.min(.05,Math.max(0,(now-pinkCourse.last)/1000));pinkCourse.last=now;
+   const turn=Math.max(-1,Math.min(1,(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+plTouchTurn));
+   player.yaw-=turn*dt*2.5;
+   const f=Math.max(-1,Math.min(1,(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0)+plTouchForward));
+   // Automatisk framåtfart, med möjlighet att bromsa eller öka med styrspaken.
+   const speed=17.6*(f<-.2?.35:f>.2?1.15:1);
+   player.x=Math.max(-220,Math.min(220,player.x-Math.sin(player.yaw)*speed*dt));
+   player.z=Math.max(-220,Math.min(220,player.z-Math.cos(player.yaw)*speed*dt));
+   player.y=Math.max(0,player.y-3.3*dt);player.vy=0;
+   if(player.y<=.04){player.y=0;pinkCourse.action=null;pinkGliderVisible(false);document.getElementById('plCourseExit').style.display='none';toast('Du landade!');}
+   return;
+  }
+  const t=Math.min(1,(now-pinkCourse.started)/2700),smooth=t*t*(3-2*t);
+  // Lianens handtag och figurens händer rör sig tillsammans i samma pendelbåge.
+  const theta=-.96+2.01*smooth;
+  const x=15.6+4.4*Math.sin(theta),z=10;
+  const y=11.6-4.4*Math.cos(theta)-1.15;
+  pinkRopePose(x,y);
   const w=parkWorld(new THREE.Vector3(x,y,z));player.x=w.x;player.z=w.z;player.y=y;player.vy=0;
-  player.yaw=type==='slide'?Math.PI:player.yaw;
-  if(t>=1){pinkCourse.action=null;document.getElementById('plCourseExit').style.display='none';if(type==='swing'&&pinkCourse.ropeMesh){pinkCourse.ropeMesh.position.set(13.5,9.55,10);pinkCourse.ropeMesh.rotation.z=-.24;pinkCourse.ropeHandle.position.set(12,7.4,10)}toast('Du klarade hindret!');}
+  if(t>=1){
+   // Släpp på landningsplattan, inte framför den i luften.
+   const landing=parkWorld(new THREE.Vector3(19.4,7.2,10));
+   player.x=landing.x;player.z=landing.z;player.y=7.2;player.vy=0;
+   pinkCourse.action=null;document.getElementById('plCourseExit').style.display='none';
+   pinkRopePose(12,7.0);toast('Du landade på plattan!');
+  }
   return;
  }
  if(building||coasterRider.active||parkRide.type||goToTarget){document.getElementById('plCourseQuestion').style.display='none';return}
- const choices=[['slide','Vill du lämna banan via rutschkanan?'],['swing','Vill du svinga dig i repet?']];
+ const choices=[['glide','Vill du flyga ned med paraplyet?'],['swing','Vill du svinga dig i lianen?']];
  const choice=choices.find(([a])=>pinkCourseCan(a));
  const dialog=document.getElementById('plCourseQuestion');
  if(!choice){pinkCourse.visited=false;dialog.style.display='none';return}
@@ -2311,10 +2356,10 @@ function frame(now){
   leftLeg.rotation.x=1.20;
   rightLeg.rotation.x=1.20;
   // Knäna böjs framåt mot vagnens/hästens framsida, med underbenen nedåt.
-  leftLeg.children.forEach(m=>m.visible=pinkCourse.action==='swing');rightLeg.children.forEach(m=>m.visible=pinkCourse.action==='swing');
-  seatedLegs.visible=pinkCourse.action!=='swing';
-  leftArm.rotation.x=pinkCourse.action==='swing'?-2.6:-.65;
-  rightArm.rotation.x=pinkCourse.action==='swing'?-2.6:-.65;
+  leftLeg.children.forEach(m=>m.visible=pinkCourse.action==='swing'||pinkCourse.action==='glide');rightLeg.children.forEach(m=>m.visible=pinkCourse.action==='swing'||pinkCourse.action==='glide');
+  seatedLegs.visible=pinkCourse.action!=='swing'&&pinkCourse.action!=='glide';
+  leftArm.rotation.x=(pinkCourse.action==='swing'||pinkCourse.action==='glide')?-2.6:-.65;
+  rightArm.rotation.x=(pinkCourse.action==='swing'||pinkCourse.action==='glide')?-2.6:-.65;
  }
  animateAnimals(dt);animateRemoteAnimals(dt);shopCheck();
  for(const a of animals)updateAnimalLead(a,avatar);
