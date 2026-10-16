@@ -508,6 +508,7 @@ function snapCandidate(x,y){
  return chosen?{d:chosen.d,valid:chosen.valid}:null;
 }
 function refreshGhost(){
+ if(!building && window.plQuickBuildActive!==true){ghost.visible=false;edgeMarker.visible=false;candidate=null;return}
  if(erase||paint){ghost.visible=false;edgeMarker.visible=false;candidate=null;return}
  candidate=snapCandidate(hover.x,hover.y);
  if(!building){const h=getHit(hover.x,hover.y);if(!lockedEdge&&(!h||h.distance>10))candidate=null;}
@@ -700,7 +701,7 @@ renderer.domElement.addEventListener('pointercancel',e=>{
 // Bygg i gåläge vid muspekaren; pekskärmens BYGG-knapp använder skärmens mitt.
 // Samma tvåstegsplacering, färg, plattval och rivverktyg som i byggläget.
 function walkPlace(x=hover.x,y=hover.y){
- if(building)return;
+ if(building||window.plQuickBuildActive!==true)return;
  const hit=getHit(x,y);
  if(!lockedEdge && (!hit || hit.distance>10)){toast('Gå närmare den plats du pekar på');return}
  put(x,y);
@@ -1204,6 +1205,8 @@ const shapes=[['square','Stor fyrkant'],['triangle','Triangel'],['half','Rektang
 const animals=[['horse','🐴','Stor häst'],['foal','🐎','Föl'],['sheep','🐑','Får'],['cat','🐈','Katt'],['dog','🐕','Hund']];
 const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['shirtColor','👕','Tröja'],['pantsColor','👖','Byxor'],['shoeColor','👟','Skor']];
 let mode='bygga',selected='square',opened=null,chosenVariant={};
+window.plQuickBuildActive=true;
+function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=click;parent.append(b);return b}
 function restore(){for(const id of ['palette','characterPanel','animalPanel']){const el=$(id);if(el&&el.parentElement===$('qContent')){document.body.append(el);el.style.display='none'}}}
 function close(){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());restore();opened=null;$('qFly').hidden=true;$('qContent').replaceChildren();render()}
@@ -1267,13 +1270,13 @@ function renderVariants(){
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{mode=key;selected=key==='bygga'?'square':key==='djur'?'horse':'headwear';close()},mode===key);
+function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
 if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
 }else if(mode==='djur'){
  for(const [key,icon,label] of animals)button(i,label,icon,()=>showAnimal(key,label),selected===key&&opened==='animalPanel',true);
  const animalDelete=button(i,'Ta bort djur','🗑',()=>{const del=$('delete');del.click();animalDelete.classList.toggle('active',del.classList.contains('on'));close()},$('delete').classList.contains('on'),true);animalDelete.classList.add('qAnimalDelete');animalDelete.title='Aktivera rivning och tryck sedan på djuret';
-}else{
+}else if(mode==='gubbe'){
  for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
 }renderVariants()}
 $('qClose').onclick=close;
@@ -1286,9 +1289,9 @@ for(const id of ['shoeColor','pantsColor','shirtColor','hairColor','headwearColo
  if(btn){const garment=btn.querySelector('.qgarment');if(garment)garment.style.setProperty('--garment',$(id).value)}
 });
 $('paletteColor')?.addEventListener('input',render);
-$('customize').onclick=()=>{mode='gubbe';showClothing('headwear')};
-$('animalToggle').onclick=()=>{mode='djur';showAnimal('horse','Stor häst')};
-$('paletteToggle').onclick=()=>{mode='bygga';showShape('square')};
+$('customize').onclick=()=>{setQuickMode('gubbe');showClothing('headwear')};
+$('animalToggle').onclick=()=>{setQuickMode('djur');showAnimal('horse','Stor häst')};
+$('paletteToggle').onclick=()=>{setQuickMode('bygga');showShape('square')};
 $('closeCharacter').onclick=close;$('closeAnimals').onclick=close;$('closePalette').onclick=close;
 render();
 })();
