@@ -1137,28 +1137,49 @@ function rebuildTownBuildings(){
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
  const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
  function cub(g,w,h,d,x,y,z,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
- function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,4.75,15.46);g.add(m)}
+ function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,4.75,15.46);m.userData.townSign=true;g.add(m)}
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
   // 30 x 30 rutor, fyra rutor höga väggar. Framsidan är +Z, mot vägkorset.
   cub(g,30,.15,30,0,.075,0,new THREE.MeshStandardMaterial({color:0xbab7a7}));
-  cub(g,30,4,.35,0,2,-15,wallMat);
-  cub(g,.35,4,30,-15,2,0,wallMat);cub(g,.35,4,30,15,2,0,wallMat);
-  // 2 x 2 öppen ingång i mitten av framsidan, mot vägkorset.
-  cub(g,14,4,.35,-8,2,15,wallMat);cub(g,14,4,.35,8,2,15,wallMat);
-  cub(g,2,2,.35,0,3,15,wallMat);
-  cub(g,.18,2,.5,-1,1,15,trimMat);cub(g,.18,2,.5,1,1,15,trimMat);
-  cub(g,2,.18,.5,0,2,15,trimMat);
-  // Sadeltak med nock längs Z, svarta takfall och röda gavlar.
+  // Varje vägg består av separata 1 x 1-plattor, med synliga fogar
+  // och samma tunna, tvåsidiga känsla som spelarens byggplattor.
+  const seamMat=new THREE.MeshStandardMaterial({color:0x742620,roughness:.9,side:THREE.DoubleSide});
+  function wallTile(x,y,z,side){
+   const tile=cub(g,side? .12: .98,.98,side? .98:.12,x,y,z,wallMat);
+   tile.castShadow=true;
+   return tile;
+  }
+  function windowHole(v){return [-11,-6,6,11].some(q=>Math.abs(v-q)<1.5)}
+  for(let iy=0;iy<4;iy++)for(let i=-15;i<15;i++){
+   const v=i+.5,y=iy+.5;
+   // Dörren är två rutor bred och två rutor hög på framsidan.
+   if(!(iy<2&&Math.abs(v)<1) && !(iy>=1&&iy<=2&&windowHole(v)))wallTile(v,y,15,false);
+   if(!(iy>=1&&iy<=2&&windowHole(v)))wallTile(v,y,-15,false);
+   const sideHole=iy>=1&&iy<=2&&[-10,-4,4,10].some(q=>Math.abs(v-q)<1.5);
+   if(!sideHole){wallTile(-15,y,v,true);wallTile(15,y,v,true)}
+  }
+  // Tunn dörrkarm, utan vägg framför öppningen.
+  cub(g,.16,2,.22,-1,1,15,trimMat);cub(g,.16,2,.22,1,1,15,trimMat);
+  cub(g,2,.16,.22,0,2,15,trimMat);
+  // Sadeltaket byggs av enskilda svarta takplattor i ett rutnät.
   const roofRise=5, half=15.8, slope=Math.hypot(half,roofRise);
-  for(const side of [-1,1]){
-   const roof=cub(g,slope,.24,31.2,side*half/2,4+roofRise/2,0,roofMat);
+  for(const side of [-1,1])for(let iz=0;iz<31;iz++)for(let ix=0;ix<16;ix++){
+   const along=(ix+.5)/16;
+   const x=side*(half-along*half),y=4+along*roofRise;
+   const roof=cub(g,slope/16-.025,.14,.98,x,y,iz-15,roofMat);
    roof.rotation.z=side===-1?Math.atan2(roofRise,half):-Math.atan2(roofRise,half);
   }
+  // Gavlarna är triangulära röda plattor (inte massiva block).
   for(const z of [-15,15]){
-   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute([-15,4,z,15,4,z,0,9,z],3));geo.computeVertexNormals();
-   const tri=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xb73932,side:THREE.DoubleSide}));g.add(tri);
+   for(let ix=-15;ix<15;ix++){
+    const x=ix+.5,top=4+roofRise*(1-Math.abs(x)/15);
+    const geo=new THREE.BufferGeometry();
+    const lo=ix,hi=ix+1,yl=4+roofRise*(1-Math.abs(lo)/15),yr=4+roofRise*(1-Math.abs(hi)/15);
+    geo.setAttribute('position',new THREE.Float32BufferAttribute([lo,4,z,hi,4,z,lo,yl,z,hi,4,z,hi,yr,z,lo,yl,z],3));
+    geo.computeVertexNormals();g.add(new THREE.Mesh(geo,wallMat));
+   }
   }
   // Fönster på framsida, baksida och båda långsidor.
   function windowAt(x,y,z,side){
@@ -1180,7 +1201,7 @@ function rebuildTownBuildings(){
   g.traverse(obj=>{
    if(!obj.isMesh||!obj.material)return;
    const material=obj.material;
-   const isWallOrRoof=material===wallMat||material===roofMat||
+   const isWallOrRoof=material===wallMat||material===roofMat||obj.userData.townSign||
      (obj.geometry?.type==='BufferGeometry'&&material.color?.getHex()===0xb73932);
    if(!isWallOrRoof)return;
    obj.material=material.clone();obj.material.transparent=true;obj.material.depthWrite=true;
