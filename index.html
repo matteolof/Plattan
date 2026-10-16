@@ -211,9 +211,9 @@
 
 #plLogin .plStartTitle{display:flex;align-items:center;justify-content:center;gap:12px}
 #plLogin .plGreenTile{display:inline-block;width:35px;height:35px;flex:none;background:#45b96c;border:3px solid #23834c;border-radius:5px;box-shadow:inset 3px 3px 0 #a5e7b4,inset -3px -3px 0 #268d4b,0 2px 5px #0005;transform:rotate(-7deg)}
-#walkZoomToggle{flex:0 0 76px!important;width:76px!important;min-width:76px!important;max-width:76px!important;height:42px!important;min-height:42px!important;padding:4px!important;font-size:11px!important;white-space:nowrap!important;box-sizing:border-box!important}@media(pointer:coarse){#walkZoomToggle{height:40px!important;min-height:40px!important}}
+#walkZoomToggle,#goHomePlot{flex:0 0 76px!important;width:76px!important;min-width:76px!important;max-width:76px!important;height:42px!important;min-height:42px!important;padding:4px!important;font-size:11px!important;white-space:nowrap!important;box-sizing:border-box!important}@media(pointer:coarse){#walkZoomToggle,#goHomePlot{height:40px!important;min-height:40px!important}}
 </style></head><body><div id="plTouchControls" aria-label="Pekskärmskontroller"><div id="plStickBase" aria-label="Styrspak"><div id="plStickKnob"></div></div><button type="button" id="plJump" aria-label="Hoppa">HOPPA</button><button type="button" id="plWalkPlace" aria-label="Placera byggplatta">BYGG</button></div><div id="plLogin"><div class="panel"><h1 class="plStartTitle"><span class="plGreenTile" aria-hidden="true"></span>Plattan</h1><label>Spelarnamn</label><input id="plName" maxlength="18" placeholder="Ditt namn"><label>Välj en ledig tomt i spelvärlden</label><div id="plSlotMap" role="group" aria-label="Fyra spelarplatser"><button type="button" class="plPlot" data-slot="1"><b>Tomt 1</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="2"><b>Tomt 2</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="3"><b>Tomt 3</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="4"><b>Tomt 4</b><span>Kontrollerar…</span></button></div><input type="hidden" id="plSlot" value="1"><label>Lösenord</label><input id="plPassword" type="password" placeholder="Lösenord"><button id="plJoin">Gå in i spelet</button><p id="plError"></p><small>Bygget sparas lokalt och kan exporteras till en fil. Välj samma spelare nästa gång.</small></div></div><div id="plRoster"></div><div id="plChat"><strong>💬 Gemensam chatt</strong><div id="plMessages"></div><form id="plChatForm"><input id="plChatText" maxlength="300" placeholder="Skriv ett meddelande…"><button>Skicka</button></form></div>
-<div id="bar"><button id="menuToggle" title="Meny">☰ Meny</button><button id="modeBuild" class="on">▣ Bygg</button><button id="modeWalk">🚶 Gå</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkZoomToggle" style="display:none" title="Växla kamerans avstånd">🔭 Utzoomat</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><input id="file" type="file" accept=".json" hidden></div>
+<div id="bar"><button id="menuToggle" title="Meny">☰ Meny</button><button id="modeBuild" class="on">▣ Bygg</button><button id="modeWalk">🚶 Gå</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkZoomToggle" style="display:none" title="Växla kamerans avstånd">🔭 Utzoomat</button><button id="goHomePlot" style="display:none" title="Flytta till vägen utanför din tomt">🏡 Hem</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><input id="file" type="file" accept=".json" hidden></div>
 <div id="palette" style="position:fixed;top:55px;left:10px;width:min(320px,90vw);max-height:75vh;overflow:auto;z-index:5;background:#fffffff2;border:2px solid #5a9584;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0003"><strong>🧲 Välj byggplatta</strong><p style="font-size:12px">Välj form, stående/liggande och färg. Placera direkt på valfri ledig kant. Den markerade plattan används när du bygger.</p><div id="pieceChoices" class="visualChoices"><button data-shape="square" aria-label="Stor fyrkant"></button><button data-shape="half" aria-label="Halv rektangel"></button><button data-shape="small" aria-label="Liten fyrkant"></button><button data-shape="triangle" aria-label="Triangel"></button><button data-shape="roof" aria-label="Snedtak"></button></div><p><strong>Ställ eller lägg plattan</strong></p><div id="orientChoices" class="visualChoices"><button data-orient="wall" aria-label="Stående platta"></button><button data-orient="floor" aria-label="Liggande platta"></button></div><p id="spinLabel"><strong>Välj långsida eller kortsida</strong></p><div id="spinChoices" class="visualChoices"><button data-spin="0" aria-label="Triangel vänster"></button><button data-spin="4" aria-label="Spegelvänd triangel höger"></button><button data-spin="2" aria-label="Triangel vriden 180 grader"></button><button data-spin="6" aria-label="Spegelvänd triangel vriden 180 grader"></button></div><p id="spinHelp" style="font-size:12px">Välj långsida eller kortsida för halvor. Klicka sedan på en kant i bygget och välj sida med musen.</p><p style="display:none"><strong>Halvans sida</strong></p><div id="halfChoices" style="display:none" style="display:flex;gap:5px"><button data-sub="0">Halva A</button><button data-sub="1">Halva B</button></div><p><strong>Plattans färg</strong></p><div id="plColorPreview" aria-label="Förhandsvisning av genomskinlig platta"><div id="plColorShape"></div></div><button id="plChooseColor" type="button">🎨 Byt färg</button><input id="paletteColor" type="color" value="#42b5ef" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-label="Välj plattfärg"><p style="font-size:11px">🎨 Måla: klicka på en redan placerad platta för att ge den vald färg.</p><button id="closePalette">Stäng fönster</button></div><div id="characterPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:16px;width:min(330px,92vw);max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>👕 Ändra gubben</strong><p style="font-size:12px">Välj kläder, hår och huvudbonad. Ändringarna syns direkt.</p><div id="characterFields" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px"><label for="shirtColor">Tröja</label><input id="shirtColor" type="color" value="#367dc2"><label for="pantsColor">Byxor</label><input id="pantsColor" type="color" value="#263c65"><label for="shoeColor">Skor</label><input id="shoeColor" type="color" value="#32353a"><label for="hairStyle">Hår</label><select id="hairStyle"><option value="none">Utan hår</option><option value="short">Kort hår</option><option value="long">Långt hår</option></select><label for="hairColor">Hårfärg</label><input id="hairColor" type="color" value="#543d32"><label for="headwear">Huvudbonad</label><select id="headwear"><option value="none">Ingen</option><option value="hat">Hatt</option><option value="cap">Keps</option><option value="beanie">Mössa</option></select><label for="headwearColor">Färg på huvudbonad</label><input id="headwearColor" type="color" value="#e85c62"></div><p><button id="closeCharacter">Klart ✓</button></p></div><div id="animalPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:15px;width:min(310px,92vw);max-height:75vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>🐾 Lägg till djur</strong><p style="font-size:12px">Lägg till hur många du vill (max 60). Djuren vandrar omkring själva. Använd 🗑 Riv i byggläget och klicka på ett djur för att ta bort det. I gåläge: gå nära ett djur och klicka på det för att sätta på eller ta av grimma/koppel.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><button data-animal="horse">🐴 Stor häst</button><button data-animal="foal">🐎 Föl</button><button data-animal="sheep">🐑 Får</button><button data-animal="cat">🐈 Katt</button><button data-animal="dog">🐕 Hund</button></div><div id="animalCreator"><strong id="animalCreatorTitle">Välj färger</strong><div id="animalPreview"></div><div id="animalCreatorFields"><label for="animalFur">Päls / kropp</label><input type="color" id="animalFur" value="#9b6540"><label class="equineColor" for="animalMane">Man</label><input class="equineColor" type="color" id="animalMane" value="#4a3022"><label class="equineColor" for="animalLegs">Nedre delen av benen</label><input class="equineColor" type="color" id="animalLegs" value="#4b3a32"><label class="equineColor" for="animalTail">Svans</label><input class="equineColor" type="color" id="animalTail" value="#4a3022"></div><div id="animalCreatorActions"><button id="animalCreatorCancel">Tillbaka</button><button id="animalCreatorAdd" class="on">✓ Skapa djur</button></div></div><p><button id="closeAnimals">Klart ✓</button></p></div><div id="message"></div><div id="error"></div><div id="plMenu" style="display:none" role="dialog" aria-label="Spelmeny"><strong>☰ Plattan – meny</strong><div class="plMenuActions"><button id="save">💾 Spara</button><button id="reset">🌱 Ny värld</button><button id="export">📤 Exportera</button><button id="import">📥 Importera</button><button id="showInstructions" aria-expanded="false">❔ Förklaring</button></div><div id="plInstructions" hidden><strong>Så fungerar spelet</strong><p>Bygg: välj platta och klicka på en kant, välj sedan sida och klicka igen. Håll vänster musknapp på en egen platta i två sekunder för att riva den.</p><p>Gå: piltangenter eller WASD, mellanslag för hopp. Peka med musen på marken eller en plattkant och vänsterklicka eller tryck E för att bygga (dator). På iPad används BYGG-knappen. Välj byggplatta i den gröna byggmenyn. Högerklick eller Esc avbryter vald kant.</p></div><button id="closeMenu">Stäng meny</button></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
@@ -557,7 +557,31 @@ function put(x,y){
  if(parts.length>=1500){toast('Max 1500 plattor i testversionen');return}
  lockedEdge=null;add(target.d);refreshGhost();
 }
-function setGameMode(nextBuilding){if(building===nextBuilding)return;lockedEdge=null;building=nextBuilding;document.getElementById('plTouchControls').classList.toggle('walking',!building);if(!building){ensureSafePlayerStart();walkZoom=1;updateWalkZoomButton()}$('walkZoomToggle').style.display=building?'none':'inline-block';$('paletteToggle').style.display=building?'inline-block':'none';$('paint').style.display=building?'inline-block':'none';$('delete').style.display=building?'inline-block':'none';$('palette').style.display=building?$('palette').style.display:'none';$('modeBuild').classList.toggle('on',building);$('modeWalk').classList.toggle('on',!building);$('cross').style.display='none';ghost.visible=true;syncPaletteButton();toast(building?'Byggläge':'Gåläge – vänsterklick för att bygga, högerdrag för att titta')}
+function setGameMode(nextBuilding){if(building===nextBuilding)return;lockedEdge=null;building=nextBuilding;document.getElementById('plTouchControls').classList.toggle('walking',!building);if(!building){ensureSafePlayerStart();walkZoom=1;updateWalkZoomButton()}$('walkZoomToggle').style.display=building?'none':'inline-block';$('goHomePlot').style.display=building?'none':'inline-block';$('paletteToggle').style.display=building?'inline-block':'none';$('paint').style.display=building?'inline-block':'none';$('delete').style.display=building?'inline-block':'none';$('palette').style.display=building?$('palette').style.display:'none';$('modeBuild').classList.toggle('on',building);$('modeWalk').classList.toggle('on',!building);$('cross').style.display='none';ghost.visible=true;syncPaletteButton();toast(building?'Byggläge':'Gåläge – vänsterklick för att bygga, högerdrag för att titta')}
+function focusWalkControls(){
+ // Knappfokus får inte hindra WASD/piltangenter efter att gåläget aktiverats.
+ const canvas=renderer.domElement;
+ if(!canvas.hasAttribute('tabindex'))canvas.tabIndex=-1;
+ try{canvas.focus({preventScroll:true})}catch(e){canvas.focus()}
+}
+function returnToMyPlot(){
+ if(building)return;
+ // Tomterna ligger 50×50 med en 10 rutor bred väg mellan dem.
+ // Starta mitt på vägen på sidan som vetter mot den egna tomten.
+ const slot=Number(window.plattanSlot)||1;
+ const eastSide=slot===1||slot===3;
+ player.x=eastSide?30:-30;
+ player.z=0;
+ player.y=0;player.vy=0;
+ player.yaw=eastSide?Math.PI/2:-Math.PI/2;
+ player.pitch=0;
+ keys.clear();plTouchForward=0;plTouchTurn=0;plResetStick();
+ avatar.position.set(player.x,player.y-.11,player.z);
+ avatar.rotation.y=player.yaw;
+ updateCamera();refreshGhost();
+ focusWalkControls();
+ toast('Du står på vägen och tittar mot din platta');
+}
 function modeToggle(){setGameMode(!building)}
 function syncPaletteButton(){$('paletteToggle').classList.toggle('on',$('palette').style.display!=='none'&&building)}
 function closeSidePanels(){for(const id of ['palette','characterPanel','animalPanel','plMenu'])$(id).style.display='none';syncPaletteButton()}
@@ -591,7 +615,7 @@ document.querySelectorAll('[data-spin]').forEach(b=>b.onclick=()=>{spin=+b.datas
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{sub=+b.dataset.sub;syncPalette()});
 updatePlColorPreview();syncPaletteButton();
 $('paint').onclick=()=>{paint=!paint;if(paint&&erase){erase=false;$('delete').classList.remove('on');$('delete').textContent='🗑 Riv: av'}$('paint').textContent='🎨 Måla: '+(paint?'på':'av');$('paint').classList.toggle('on',paint);refreshGhost()};syncPalette();
-$('modeBuild').onclick=()=>setGameMode(true);$('modeWalk').onclick=()=>setGameMode(false);$('menuToggle').onclick=()=>{const opening=$('plMenu').style.display==='none';closeSidePanels();if(opening)$('plMenu').style.display='block'};$('closeMenu').onclick=()=>{$('plMenu').style.display='none'};
+$('modeBuild').onclick=()=>setGameMode(true);$('modeWalk').onclick=()=>{setGameMode(false);focusWalkControls()};$('goHomePlot').onclick=returnToMyPlot;$('menuToggle').onclick=()=>{const opening=$('plMenu').style.display==='none';closeSidePanels();if(opening)$('plMenu').style.display='block'};$('closeMenu').onclick=()=>{$('plMenu').style.display='none'};
 // v37: Stäng menyn när man trycker utanför den, även på iPad.
 document.addEventListener('pointerdown',e=>{const menu=$('plMenu');if(menu.style.display==='none')return;if(menu.contains(e.target)||$('menuToggle').contains(e.target))return;menu.style.display='none'},true);
 $('showInstructions').onclick=()=>{const el=$('plInstructions');el.hidden=!el.hidden;$('showInstructions').setAttribute('aria-expanded',String(!el.hidden))};$('shape').onchange=e=>{shape=e.target.value;refreshGhost()};$('color').oninput=e=>{hex=e.target.value;refreshGhost()};$('rotate').onclick=()=>{rot=(rot+1)%4;refreshGhost();toast('Vridning '+rot*90+'°')};$('orient').onclick=()=>{orientation=orientation==='wall'?'floor':'wall';$('orient').textContent=orientation==='wall'?'Vägg / golv':'Golv / vägg';refreshGhost();toast(orientation==='wall'?'Vägg':'Golv/tak')};$('delete').onclick=()=>{erase=!erase;if(erase&&paint){paint=false;$('paint').textContent='🎨 Måla: av';$('paint').classList.remove('on')}$('delete').textContent='🗑 Riv: '+(erase?'på':'av');$('delete').classList.toggle('on',erase);refreshGhost()};$('save').onclick=()=>save();$('reset').onclick=()=>{if(confirm('Radera hela byggvärlden?')){[...parts].forEach(remove);save();toast('Ny tom värld')}};
@@ -747,7 +771,7 @@ function jump(){
 }
 addEventListener('keydown',e=>{
  if(e.key==='Escape'&&lockedEdge){lockedEdge=null;refreshGhost();toast('Kantval avbrutet');return}
- if(e.target.closest('input,select,button,textarea'))return;
+ if(e.target instanceof Element && e.target.closest('input,select,textarea,[contenteditable="true"]'))return;
  const k=e.key.toLowerCase();
  if(k==='e'&&!e.repeat&&!building){walkPlace();return}
  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
@@ -940,9 +964,28 @@ function makeAnimal(type,x,z,saveIt=true,savedColor=null,remote=false,extraColor
  }
  const harness=new THREE.Group();body.add(harness);
  const collar=animalPart(harness,new THREE.TorusGeometry(.225*k,.028*k,6,18),0xd63b45,0,1.20*k,-.60*k);collar.rotation.x=Math.PI/2;
- const leadMaterial=new THREE.MeshStandardMaterial({color:0xff172e,emissive:0x79000c,emissiveIntensity:.38,roughness:.65});const leadPoints=[new THREE.Vector3(0,1.16*k,-.77*k),new THREE.Vector3(0,.83*k,-1.06*k),new THREE.Vector3(0,.32*k,-1.22*k)];const leadCurve=new THREE.CatmullRomCurve3(leadPoints);const lead=new THREE.Mesh(new THREE.TubeGeometry(leadCurve,20,.032*k,8,false),leadMaterial);harness.add(lead);harness.visible=false;
+ // Kopplet byggs om varje bildruta mellan djurets grimma och spelarens hand.
+ const leadMaterial=new THREE.MeshStandardMaterial({color:0xe9273e,emissive:0x61000c,emissiveIntensity:.25,roughness:.7});
+ const lead=new THREE.Mesh(new THREE.BufferGeometry(),leadMaterial);lead.visible=false;g.add(lead);
  g.position.set(x,0,z);scene.add(g);
- const a={type,x,z,groundY:0,yaw:Math.random()*Math.PI*2,dir:Math.random()*Math.PI*2,turn:0,speed:.5,stuck:0,leashed:false,color:furColor,mane:colors.mane,legs:colors.legs,tail:colors.tail,group:g,body,harness,walkingLegs,phase:Math.random()*7};if(!remote)animals.push(a);if(saveIt&&!remote)saveAnimals();return a;
+ const a={type,x,z,groundY:0,yaw:Math.random()*Math.PI*2,dir:Math.random()*Math.PI*2,turn:0,speed:.5,stuck:0,leashed:false,color:furColor,mane:colors.mane,legs:colors.legs,tail:colors.tail,group:g,body,harness,lead,leadScale:k,walkingLegs,phase:Math.random()*7};if(!remote)animals.push(a);if(saveIt&&!remote)saveAnimals();return a;
+}
+// Världspositioner används så att kopplet verkligen når handen även när djuret vänder sig.
+const plLeadMouth=new THREE.Vector3(),plLeadHand=new THREE.Vector3();
+function updateAnimalLead(a,owner){
+ if(!a.leashed||!owner){a.lead.visible=false;return}
+ a.group.updateWorldMatrix(true,false);owner.updateWorldMatrix(true,false);
+ // Grimman sitter framtill vid mulen. Gubbens hand sitter bredvid kroppen.
+ plLeadMouth.set(0,1.16*a.leadScale,-.77*a.leadScale);
+ a.body.localToWorld(plLeadMouth);a.group.worldToLocal(plLeadMouth);
+ plLeadHand.set(.31,.68,-.06);owner.localToWorld(plLeadHand);a.group.worldToLocal(plLeadHand);
+ const d=plLeadMouth.distanceTo(plLeadHand);
+ if(d<.01){a.lead.visible=false;return}
+ const mid=plLeadMouth.clone().lerp(plLeadHand,.5);
+ mid.y-=Math.min(.34,d*.13); // lite naturligt häng
+ const curve=new THREE.CatmullRomCurve3([plLeadMouth.clone(),mid,plLeadHand.clone()]);
+ const geometry=new THREE.TubeGeometry(curve,Math.max(10,Math.min(24,Math.ceil(d*8))),.018,5,false);
+ a.lead.geometry.dispose();a.lead.geometry=geometry;a.lead.visible=true;
 }
 function removeAnimal(a){
  const i=animals.indexOf(a);if(i<0)return;
@@ -1021,7 +1064,7 @@ renderer.domElement.addEventListener('click',e=>{
  const a=animals.find(a=>{let o=hits[0].object;while(o){if(o===a.group)return true;o=o.parent}return false});
  if(!a)return;
  if(Math.hypot(a.x-player.x,a.z-player.z)>2.3){toast('Gå lite närmare djuret!');return}
- a.leashed=!a.leashed;a.harness.visible=a.leashed;saveAnimals();toast(a.leashed?'Grimma/koppel på! Djuret följer dig.':'Grimma/koppel av! Djuret går fritt.');
+ a.leashed=!a.leashed;a.harness.visible=a.leashed;a.lead.visible=a.leashed;saveAnimals();toast(a.leashed?'Grimma/koppel på! Djuret följer dig.':'Grimma/koppel av! Djuret går fritt.');
 });
 function animateAnimals(dt){
  for(const a of animals){
@@ -1199,7 +1242,10 @@ function frame(now){
   avatar.rotation.y=player.yaw;
   avatar.position.set(player.x,player.y-.11,player.z);
  }
- animateAnimals(dt);animateRemoteAnimals(dt);updateCamera();refreshGhost();renderer.render(scene,camera);requestAnimationFrame(frame);
+ animateAnimals(dt);animateRemoteAnimals(dt);
+ for(const a of animals)updateAnimalLead(a,avatar);
+ for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
+ updateCamera();refreshGhost();renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
