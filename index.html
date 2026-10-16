@@ -770,7 +770,7 @@ function floorHeight(x,z){
   }
   if(inside&&v[0].y<=player.y+.18&&v[0].y>best)best=v[0].y;
  }
- return best;
+ return Math.max(best,playGroundHeight(x,z));
 }
 function jump(){
  if(building)return;
@@ -788,7 +788,7 @@ addEventListener('keydown',e=>{
  if(e.key==='Escape'&&lockedEdge){lockedEdge=null;refreshGhost();toast('Kantval avbrutet');return}
  if(e.target instanceof Element && e.target.closest('input,select,textarea,[contenteditable="true"]'))return;
  const k=e.key.toLowerCase();
- if(k==='e'&&!e.repeat&&!building){walkPlace();return}
+ if(k==='e'&&!e.repeat&&!building){if(!playInteract())walkPlace();return}
  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
  if(k===' '&&!e.repeat)jump();
  keys.add(k);
@@ -1171,6 +1171,7 @@ function rebuildTownBuildings(){
   for(const x of [-11,-6,6,11]){windowAt(x,2.15,-15.25,false);windowAt(x,2.15,15.25,false)}
   for(const z of [-10,-4,4,10]){windowAt(-15.25,2.15,z,true);windowAt(15.25,2.15,z,true)}
   label(g,name);
+  if(name==='Leklandet')buildPlayland(g,cub);
  }
  // Entréerna vetter mot varsin vägarm. Husens närmaste vägg är 60 rutor från mitten, helt utanför 50x50-tomterna (som slutar vid 55).
  house('Djuraffär',0,-75,0);
@@ -1179,6 +1180,60 @@ function rebuildTownBuildings(){
  house('Leklandet',-75,0,Math.PI/2);
 }
 
+// Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
+const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
+function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-75+z-ox,z:-x-oz}}
+function playPosition(){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-(player.z+oz),z:player.x+ox+75}}
+function buildPlayland(g,cub){
+ playPlatforms.length=0;
+ const turquoise=new THREE.MeshStandardMaterial({color:0x19b6b2,roughness:.5,side:THREE.DoubleSide});
+ const yellow=new THREE.MeshStandardMaterial({color:0xffc442,roughness:.6,side:THREE.DoubleSide});
+ const pink=new THREE.MeshStandardMaterial({color:0xf15b91,roughness:.6,side:THREE.DoubleSide});
+ const purple=new THREE.MeshStandardMaterial({color:0x8164d9,roughness:.6});
+ const platform=(x,z,y,w=1.2,d=1.2,mat=yellow)=>{cub(g,w,.16,d,x,y-.08,z,mat);playPlatforms.push({x,z,y,w,d})};
+ // Start: gå upp på rampen till en plattform tre plattor ovanför golvet.
+ const rampTop=3, rampLength=11;
+ const ramp=new THREE.Mesh(new THREE.BoxGeometry(2.2,.16,Math.hypot(rampLength,rampTop)),turquoise);
+ ramp.position.set(-9,rampTop/2,-5.5);ramp.rotation.x=-Math.atan2(rampTop,rampLength);g.add(ramp);
+ for(const x of [-10.2,-7.8])cub(g,.12,.48,11.4,x,1.7,-5.5,purple);
+ platform(-9,.5,3,2.6,2.6,purple);
+ // Hinderbanan: små fristående plattor med luckor mellan. Missar man en platta faller man ned.
+ const steps=[[-7,2.1],[-5,3.4],[-3,2.1],[-1,3.5],[1,2.1],[3,3.5],[5,2.1],[7,3.5],[9,5.2]];
+ steps.forEach(([x,z],i)=>platform(x,z,3,1.2,1.2,i%2?turquoise:yellow));
+ platform(9,7,3,2.6,2.6,purple);
+ // Målet: rak rutschkana från tre plattors höjd ned till marken.
+ const start=new THREE.Vector3(9,3,8),end=new THREE.Vector3(9,.17,13.2);
+ const delta=end.clone().sub(start),len=delta.length(),mid=start.clone().add(end).multiplyScalar(.5);
+ const slide=new THREE.Mesh(new THREE.BoxGeometry(2,.14,len),pink);
+ slide.position.copy(mid);slide.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),delta.clone().normalize());g.add(slide);
+ for(const side of [-1,1]){
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.13,.48,len),purple);
+  rail.position.copy(mid).add(new THREE.Vector3(side*1.04,.27,0));rail.quaternion.copy(slide.quaternion);g.add(rail);
+ }
+ // Tydlig start- och målskylt.
+ cub(g,2.5,.22,.25,-9,3.75,.5,yellow);
+ cub(g,2.5,.22,.25,9,3.75,7,pink);
+ playRide={path:[start,end]};playSwing=null;
+}
+function playGroundHeight(x,z){
+ const p=playLocal(x,z);let best=0;
+ // Rampens yta stiger från 0 till 3.1; en spelare måste gå upp på den.
+ if(Math.abs(p.x+9)<1.08&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.34)best=Math.max(best,h)}
+ for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.22)best=Math.max(best,s.y)}
+ return best;
+}
+function playInteract(){
+ if(building)return false;
+ const p=playPosition();
+ if(playRide&&!playRide.active&&Math.hypot(p.x-9,p.z-7)<1.8&&player.y>2.6){playRide.active={start:performance.now()};toast('Du åker den raka rutschkanan!');return true}
+ if(playSwing&&!playSwing.active&&Math.hypot(p.x-playSwing.from.x,p.z-playSwing.from.z)<1.6&&player.y>2.3){playSwing.active={start:performance.now()};toast('Du svingar dig i kopplet!');return true}
+ return false;
+}
+function animatePlayland(now){
+ const pp=playPosition();if(Math.abs(pp.x)<14&&Math.abs(pp.z)<14&&now-playHintTime>18000&&!building){playHintTime=now;toast('Leklandet: gå uppför rampen, hoppa mellan plattorna och tryck E vid rutschkanan!')}
+ if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=q.x+p.z;player.z=q.z-p.x;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
+ if(playSwing?.active){const t=Math.min(1,(now-playSwing.active.start)/1900),u=(1-Math.cos(Math.PI*t))/2,s=playSwing,p=playLocal(0,0);player.x=p.x+s.from.z;player.z=p.z-(s.from.x+(s.to.x-s.from.x)*u);player.y=s.y+Math.sin(Math.PI*t)*1.3;player.vy=0;if(t>=1){playSwing.active=null;toast('Du landade på nästa platta!')}}
+}
 const remoteWorlds=new Map();
 const remoteCollision=new Map();
 const remotePlayers=new Map();
@@ -1440,6 +1495,7 @@ function frame(now){
   player.y+=player.vy*dt;
   player.vy-=15*dt;
   if(player.y<=ground){player.y=ground;player.vy=0}
+  animatePlayland(now);
   const swing=moving?Math.sin(runCycle)*.65:0;
   leftLeg.rotation.x=swing;rightLeg.rotation.x=-swing;
   leftArm.rotation.x=-swing*.75;rightArm.rotation.x=swing*.75;
