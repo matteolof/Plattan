@@ -288,9 +288,9 @@
 <div id="palette" style="position:fixed;top:55px;left:10px;width:min(320px,90vw);max-height:75vh;overflow:auto;z-index:5;background:#fffffff2;border:2px solid #5a9584;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0003"><strong>🧲 Välj byggplatta</strong><p style="font-size:12px">Välj form, stående/liggande och färg. Placera direkt på valfri ledig kant. Den markerade plattan används när du bygger.</p><div id="pieceChoices" class="visualChoices"><button data-shape="square" aria-label="Stor fyrkant"></button><button data-shape="half" aria-label="Halv rektangel"></button><button data-shape="small" aria-label="Liten fyrkant"></button><button data-shape="triangle" aria-label="Triangel"></button><button data-shape="roof" aria-label="Snedtak"></button></div><p><strong>Ställ eller lägg plattan</strong></p><div id="orientChoices" class="visualChoices"><button data-orient="wall" aria-label="Stående platta"></button><button data-orient="floor" aria-label="Liggande platta"></button></div><p id="spinLabel"><strong>Välj långsida eller kortsida</strong></p><div id="spinChoices" class="visualChoices"><button data-spin="0" aria-label="Triangel vänster"></button><button data-spin="4" aria-label="Spegelvänd triangel höger"></button><button data-spin="2" aria-label="Triangel vriden 180 grader"></button><button data-spin="6" aria-label="Spegelvänd triangel vriden 180 grader"></button></div><p id="spinHelp" style="font-size:12px">Välj långsida eller kortsida för halvor. Klicka sedan på en kant i bygget och välj sida med musen.</p><p style="display:none"><strong>Halvans sida</strong></p><div id="halfChoices" style="display:none" style="display:flex;gap:5px"><button data-sub="0">Halva A</button><button data-sub="1">Halva B</button></div><p><strong>Plattans färg</strong></p><div id="plColorPreview" aria-label="Förhandsvisning av genomskinlig platta"><div id="plColorShape"></div></div><button id="plChooseColor" type="button">🎨 Byt färg</button><input id="paletteColor" type="color" value="#42b5ef" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-label="Välj plattfärg"><p style="font-size:11px">🎨 Måla: klicka på en redan placerad platta för att ge den vald färg.</p><button id="closePalette">Stäng fönster</button></div><div id="characterPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:16px;width:min(330px,92vw);max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>👕 Ändra gubben</strong><p style="font-size:12px">Välj kläder, hår och huvudbonad. Ändringarna syns direkt.</p><div id="characterFields" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px"><label for="shirtColor">Tröja</label><input id="shirtColor" type="color" value="#367dc2"><label for="pantsColor">Byxor</label><input id="pantsColor" type="color" value="#263c65"><label for="shoeColor">Skor</label><input id="shoeColor" type="color" value="#32353a"><label for="hairStyle">Hår</label><select id="hairStyle"><option value="none">Utan hår</option><option value="short">Kort hår</option><option value="long">Långt hår</option></select><label for="hairColor">Hårfärg</label><input id="hairColor" type="color" value="#543d32"><label for="headwear">Huvudbonad</label><select id="headwear"><option value="none">Ingen</option><option value="hat">Hatt</option><option value="cap">Keps</option><option value="beanie">Mössa</option></select><label for="headwearColor">Färg på huvudbonad</label><input id="headwearColor" type="color" value="#e85c62"></div><p><button id="closeCharacter">Klart ✓</button></p></div><div id="animalPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:15px;width:min(310px,92vw);max-height:75vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>🐾 Lägg till djur</strong><p style="font-size:12px">Välj ett djur att skapa. För att koppla eller ta bort ett djur: aktivera motsvarande knapp i djurmenyn och klicka på djuret. Klicka på knappen igen för att stänga av.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><button data-animal="horse">🐴 Stor häst</button><button data-animal="foal">🐎 Föl</button><button data-animal="sheep">🐑 Får</button><button data-animal="cat">🐈 Katt</button><button data-animal="dog">🐕 Hund</button></div><div id="animalCreator"><strong id="animalCreatorTitle">Välj färger</strong><div id="animalPreview"></div><div id="animalCreatorFields"><label for="animalFur">Päls / kropp</label><input type="color" id="animalFur" value="#9b6540"><label class="equineColor" for="animalMane">Man</label><input class="equineColor" type="color" id="animalMane" value="#4a3022"><label class="equineColor" for="animalLegs">Nedre delen av benen</label><input class="equineColor" type="color" id="animalLegs" value="#4b3a32"><label class="equineColor" for="animalTail">Svans</label><input class="equineColor" type="color" id="animalTail" value="#4a3022"></div><div id="animalCreatorActions"><button id="animalCreatorCancel">Tillbaka</button><button id="animalCreatorAdd" class="on">✓ Skapa djur</button></div></div><p><button id="closeAnimals">Klart ✓</button></p></div><div id="message"></div><div id="error"></div><div id="plMenu" style="display:none" role="dialog" aria-label="Spelmeny"><strong>☰ Plattan – meny</strong><div class="plMenuActions"><button id="save">💾 Spara</button><button id="reset">🌱 Ny värld</button><button id="export">📤 Exportera</button><button id="import">📥 Importera</button><button id="showInstructions" aria-expanded="false">❔ Förklaring</button></div><div id="plInstructions" hidden><strong>Så fungerar spelet</strong><p>Bygg: välj platta och klicka på en kant, välj sedan sida och klicka igen. Håll vänster musknapp på en egen platta i två sekunder för att riva den.</p><p>Gå: piltangenter eller WASD, mellanslag för hopp. Peka med musen på marken eller en plattkant och vänsterklicka eller tryck E för att bygga (dator). På iPad används BYGG-knappen. Välj byggplatta i den gröna byggmenyn. Högerklick eller Esc avbryter vald kant.</p></div><button id="closeMenu">Stäng meny</button></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-const $=x=>document.getElementById(x),scene=new THREE.Scene();scene.background=new THREE.Color(0x9ed9ff);scene.fog=new THREE.Fog(0x9ed9ff,65,175);
-const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,210),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xffffff,0x66824c,2.0));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(15,28,11);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
+const $=x=>document.getElementById(x),scene=new THREE.Scene();scene.background=new THREE.Color(0x9ed9ff);scene.fog=new THREE.Fog(0x9ed9ff,25,35);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,85),renderer=new THREE.WebGLRenderer({antialias:navigator.maxTouchPoints===0});renderer.setPixelRatio(Math.min(devicePixelRatio,(navigator.maxTouchPoints>0?1:1.5)));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=navigator.maxTouchPoints===0;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x66824c,2.0));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(15,28,11);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
 const nightStars=new THREE.Group();scene.add(nightStars);const starMat=new THREE.MeshBasicMaterial({color:0xfff7df,fog:false,depthTest:false});const starGeo=new THREE.SphereGeometry(.16,5,4);for(let i=0;i<100;i++){const a=i*2.39996,h=.24+((i*37)%71)/100,r=70;const s=new THREE.Mesh(starGeo,starMat);s.position.set(Math.cos(a)*r*Math.sqrt(1-h*h),h*r,Math.sin(a)*r*Math.sqrt(1-h*h));nightStars.add(s)}const moon=new THREE.Mesh(new THREE.SphereGeometry(3.1,20,14),new THREE.MeshBasicMaterial({color:0xfff5d4,fog:false,depthTest:false}));moon.position.set(-35,55,-48);scene.add(moon);moon.visible=false;nightStars.visible=false;const ambient=scene.children.find(x=>x.isHemisphereLight);window.plSetNight=night=>{scene.background.setHex(night?0x09132d:0x9ed9ff);scene.fog.color.setHex(night?0x09132d:0x9ed9ff);sun.intensity=night?.24:2;ambient.intensity=night?.65:2;moon.visible=night;nightStars.visible=night;};
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(230,230),new THREE.MeshStandardMaterial({color:0x999da2,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 const grid=new THREE.GridHelper(230,230,0xb4b7ba,0xadb0b4);grid.position.y=.006;scene.add(grid);
@@ -454,8 +454,8 @@ function makePanel(d){const group=new THREE.Group(),geo=d.shape==='roof'?roofGeo
 const edges=new THREE.EdgesGeometry(geo);const lines=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:d.color,linewidth:2}));group.add(lines);
 const edgePositions=edges.getAttribute('position');for(let i=0;i<edgePositions.count;i+=2){const a=new THREE.Vector3().fromBufferAttribute(edgePositions,i),b=new THREE.Vector3().fromBufferAttribute(edgePositions,i+1);const diff=b.clone().sub(a),mid=a.clone().add(b).multiplyScalar(.5);const bar=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,diff.length(),6),new THREE.MeshStandardMaterial({color:d.color,roughness:.35,metalness:.1}));bar.position.copy(mid);bar.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),diff.normalize());group.add(bar)}
  panelPose(d,group);group.userData.part=d;scene.add(group);objects.push(face);return group}
-function add(d,persist=true){d.id=d.id||Math.random().toString(36).slice(2);d.mesh=makePanel(d);parts.push(d);if(persist)save(true)}
-function remove(d){scene.remove(d.mesh);d.mesh.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});const i=parts.indexOf(d);if(i>=0)parts.splice(i,1);const j=objects.indexOf(d.mesh.children[0]);if(j>=0)objects.splice(j,1);save(true)}
+function add(d,persist=true){d.id=d.id||Math.random().toString(36).slice(2);d.mesh=makePanel(d);parts.push(d);window.plCollisionEpoch=(window.plCollisionEpoch||0)+1;if(persist)save(true)}
+function remove(d){scene.remove(d.mesh);d.mesh.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});const i=parts.indexOf(d);if(i>=0)parts.splice(i,1);window.plCollisionEpoch=(window.plCollisionEpoch||0)+1;const j=objects.indexOf(d.mesh.children[0]);if(j>=0)objects.splice(j,1);save(true)}
 function save(silent=false){try{localStorage.setItem(('plattan-online-world-slot-'+(window.plattanSlot||1)),JSON.stringify(parts.map(({mesh,...d})=>d)));if(!silent)toast('Världen sparad!')}catch(e){toast('Sparning misslyckades – exportera filen')}}
 
 function updateCamera(){
@@ -921,9 +921,11 @@ document.getElementById('plWalkPlace').addEventListener('pointerdown',e=>{e.prev
 let lastSpace=-1000, jumpStart=0, runCycle=0;
 function floorHeight(x,z){
  let best=0;
- for(const p of [...parts,...Array.from(remoteCollision.values()).flat()]){
-  if(p.orient!=='floor')continue;
-  const v=p.v||corners(p);if(v.length<3)continue;
+ if(cachedFloorRevision!==collisionRevision||!cachedFloors||cachedFloors.epoch!==(window.plCollisionEpoch||0)){
+  cachedFloors={epoch:window.plCollisionEpoch||0,items:[...parts,...Array.from(remoteCollision.values()).flat()].filter(p=>p.orient==='floor').map(p=>({v:p.v||corners(p)}))};cachedFloorRevision=collisionRevision;
+ }
+ for(const p of cachedFloors.items){
+  const v=p.v;if(v.length<3)continue;
   let inside=false;
   for(let i=0,j=v.length-1;i<v.length;j=i++){
    if(((v[i].z>z)!==(v[j].z>z))&&(x<(v[j].x-v[i].x)*(z-v[i].z)/(v[j].z-v[i].z)+v[i].x))inside=!inside;
@@ -1610,13 +1612,16 @@ function animateTownFade(dt){
   const target=inside?.13:1;
   h.opacity+=(target-h.opacity)*Math.min(1,dt*5);
   if(Math.abs(h.opacity-target)<.003)h.opacity=target;
-  for(const mesh of h.fadeMeshes){const base=mesh.material.userData?.townBaseOpacity??1;mesh.material.opacity=base*h.opacity;mesh.material.depthWrite=false;}
+  for(const mesh of h.fadeMeshes){const base=mesh.material.userData?.townBaseOpacity??1;if(Math.abs(mesh.material.opacity-base*h.opacity)>.002)mesh.material.opacity=base*h.opacity;if(mesh.material.depthWrite)mesh.material.depthWrite=false;}
  }
 }
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
 const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
 const parkRide={type:null,index:0,offset:0,angle:0};let ferrisRoot=null,carouselRoot=null;const ferrisSeats=[],carouselHorses=[];
-const coasterRider={active:false,started:0,seat:0,cameraOffset:0,heading:0};let coasterTrack=null;const coasterCarts=[];const coasterSeatOffsets=[0,.032,.064,.096];
+const coasterRider={active:false,started:0,seat:0,cameraOffset:0,heading:0};
+// v105: Animationer kör bara när minst en ansluten spelare åker.
+const remoteRideStates=new Map();let coasterPhase=0,coasterLastTick=0,ferrisPhase=0,ferrisLastTick=0;
+function rideOccupied(type){if(type==='coaster'&&coasterRider.active)return true;if(type==='ferris'&&parkRide.type==='ferris')return true;const now=performance.now();for(const v of remoteRideStates.values())if(now-v.at<6500&&v.activity===(type==='coaster'?'coaster':'ride'))return true;return false;}let coasterTrack=null;const coasterCarts=[];const coasterSeatOffsets=[0,.032,.064,.096];
 function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:-wz,z:wx+75}}
 function playPosition(){return playLocal(player.x,player.z)}
 function buildAdventurePark(g,cub){
@@ -1751,7 +1756,10 @@ function parkLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const 
 function parkWorld(p){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-110+p.z-ox,z:-p.x-oz}}
 function updateCoaster(now){
  if(!coasterTrack||!coasterCarts.length)return;
- const t=(now*.000022)%1;
+ const dt=coasterLastTick?Math.min(100,now-coasterLastTick):0;coasterLastTick=now;
+ if(rideOccupied('coaster'))coasterPhase=(coasterPhase+dt*.000022)%1;
+ const t=coasterPhase;
+ if(!rideOccupied('coaster')&&!coasterRider.active)return;
  for(let i=0;i<coasterCarts.length;i++){
   const u=(t-coasterSeatOffsets[i]+1)%1,p=coasterTrack.getPointAt(u),tan=coasterTrack.getTangentAt(u);
   const cart=coasterCarts[i];cart.position.copy(p);cart.rotation.y=Math.atan2(tan.x,tan.z);
@@ -1922,7 +1930,7 @@ function pinkCourseUpdate(now){
 }
 function parkRideStart(type){
  if(parkRide.type||coasterRider.active)return;
- parkRide.type=type;parkRide.index=0;parkRide.offset=0;
+ parkRide.type=type;parkRide.index=type==='ferris'&&ferrisSeats.length?((window.plattanSlot||1)-1)%ferrisSeats.length:0;parkRide.offset=0;
  parkRideHideQuestion();document.getElementById('plParkRideExit').classList.add('riding');
  toast('Du åker! Dra med fingret eller höger musknapp för att titta runt.');
 }
@@ -1937,7 +1945,9 @@ function parkRideStop(){
 }
 function updateParkRides(now){
  if(ferrisRoot){
-  const a=now*.000095;ferrisRoot.rotation.z=a;
+  const dt=ferrisLastTick?Math.min(100,now-ferrisLastTick):0;ferrisLastTick=now;
+  if(rideOccupied('ferris'))ferrisPhase+=dt*.000095;
+  const a=ferrisPhase;ferrisRoot.rotation.z=a;
   for(let i=0;i<ferrisSeats.length;i++)ferrisSeats[i].basket.rotation.z=-a;
  }
 
@@ -2096,15 +2106,16 @@ const remoteWorlds=new Map();
 const remoteCollision=new Map();
 const remotePlayers=new Map();
 const remoteAnimals=new Map();
-function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const r=PLOT_ROT[slot]-PLOT_ROT[window.plattanSlot||1];return [cx-ox+Math.cos(r)*x+Math.sin(r)*z,cz-oz-Math.sin(r)*x+Math.cos(r)*z]}
-function clearRemote(slot){remoteCollision.delete(slot);const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});remoteWorlds.delete(slot)}}
-function updateRemotePlot(slot,world){if(slot===window.plattanSlot)return;clearRemote(slot);const root=new THREE.Group(),[cx,cz]=toLocalPlot(slot,0,0);root.position.set(cx,0,cz);root.rotation.y=PLOT_ROT[slot]-PLOT_ROT[window.plattanSlot||1];
+let collisionRevision=0,cachedWalls=null,cachedWallRevision=-1,cachedFloors=null,cachedFloorRevision=-1;
+function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return [cx-ox+x,cz-oz+z]}
+function clearRemote(slot){remoteCollision.delete(slot);collisionRevision++;const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});remoteWorlds.delete(slot)}}
+function updateRemotePlot(slot,world){if(slot===window.plattanSlot)return;clearRemote(slot);const root=new THREE.Group(),[cx,cz]=toLocalPlot(slot,0,0);root.position.set(cx,0,cz);root.rotation.y=0;
  const collision=[];const rot=root.rotation.y,cr=Math.cos(rot),sr=Math.sin(rot);
  for(const d of (world.parts||[]).slice(0,1500)){if(!['square','half','small','triangle','roof'].includes(d.shape)||!Number.isFinite(d.x)||!Number.isFinite(d.z)||!Number.isFinite(d.y)||!/^#[0-9a-f]{6}$/i.test(d.color))continue;try{const g=makePanel({...d});scene.remove(g);objects.pop();root.add(g);
   if(d.orient==='wall'||d.orient==='floor'){const v=corners(d).map(q=>({x:cx+cr*q.x+sr*q.z,y:q.y,z:cz-sr*q.x+cr*q.z}));collision.push({orient:d.orient,v})}
  }catch(e){console.warn('Fjärrplatta',e)}}
  
- scene.add(root);remoteWorlds.set(slot,root);remoteCollision.set(slot,collision);for(const a of remoteAnimals.get(slot)||[])if(a)root.add(a.group)}
+ scene.add(root);remoteWorlds.set(slot,root);remoteCollision.set(slot,collision);collisionRevision++;for(const a of remoteAnimals.get(slot)||[])if(a)root.add(a.group)}
 function updateRemoteAnimals(slot,list){
  let existing=remoteAnimals.get(slot);if(!existing){existing=[];remoteAnimals.set(slot,existing)}
  const worldRoot=remoteWorlds.get(slot);if(!worldRoot)return;
@@ -2137,24 +2148,37 @@ function animateRemoteAnimals(dt){
  }
 }
 
-function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remotePlayers.get(p.slot);
- if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;scene.add(m);remotePlayers.set(p.slot,m)}
+function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
+ const activity=p.state?.player?.activity||'walk';remoteRideStates.set(p.slot,{activity,at:performance.now()});
+ let m=remotePlayers.get(p.slot);
+ if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;
+ const sourceGroups=[],clonedGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)clonedGroups.push(o)});
+ m.userData.animationParts={leftLeg:clonedGroups[sourceGroups.indexOf(leftLeg)],rightLeg:clonedGroups[sourceGroups.indexOf(rightLeg)],leftArm:clonedGroups[sourceGroups.indexOf(leftArm)],rightArm:clonedGroups[sourceGroups.indexOf(rightArm)]};scene.add(m);remotePlayers.set(p.slot,m)}
  const look=p.state?.appearance||{};const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
  for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
  const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
  for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else dst.visible=src.visible}
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
- const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
+ const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0);
+  const parts=m.userData.animationParts;
+  if(parts){const moving=!!q.moving,phase=performance.now()*.012;const step=moving?Math.sin(phase)*.55:0;
+   parts.leftLeg.rotation.x=step;parts.rightLeg.rotation.x=-step;
+   parts.leftArm.rotation.x=-step*.7;parts.rightArm.rotation.x=step*.7;
+   if(q.activity==='coaster'||q.activity==='ride'){parts.leftLeg.rotation.x=1.2;parts.rightLeg.rotation.x=1.2;parts.leftArm.rotation.x=-.65;parts.rightArm.rotation.x=-.65}
+   if(q.activity==='dance'){parts.leftArm.rotation.z=Math.sin(phase)*.8;parts.rightArm.rotation.z=-Math.sin(phase)*.8}
+   else{parts.leftArm.rotation.z=0;parts.rightArm.rotation.z=0}
+  }
+ }
 }
-function loadOwnSlot(){coinState=null;coinSlot=0;shopNear=false;shopClose();coinLoad();refreshPlotTiles();rebuildPlotFences();rebuildTownBuildings();
+function loadOwnSlot(){collisionRevision++;coinState=null;coinSlot=0;shopNear=false;shopClose();coinLoad();refreshPlotTiles();rebuildPlotFences();rebuildTownBuildings();
  for(const d of [...parts])remove(d);
  for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-animals-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const a of stored.slice(0,60)){if(animalTypes[a.type]&&Number.isFinite(a.x)&&Number.isFinite(a.z)){const v=makeAnimal(a.type,a.x,a.z,false,a.color,false,a);if(v){v.leashed=!!a.leashed;v.harness.visible=v.leashed}}}}catch(e){console.warn('Kunde inte läsa djur',e)}
  ensureSafePlayerStart();coinRefresh();
 }
-function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw},appearance:{...characterOptions},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,groundY:a.groundY,yaw:a.group.rotation.y,moving:Math.abs(a.walkingLegs[0]?.pivot.rotation.x||0)>.025,color:a.color,mane:a.mane,legs:a.legs,tail:a.tail,leashed:a.leashed}))}}}
-window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
+function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw,moving:keys.has('w')||keys.has('s')||keys.has('arrowup')||keys.has('arrowdown')||Math.abs(plTouchForward)>.05,activity:coasterRider.active?'coaster':parkRide.type?'ride':pinkCourse.action?'obstacle':window.plZone==='disco'&&danceMove>=0?'dance':'walk',dance:danceMove},appearance:{...characterOptions},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,groundY:a.groundY,yaw:a.group.rotation.y,moving:Math.abs(a.walkingLegs[0]?.pivot.rotation.x||0)>.025,color:a.color,mane:a.mane,legs:a.legs,tail:a.tail,leashed:a.leashed}))}}}
+window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);remoteRideStates.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
 
 updateCamera();let last=performance.now();
 // Inredning: föremål i samma världskoordinater som magnetplattorna.
@@ -2275,6 +2299,47 @@ document.addEventListener('pointerdown',event=>{
 
 coinLoad();coinRefresh();
 
+// v106: avståndsbaserad detaljvisning. Dimman ensam sparar inte GPU-arbete;
+// dessa objekt hoppas även över av renderaren när de ligger utanför sikten.
+const plViewDistance=35;
+const plCullState=new WeakMap();
+const plCullCenter=new THREE.Vector3();
+const plCullScale=new THREE.Vector3();
+let plCullLast=0;
+function plCullObject(mesh,camX,camZ){
+ if(!mesh.geometry)return;
+ if(!mesh.geometry.boundingSphere)mesh.geometry.computeBoundingSphere();
+ const sphere=mesh.geometry.boundingSphere;
+ if(!sphere)return;
+ plCullCenter.copy(sphere.center).applyMatrix4(mesh.matrixWorld);
+ mesh.getWorldScale(plCullScale);
+ const radius=sphere.radius*Math.max(plCullScale.x,plCullScale.y,plCullScale.z);
+ const dx=plCullCenter.x-camX,dz=plCullCenter.z-camZ;
+ const outside=dx*dx+dz*dz>Math.pow(plViewDistance+4+radius,2);
+ const previouslyCulled=plCullState.get(mesh)===true;
+ if(outside){
+  // Respektera objekt som redan är dolda av spelets egen logik.
+  if(mesh.visible||previouslyCulled){mesh.visible=false;plCullState.set(mesh,true)}
+ }else if(previouslyCulled){mesh.visible=true;plCullState.set(mesh,false)}
+}
+function plUpdateVisibility(now){
+ if(now-plCullLast<220)return;
+ plCullLast=now;
+ // Matrisuppdatering behövs även för föremål som tidigare dolts.
+ scene.updateMatrixWorld(true);
+ const x=player.x,z=player.z;
+ // Gemensamma byggnader och nöjespark: dölj enskilda detaljer,
+ // inte hela byggnaden, så att pariserhjulet kan synas från kanten.
+ townBuildings.traverse(o=>{if(o.isMesh)plCullObject(o,x,z)});
+ for(const p of parts)if(p.mesh)p.mesh.traverse(o=>{if(o.isMesh)plCullObject(o,x,z)});
+ for(const f of furnitureItems)f.group.traverse(o=>{if(o.isMesh)plCullObject(o,x,z)});
+ for(const root of remoteWorlds.values())root.traverse(o=>{if(o.isMesh)plCullObject(o,x,z)});
+ // Fjärrspelare och djur behåller sin rörelse och status även utanför synfältet.
+ // Låt dem synas när de kommer tillbaka inom räckhåll.
+ for(const m of remotePlayers.values())if(m)m.visible=Math.hypot(m.position.x-x,m.position.z-z)<plViewDistance+4;
+ for(const a of animals)if(a.group)a.group.visible=Math.hypot(a.group.position.x-x,a.group.position.z-z)<plViewDistance+4;
+ for(const list of remoteAnimals.values())for(const a of list)if(a?.group)a.group.visible=Math.hypot(a.group.getWorldPosition(plCullCenter).x-x,plCullCenter.z-z)<plViewDistance+4;
+}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  if(!building&&!coasterRider.active&&!parkRide.type&&!pinkCourse.action&&!goToTarget&&parkRideQuestion.style.display!=='block'&&coasterQuestion.style.display!=='block'){
@@ -2290,12 +2355,10 @@ function frame(now){
    // Kontinuerlig kollision: flytta i små steg så att kroppen aldrig passerar genom en tunn vägg.
    // Separera också gubben från väggen om han redan råkat hamna för nära.
    const radius=.30; // Kroppens kollisionscylinder omfattar även huvud och hår (höjd 1,62).
-   const walls=[...parts,...Array.from(remoteCollision.values()).flat()].filter(p=>p.orient==='wall').map(p=>{
-     const v=p.v||corners(p),low=Math.min(...v.map(q=>q.y)),high=Math.max(...v.map(q=>q.y));
-     let a=v[0],b=v[0],longest=-1;
-     for(const q of v)for(const r of v){const d=(q.x-r.x)**2+(q.z-r.z)**2;if(d>longest){longest=d;a=q;b=r}}
-     return {a,b,low,high};
-   });
+   if(cachedWallRevision!==collisionRevision||!cachedWalls||cachedWalls.epoch!==(window.plCollisionEpoch||0)){
+    cachedWalls={epoch:window.plCollisionEpoch||0,items:[...parts,...Array.from(remoteCollision.values()).flat()].filter(p=>p.orient==='wall').map(p=>{const v=p.v||corners(p),low=Math.min(...v.map(q=>q.y)),high=Math.max(...v.map(q=>q.y));let a=v[0],b=v[0],longest=-1;for(const q of v)for(const r of v){const d=(q.x-r.x)**2+(q.z-r.z)**2;if(d>longest){longest=d;a=q;b=r}}return {a,b,low,high}})};cachedWallRevision=collisionRevision;
+   }
+   const walls=[...cachedWalls.items];
    walls.push(...townCollisionWalls);
    function closest(w,x,z){
      const vx=w.b.x-w.a.x,vz=w.b.z-w.a.z,len=vx*vx+vz*vz;
@@ -2400,7 +2463,7 @@ function frame(now){
  animateAnimals(dt);animateRemoteAnimals(dt);shopCheck();
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
- updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
+ updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();plUpdateVisibility(now);renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
