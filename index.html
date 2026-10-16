@@ -10,6 +10,7 @@
 #plQuick .qmatrix .qbtn.active{background:#278454!important;border:2px solid #d0ffd5!important}
 #plQuick:has(.qmatrix:not([hidden])) #qItems{display:none}
 @media(pointer:coarse){#plQuick .qmatrix{grid-template-columns:repeat(4,32px);grid-template-rows:21px repeat(7,32px);gap:3px}#plQuick .qmatrix .qbtn{width:32px;height:32px}#plQuick .qmatrix .qmatrixAction{width:100%}#plQuick .qmatrixHead{font-size:10px}}
+#plQuick #qItems.qFurnitureGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;align-content:start;max-height:calc(100dvh - 95px);overflow-y:auto}#plQuick #qItems.qFurnitureGrid .qbtn{width:40px;height:40px;min-width:0}
 </style><style>.visualChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}.visualChoices button{height:64px;display:flex;align-items:center;justify-content:center;padding:5px;cursor:pointer;background:#f7fcff;border:3px solid #c2d9e3;border-radius:12px}.visualChoices button.on{border-color:#168b6c;background:#d8f7e9}.visualChoices svg{width:100%;height:100%;max-width:75px}#orientChoices button{height:76px;flex-direction:column;gap:1px}#orientChoices svg{height:48px;max-width:75px}#orientChoices .orientCaption{font-size:11px;font-weight:600;line-height:13px;color:#315b65}.visualChoices button:focus-visible{outline:3px solid #f69c18}#spinChoices{grid-template-columns:repeat(2,minmax(0,1fr))!important}#palette{width:min(340px,92vw)!important}</style><style>
 #animalCreator{display:none;margin-top:12px;border-top:1px solid #9abcb2;padding-top:12px}
 #animalPreview{height:205px;background:linear-gradient(#c5e7f7,#e9f2e8);border-radius:12px;overflow:hidden;margin:9px 0}
@@ -1177,6 +1178,12 @@ window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const
 updateCamera();let last=performance.now();
 // Inredning: föremål i samma världskoordinater som magnetplattorna.
 const furnitureItems=[];
+let furnitureDefaultColor='#a8794c';
+function furnitureTint(group,color){group.userData.tint=color;group.traverse(o=>{if(!o.isMesh)return;if(!o.userData.baseFurnitureMaterial)o.userData.baseFurnitureMaterial=o.material;const mat=o.userData.baseFurnitureMaterial.clone();mat.color.set(color);o.userData.originalMaterial=mat;o.material=mat});}
+window.plFurnitureColor=(color)=>{if(!/^#[0-9a-f]{6}$/i.test(color))return;furnitureDefaultColor=color;if(furnitureActive){furnitureTint(furnitureActive.group,color);furnitureSelectRefresh();furnitureSave();}try{localStorage.setItem('plattan-furniture-default-color',color)}catch(e){}};
+try{const c=localStorage.getItem('plattan-furniture-default-color');if(/^#[0-9a-f]{6}$/i.test(c))furnitureDefaultColor=c}catch(e){}
+window.plFurnitureCurrentColor=()=>furnitureActive?.group.userData.tint||furnitureDefaultColor;
+window.plFurnitureHasSelection=()=>!!furnitureActive;
 const furnitureMaterials={wood:new THREE.MeshStandardMaterial({color:0xa8794c,roughness:.8}),dark:new THREE.MeshStandardMaterial({color:0x58422e}),fabric:new THREE.MeshStandardMaterial({color:0x507da0}),white:new THREE.MeshStandardMaterial({color:0xe9e6dc}),metal:new THREE.MeshStandardMaterial({color:0x46484a,metalness:.35,roughness:.5}),glass:new THREE.MeshStandardMaterial({color:0x92cdec,transparent:true,opacity:.5,side:THREE.DoubleSide})};
 function furnitureModel(type){const g=new THREE.Group(),M=furnitureMaterials;
  function box(w,h,d,x,y,z,mat=M.wood){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);return mesh}
@@ -1190,14 +1197,28 @@ function furnitureModel(type){const g=new THREE.Group(),M=furnitureMaterials;
  if(type==='coffee'){legs(.95,.58,.37);box(1.02,.07,.62,0,.41,0)}
  if(type==='bed'){box(1.15,.22,1.85,0,.31,0,M.wood);box(1.09,.17,1.48,0,.51,-.16,M.fabric);box(1.15,.72,.10,0,.42,.93,M.wood);box(.72,.08,.31,0,.62,.56,M.white)}
  if(type==='nightstand'){box(.48,.46,.45,0,.25,0,M.wood);box(.45,.015,.03,0,.31,.237,M.dark)}
- if(type==='door'){box(.08,1.7,1,0,.85,0,M.wood);box(.11,.065,.07,.09,.87,.31,M.metal)}
+ if(type==='door'){const hinge=new THREE.Group();hinge.position.z=-.5;g.add(hinge);const leaf=new THREE.Mesh(new THREE.BoxGeometry(.08,1.7,1),M.wood);leaf.position.set(0,.85,.5);leaf.castShadow=true;hinge.add(leaf);const knob=new THREE.Mesh(new THREE.BoxGeometry(.11,.065,.07),M.metal);knob.position.set(.09,.87,.81);hinge.add(knob);g.userData.doorHinge=hinge;g.userData.open=false}
  if(type==='window'){box(.07,1,1,0,1.05,0,M.white);box(.085,.85,.85,.015,1.05,0,M.glass);box(.1,.05,1,0,1.05,0,M.white);box(.1,1,.05,0,1.05,0,M.white)}
  return g}
-function furnitureSave(){try{localStorage.setItem('plattan-furniture-'+(window.plattanSlot||1),JSON.stringify(furnitureItems.map(x=>({type:x.type,x:x.group.position.x,z:x.group.position.z,rot:x.group.rotation.y}))))}catch(e){}}
-function furnitureAdd(type,x,z,rot=0,persist=true){const group=furnitureModel(type);group.position.set(x,0,z);group.rotation.y=rot;scene.add(group);furnitureItems.push({type,group});if(persist)furnitureSave()}
+function furnitureSave(){try{localStorage.setItem('plattan-furniture-'+(window.plattanSlot||1),JSON.stringify(furnitureItems.map(x=>({type:x.type,x:x.group.position.x,z:x.group.position.z,rot:x.group.rotation.y,open:!!x.group.userData.open,color:x.group.userData.tint}))))}catch(e){}}
+function furnitureAdd(type,x,z,rot=0,persist=true,open=false,color=furnitureDefaultColor){const group=furnitureModel(type);furnitureTint(group,color);group.position.set(x,0,z);group.rotation.y=rot;if(type==='door'&&open){group.userData.open=true;group.userData.doorHinge.rotation.y=-Math.PI*.52}scene.add(group);furnitureItems.push({type,group});if(persist)furnitureSave()}
 window.plFurniturePlace=(x,y)=>{if(!window.plFurnitureMode)return false;const hit=getHit(x,y);if(!hit)return true;const type=window.plFurnitureSelected||'table';let px=hit.point.x,pz=hit.point.z;if(!Number.isFinite(px)||!Number.isFinite(pz))return true;px=Math.round(px*2)/2;pz=Math.round(pz*2)/2;if(Math.abs(px)>24.5||Math.abs(pz)>24.5){toast('Placera inredningen på din egen tomt');return true}furnitureAdd(type,px,pz);toast('Inredning placerad: '+type);return true};
-window.plFurnitureDelete=()=>{const item=furnitureItems.pop();if(item){scene.remove(item.group);furnitureSave()}};
-try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false)}catch(e){}
+let furnitureActive=null;const furnitureRay=new THREE.Raycaster(),furnitureMouse=new THREE.Vector2(),furniturePlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function furnitureSelectRefresh(){for(const f of furnitureItems){f.group.traverse(o=>{if(o.isMesh){if(!o.userData.originalMaterial)o.userData.originalMaterial=o.material; o.material=f===item?furnitureHighlight(o.userData.originalMaterial):o.userData.originalMaterial}})}document.dispatchEvent(new Event('plFurnitureSelectionChanged'))}
+function furnitureSelect(item){if(furnitureActive===item)return;furnitureActive=item;furnitureSelectRefresh()}
+const furnitureHighlightCache=new WeakMap();function furnitureHighlight(mat){if(!furnitureHighlightCache.has(mat)){const m=mat.clone();m.emissive=new THREE.Color(0x327f5c);m.emissiveIntensity=.48;furnitureHighlightCache.set(mat,m)}return furnitureHighlightCache.get(mat)}
+function furniturePick(x,y){furnitureMouse.set(x/innerWidth*2-1,-y/innerHeight*2+1);furnitureRay.setFromCamera(furnitureMouse,camera);const hits=furnitureRay.intersectObjects(furnitureItems.map(f=>f.group),true);for(const h of hits){const item=furnitureItems.find(f=>{let obj=h.object;while(obj){if(obj===f.group)return true;obj=obj.parent}return false});if(item)return item}return null}
+function furnitureGround(x,y){furnitureMouse.set(x/innerWidth*2-1,-y/innerHeight*2+1);furnitureRay.setFromCamera(furnitureMouse,camera);const p=new THREE.Vector3();return furnitureRay.ray.intersectPlane(furniturePlane,p)?p:null}
+window.plFurnitureDelete=()=>{if(!furnitureActive){toast('Markera först en möbel');return}const item=furnitureActive;furnitureSelect(null);scene.remove(item.group);furnitureItems.splice(furnitureItems.indexOf(item),1);furnitureSave();toast('Inredning borttagen')};
+window.plFurnitureRotate=()=>{if(!furnitureActive){toast('Markera först en möbel');return}furnitureActive.group.rotation.y+=Math.PI/2;furnitureSave()};
+window.plFurnitureClearSelection=()=>furnitureSelect(null);
+let furnitureDrag=null;
+renderer.domElement.addEventListener('pointerdown',e=>{if(!window.plFurnitureMode||e.button!==0&&e.pointerType!=='touch')return;const item=furniturePick(e.clientX,e.clientY);if(!item)return;const ground=furnitureGround(e.clientX,e.clientY);furnitureSelect(item);furnitureDrag={id:e.pointerId,item,x:e.clientX,y:e.clientY,moved:false,offsetX:ground?item.group.position.x-ground.x:0,offsetZ:ground?item.group.position.z-ground.z:0};renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation()},true);
+renderer.domElement.addEventListener('pointermove',e=>{if(!furnitureDrag||furnitureDrag.id!==e.pointerId)return;const d=furnitureDrag;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>5)d.moved=true;if(d.moved){const p=furnitureGround(e.clientX,e.clientY);if(p){const x=Math.round((p.x+d.offsetX)*10)/10,z=Math.round((p.z+d.offsetZ)*10)/10;if(Math.abs(x)<=24.5&&Math.abs(z)<=24.5)d.item.group.position.set(x,0,z)}}e.preventDefault();e.stopImmediatePropagation()},true);
+renderer.domElement.addEventListener('pointerup',e=>{if(!furnitureDrag||furnitureDrag.id!==e.pointerId)return;const d=furnitureDrag;furnitureDrag=null;if(!d.moved&&d.item.type==='door'&&d.item.group.userData.doorHinge){const g=d.item.group;g.userData.open=!g.userData.open;g.userData.doorHinge.rotation.y=g.userData.open?-Math.PI*.52:0}furnitureSave();e.preventDefault();e.stopImmediatePropagation()},true);
+renderer.domElement.addEventListener('pointercancel',e=>{if(furnitureDrag?.id===e.pointerId){furnitureDrag=null;furnitureSave();e.stopImmediatePropagation()}},true);
+
+try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false,!!d.open,d.color&&/^#[0-9a-f]{6}$/i.test(d.color)?d.color:furnitureDefaultColor)}catch(e){}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  if(!building){
@@ -1224,7 +1245,23 @@ function frame(now){
      const t=len>1e-8?Math.max(0,Math.min(1,((x-w.a.x)*vx+(z-w.a.z)*vz)/len)):0;
      return {x:w.a.x+t*vx,z:w.a.z+t*vz};
    }
-   function blocked(x,z){return walls.some(w=>{
+   // Möblernas kollisionsytor följer deras position, rotation och öppna dörrblad.
+   // Bygg en rektangel i möbelns lokala koordinater och testa spelarcirkeln mot den.
+   const furnitureObstacles=furnitureItems.map(item=>{
+     const group=item.group;
+     group.updateMatrixWorld(true);
+     const bounds=new THREE.Box3().setFromObject(group);
+     if(bounds.isEmpty())return null;
+     // För öppna dörrar använder vi den faktiska dörrbladets världsbox.
+     return bounds;
+   }).filter(Boolean);
+   function furnitureBlocked(x,z){return furnitureObstacles.some(b=>{
+     if(player.y>=b.max.y||player.y+1.62<=b.min.y)return false;
+     const cx=Math.max(b.min.x,Math.min(x,b.max.x));
+     const cz=Math.max(b.min.z,Math.min(z,b.max.z));
+     return (x-cx)**2+(z-cz)**2<radius*radius;
+   })}
+   function blocked(x,z){return furnitureBlocked(x,z)||walls.some(w=>{
      if(player.y>=w.high||player.y+1.62<=w.low)return false;
      const q=closest(w,x,z);return (x-q.x)**2+(z-q.z)**2<radius*radius;
    })}
@@ -1239,6 +1276,25 @@ function frame(now){
          if(d<1e-6){const wx=w.b.x-w.a.x,wz=w.b.z-w.a.z,L=Math.hypot(wx,wz)||1;ux=-wz/L;uz=wx/L}
          player.x+=ux*(radius-d+.012);player.z+=uz*(radius-d+.012);pushed=true;
        }
+     }
+     if(!pushed)break;
+   }
+   // Om en möbel flyttas ovanpå gubben trycks han varsamt ut ur möbeln.
+   for(let iteration=0;iteration<5;iteration++){
+     let pushed=false;
+     for(const b of furnitureObstacles){
+       if(player.y>=b.max.y||player.y+1.62<=b.min.y)continue;
+       const cx=Math.max(b.min.x,Math.min(player.x,b.max.x));
+       const cz=Math.max(b.min.z,Math.min(player.z,b.max.z));
+       let vx=player.x-cx,vz=player.z-cz,d=Math.hypot(vx,vz);
+       if(d>=radius)continue;
+       if(d<1e-6){
+         const edges=[{v:player.x-b.min.x,x:-1,z:0},{v:b.max.x-player.x,x:1,z:0},{v:player.z-b.min.z,x:0,z:-1},{v:b.max.z-player.z,x:0,z:1}];
+         edges.sort((a,b)=>a.v-b.v);
+         player.x+=edges[0].x*(edges[0].v+radius+.015);
+         player.z+=edges[0].z*(edges[0].v+radius+.015);
+       }else{player.x+=vx/d*(radius-d+.015);player.z+=vz/d*(radius-d+.015)}
+       pushed=true;
      }
      if(!pushed)break;
    }
@@ -1289,7 +1345,7 @@ const animals=[['horse','🐴','Stor häst'],['foal','🐎','Föl'],['sheep','�
 const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['shirtColor','👕','Tröja'],['pantsColor','👖','Byxor'],['shoeColor','👟','Skor']];
 let mode='bygga',selected='square',opened=null,chosenVariant={};
 window.plQuickBuildActive=true;
-function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';window.plFurnitureMode=mode==='inred';if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
+function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';window.plFurnitureMode=mode==='inred';if(mode!=='inred')window.plFurnitureClearSelection?.();if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=click;parent.append(b);return b}
 function restore(){for(const id of ['palette','characterPanel','animalPanel']){const el=$(id);if(el&&el.parentElement===$('qContent')){document.body.append(el);el.style.display='none'}}}
 function close(){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());restore();opened=null;$('qFly').hidden=true;$('qContent').replaceChildren();render()}
@@ -1329,6 +1385,17 @@ document.addEventListener('pointerdown',event=>{
   renderClothingActive();
  }
 },true);
+function showFurnitureColors(anchor){
+ document.querySelectorAll('.plSwatches').forEach(x=>x.remove());
+ const grid=document.createElement('div');grid.className='plSwatches';grid.setAttribute('aria-label','Inredningens färg');
+ const current=window.plFurnitureCurrentColor?.()||'#a8794c';
+ const apply=color=>{window.plFurnitureColor?.(color);grid.querySelectorAll('.plSwatch').forEach(b=>b.classList.toggle('active',b.dataset.color===color.toLowerCase()))};
+ for(const c of swatchColors){const b=document.createElement('button');b.type='button';b.title=c;b.dataset.color=c.toLowerCase();b.style.background=c;b.className='plSwatch'+(current.toLowerCase()===c.toLowerCase()?' active':'');b.onclick=()=>apply(c);grid.append(b)}
+ const more=document.createElement('label');more.className='plSwatchMore plNativeColor';more.title='Välj egen färg';more.setAttribute('aria-label','Välj egen färg');
+ const plus=document.createElement('span');plus.textContent='+';plus.setAttribute('aria-hidden','true');more.append(plus);
+ const picker=document.createElement('input');picker.type='color';picker.value=current;picker.setAttribute('aria-label','Välj egen inredningsfärg');picker.addEventListener('input',()=>apply(picker.value));picker.addEventListener('change',()=>apply(picker.value));more.append(picker);grid.append(more);
+ document.body.append(grid);const r=anchor.getBoundingClientRect(),width=grid.offsetWidth;grid.style.left=Math.max(5,Math.min(window.innerWidth-width-5,r.right+8))+'px';grid.style.top=Math.max(5,Math.min(r.top,window.innerHeight-grid.offsetHeight-5))+'px';
+}
 function showClothing(key){
  selected=key;restore();opened='clothes';$('qFly').hidden=true;
  $('qVariants').hidden=true;document.querySelectorAll('.plClothesOptions,.plSwatches').forEach(x=>x.remove());
@@ -1361,11 +1428,16 @@ function renderVariants(){
 }
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
-function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
+function render(){const m=$('qModes'),i=$('qItems');document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');for(const [key,icon,label] of modes)button(m,label,icon,()=>{const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':next==='gubbe'?'headwear':null;close()},mode===key);
 if(mode==='bygga'){
  // Alla byggdelar finns nu i en gemensam rutmatris till höger om byggknappen.
 }else if(mode==='inred'){
+ i.classList.add('qFurnitureGrid');
  for(const [key,icon,label] of furnishings)button(i,label,icon,()=>{selected=key;window.plFurnitureSelected=key;render();},selected===key,true);
+ const furnitureColorButton=button(i,'Färg på inredning','🎨',()=>showFurnitureColors(furnitureColorButton),false,true);furnitureColorButton.title='Byt färg på markerad möbel, eller välj färg för nya möbler';
+ button(i,'Rotera markerad','↻',()=>window.plFurnitureRotate?.(),false,true).title='Rotera markerad möbel 90°';
+ button(i,'Ta bort markerad','🗑',()=>window.plFurnitureDelete?.(),false,true).title='Ta bort markerad möbel';
+
 }else if(mode==='djur'){
  for(const [key,icon,label] of animals)button(i,label,icon,()=>showAnimal(key,label),selected===key&&opened==='animalPanel',true);
  const animalDelete=button(i,'Ta bort djur','🗑',()=>{const del=$('delete');del.click();animalDelete.classList.toggle('active',del.classList.contains('on'));close()},$('delete').classList.contains('on'),true);animalDelete.classList.add('qAnimalDelete');animalDelete.title='Aktivera rivning och tryck sedan på djuret';
