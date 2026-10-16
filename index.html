@@ -295,72 +295,11 @@ const nightStars=new THREE.Group();scene.add(nightStars);const starMat=new THREE
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(230,230),new THREE.MeshStandardMaterial({color:0x999da2,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 const grid=new THREE.GridHelper(230,230,0xb4b7ba,0xadb0b4);grid.position.y=.006;scene.add(grid);
 const plotTiles=new THREE.Group();scene.add(plotTiles);
-function refreshPlotTiles(){plotTiles.clear();const own=window.plattanSlot||1;for(let slot=1;slot<=4;slot++){const [cx,cz]=PLOT_CENTERS[slot],[ox,oz]=PLOT_CENTERS[own];const tile=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:slot===own?0x75bd65:0x84ba79,roughness:1}));tile.rotation.x=-Math.PI/2;tile.position.set(cx-ox,.012,cz-oz);tile.receiveShadow=true;plotTiles.add(tile);const g=new THREE.GridHelper(50,50,0xc4e8b8,0xa7d49c);g.position.set(cx-ox,.018,cz-oz);plotTiles.add(g)}}
+function refreshPlotTiles(){plotTiles.clear();const own=window.plattanSlot||1;for(let slot=1;slot<=4;slot++){const [cx,cz]=PLOT_CENTERS[slot],[ox,oz]=PLOT_CENTERS[own];const tile=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:slot===own?0x498a45:0x84ba79,roughness:1}));tile.rotation.x=-Math.PI/2;tile.position.set(cx-ox,.012,cz-oz);tile.receiveShadow=true;plotTiles.add(tile);const g=new THREE.GridHelper(50,50,0xc4e8b8,0xa7d49c);g.position.set(cx-ox,.018,cz-oz);plotTiles.add(g)}}
 
-// V68: Låga röda staket runt alla fyra tomter, med tre rutors öppning mot vägkorset.
-const plotFenceGroup=new THREE.Group();scene.add(plotFenceGroup);
-const plotFenceSegments=[];
-function rebuildPlotFences(){
- plotFenceGroup.clear();plotFenceSegments.length=0;
- const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
- const red=new THREE.MeshStandardMaterial({color:0xc43d35,roughness:.74});
- const dark=new THREE.MeshStandardMaterial({color:0x942a25,roughness:.78});
- const ownRed=new THREE.MeshStandardMaterial({color:0x842522,roughness:.76});
- const ownDark=new THREE.MeshStandardMaterial({color:0x581917,roughness:.8});
- const ownSlot=Number(window.plattanSlot)||1;
- function beam(x,y,z,w,h,d,mat=red){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;plotFenceGroup.add(mesh)}
- function section(ax,az,bx,bz){
-  const x1=ax-ox,z1=az-oz,x2=bx-ox,z2=bz-oz;
-  const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
-  if(len<.01)return;
-  plotFenceSegments.push({ax:x1,az:z1,bx:x2,bz:z2,slot:buildingSlot});
-  const horizontal=Math.abs(dx)>Math.abs(dz);
-  const midx=(x1+x2)/2,midz=(z1+z2)/2;
-  for(const y of [.34,.70])beam(midx,y,midz,horizontal?len:.105,.105,horizontal?.105:len);
- }
- let buildingSlot=0;
- for(let slot=1;slot<=4;slot++){
-  buildingSlot=slot;
-  const [cx,cz]=PLOT_CENTERS[slot],xmin=cx-25,xmax=cx+25,zmin=cz-25,zmax=cz+25;
-  // Varje entré vetter mot korsningen. Hem-knappen placerar gubben på denna väg.
-  const gateX=cx<0?xmax:xmin;
-  for(let z=zmin;z<zmax;z++){
-   section(xmin,z,xmin,z+1); // Vänster sida
-   section(xmax,z,xmax,z+1); // Höger sida
-  }
-  // Ersätt tre sektioner mitt på den inåtvända sidan med en öppen grind.
-  const side=gateX-ox;
-  for(let i=plotFenceSegments.length-100;i<plotFenceSegments.length;i++){
-   const q=plotFenceSegments[i];
-   if(q&&Math.abs(q.ax-side)<.01&&Math.abs(q.bx-side)<.01&&((q.az+q.bz)/2 >= cz-oz-1 && (q.az+q.bz)/2 < cz-oz+2))q.gate=true;
-  }
-  for(let x=xmin;x<xmax;x++){section(x,zmin,x+1,zmin);section(x,zmax,x+1,zmax)}
-  // Bygg om de tre grindsektionernas synliga balkar genom att dölja motsvarande mesh.
-  // Enklare och robustare: balkar och stolpar skapas nedan från segmentlistan.
- }
- // Rensa första omgångens balkar och bygg bara de riktiga staketdelarna.
- plotFenceGroup.clear();
- const kept=plotFenceSegments.filter(s=>!s.gate);plotFenceSegments.length=0;plotFenceSegments.push(...kept);
- const posts=new Set();
- for(const s of plotFenceSegments){
-  const dx=s.bx-s.ax,dz=s.bz-s.az,len=Math.hypot(dx,dz),horizontal=Math.abs(dx)>.1;
-  for(const y of [.34,.70])beam((s.ax+s.bx)/2,y,(s.az+s.bz)/2,horizontal?len+.025:.09,.09,horizontal?.09:len+.025,s.slot===ownSlot?ownRed:red);
-  for(const [x,z] of [[s.ax,s.az],[s.bx,s.bz]]){
-   const k=x.toFixed(2)+','+z.toFixed(2);if(posts.has(k))continue;posts.add(k);
-   beam(x,.46,z,.15,.92,.15,s.slot===ownSlot?ownDark:dark);
-  }
- }
-}
-function plotFenceBlocks(x,z,height){
- if(height>=.95)return false; // Hoppa över det låga staketet.
- const radius=.30;
- for(const s of plotFenceSegments){
-  const dx=s.bx-s.ax,dz=s.bz-s.az,len2=dx*dx+dz*dz;
-  const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/len2));
-  if(Math.hypot(x-s.ax-t*dx,z-s.az-t*dz)<radius)return true;
- }
- return false;
-}
+// V108: Tomtstaketen är borttagna. Inga staketmesh eller staketkollisioner skapas.
+function rebuildPlotFences(){};
+function plotFenceBlocks(){return false;}
 const objects=[],parts=[];const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let building=true,erase=false,paint=false,shape='square',hex='#42b5ef',rot=0,spin=0,sub=0,orientation='wall';
 const player={x:0,z:5,y:0,vy:0,yaw:0,pitch:0};let walkZoom=1;const keys=new Set();let pointerDown=null,lookDrag=false,hover={x:innerWidth/2,y:innerHeight/2},candidate=null;let orbitYaw=0,orbitPitch=.55,orbitDistance=9,orbitTarget=new THREE.Vector3(0,0,0),touches=new Map();
 function toast(t){$('message').textContent=t;$('message').style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>$('message').style.display='none',2400)}
@@ -1638,18 +1577,7 @@ function buildAdventurePark(g,cub){
  // En tydlig gångväg från gatukorset till påstigningsstationen.
  cub(g,5,.035,15,0,.12,37,gravel);
  cub(g,14,.16,8,0,.17,31,gravel);
- // Lågt rött staket runt området, öppning vid entrén mot mitten.
- for(let x=-55;x<=55;x+=2){
-  for(const z of [-45,45]){
-   if(z===45&&Math.abs(x)<3.5)continue;
-   cub(g,.13,1.15,.13,x,.64,z,red);
-   if(x<55)cub(g,1.96,.12,.12,x+1,.66,z,red);
-  }
- }
- for(let z=-45;z<=45;z+=2)for(const x of [-55,55]){
-  cub(g,.13,1.15,.13,x,.64,z,red);
-  if(z<45)cub(g,.12,.12,1.96,x,.66,z+1,red);
- }
+ // V108: Nöjesparkens ytterstaket är borttaget för färre 3D-objekt.
  // En sluten bana längs ytterkanten med backar, nedförsbackar och kurvor.
  const points=[
   [0,3.0,31],[12,3.1,31],[32,5.8,31],[47,8.3,26],
@@ -2151,13 +2079,13 @@ function animateRemoteAnimals(dt){
 function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
  const activity=p.state?.player?.activity||'walk';remoteRideStates.set(p.slot,{activity,at:performance.now()});
  let m=remotePlayers.get(p.slot);
- if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;
+ if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=Array.isArray(o.material)?o.material.map(mat=>mat.clone()):o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;
  const sourceGroups=[],clonedGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)clonedGroups.push(o)});
  m.userData.animationParts={leftLeg:clonedGroups[sourceGroups.indexOf(leftLeg)],rightLeg:clonedGroups[sourceGroups.indexOf(rightLeg)],leftArm:clonedGroups[sourceGroups.indexOf(leftArm)],rightArm:clonedGroups[sourceGroups.indexOf(rightArm)]};scene.add(m);remotePlayers.set(p.slot,m)}
- const look=p.state?.appearance||{};const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
- for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
+ const incomingLook=p.state?.appearance;const look={...characterDefaults,...(m.userData.remoteLook||{}),...(incomingLook&&typeof incomingLook==='object'?incomingLook:{})};m.userData.remoteLook={...look};m.userData.remoteMotion={...(p.state?.player||{})};m.userData.remoteMotionAt=performance.now();const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
+ for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.set(characterDefaults[fields[idx]])}}
  const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
- for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else dst.visible=src.visible}
+ for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else if(src===seatedLegs)dst.visible=false;else if(src===hairGroup)dst.visible=look.hairStyle!=='none';else dst.visible=true}
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0);
   const parts=m.userData.animationParts;
@@ -2167,6 +2095,40 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
    if(q.activity==='coaster'||q.activity==='ride'){parts.leftLeg.rotation.x=1.2;parts.rightLeg.rotation.x=1.2;parts.leftArm.rotation.x=-.65;parts.rightArm.rotation.x=-.65}
    if(q.activity==='dance'){parts.leftArm.rotation.z=Math.sin(phase)*.8;parts.rightArm.rotation.z=-Math.sin(phase)*.8}
    else{parts.leftArm.rotation.z=0;parts.rightArm.rotation.z=0}
+  }
+ }
+}
+// v109: fjärrspelarnas rörelser uppdateras varje bildruta, inte bara när servern svarar.
+function animateRemotePlayers(now){
+ for(const m of remotePlayers.values()){
+  const q=m.userData.remoteMotion||{},parts=m.userData.animationParts;
+  if(!parts)continue;
+  const t=now*.001,fast=t*7,slow=t*3;
+  const move=q.activity==='dance'&&Number.isInteger(q.dance)?q.dance:-1;
+  m.rotation.x=0;m.rotation.z=0;
+  for(const k of ['leftArm','rightArm','leftLeg','rightLeg']){if(parts[k]){parts[k].rotation.x=0;parts[k].rotation.z=0}}
+  if(move>=0){
+   const sway=Math.sin(fast),bounce=Math.abs(Math.sin(fast));
+   switch(move){
+    case 0:m.rotation.y=(Number(q.yaw)||0)+t*5;parts.leftArm.rotation.z=-1;parts.rightArm.rotation.z=1;break;
+    case 1:m.rotation.x=sway*.22;m.rotation.z=Math.sin(slow)*.13;break;
+    case 2:m.rotation.z=sway*.23;m.rotation.x=.15;break;
+    case 3:parts.leftLeg.rotation.x=sway*.65;parts.rightLeg.rotation.x=-sway*.65;break;
+    case 4:parts.leftArm.rotation.x=sway*.8;parts.rightArm.rotation.x=-sway*.8;parts.leftArm.rotation.z=-.6;parts.rightArm.rotation.z=.6;break;
+    case 5:parts.leftArm.rotation.z=-1.9+sway*.2;parts.rightArm.rotation.z=1.9-sway*.2;m.rotation.z=sway*.15;break;
+    case 6:parts.leftArm.rotation.z=-.8;parts.rightArm.rotation.z=.8;break;
+    case 7:parts.leftArm.rotation.z=-.9-sway*.8;parts.rightArm.rotation.z=.9+sway*.8;break;
+    case 8:m.rotation.z=sway*.12;break;
+    case 9:parts.leftArm.rotation.z=-.9+sway*.55;parts.rightArm.rotation.z=.9-sway*.55;break;
+   }
+  }else if(q.activity==='coaster'||q.activity==='ride'){
+   parts.leftLeg.rotation.x=1.2;parts.rightLeg.rotation.x=1.2;parts.leftArm.rotation.x=-.65;parts.rightArm.rotation.x=-.65;
+  }else if(q.moving){const step=Math.sin(now*.012)*.55;parts.leftLeg.rotation.x=step;parts.rightLeg.rotation.x=-step;parts.leftArm.rotation.x=-step*.7;parts.rightArm.rotation.x=step*.7}
+  // Hår och hatt skall styras av den andra spelarens val, inte av vår egen avatar.
+  const look=m.userData.remoteLook||{};
+  const original=m.userData.meshOriginals||[],copies=m.userData.meshCopies||[];
+  for(let i=0;i<original.length;i++){
+   if(original[i]===shortHair)copies[i].visible=look.hairStyle==='short';
   }
  }
 }
@@ -2460,7 +2422,7 @@ function frame(now){
   leftArm.rotation.x=(pinkCourse.action==='swing'||pinkCourse.action==='glide')?-2.6:-.65;
   rightArm.rotation.x=(pinkCourse.action==='swing'||pinkCourse.action==='glide')?-2.6:-.65;
  }
- animateAnimals(dt);animateRemoteAnimals(dt);shopCheck();
+ animateAnimals(dt);animateRemoteAnimals(dt);animateRemotePlayers(now);shopCheck();
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
  updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();plUpdateVisibility(now);renderer.render(scene,camera);requestAnimationFrame(frame);
