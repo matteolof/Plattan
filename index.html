@@ -236,6 +236,22 @@
 @media(pointer:coarse){#plCoasterExit.riding{display:block}}
 @media(pointer:coarse) and (max-width:700px){#plCoasterExit{bottom:110px;right:12px;padding:12px;font-size:15px}}
 #plParkRideQuestion{position:fixed;z-index:46;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100vw - 32px));padding:22px;background:#f4fff8;color:#163d2e;border:3px solid #438a64;border-radius:18px;box-shadow:0 14px 60px #0008;text-align:center}#plParkRideQuestion strong{display:block;font-size:20px}#plParkRideQuestion .answers{display:flex;gap:12px;justify-content:center}#plParkRideQuestion button{padding:12px 22px;font-size:17px}#plParkRideExit{display:none;position:fixed;z-index:36;bottom:145px;right:18px;background:#bc3641;color:white;border:3px solid white;border-radius:16px;padding:15px 18px;font-size:17px}#plParkRideExit.riding{display:block}@media(pointer:coarse) and (max-width:700px){#plParkRideExit{bottom:110px;right:12px;padding:12px;font-size:15px}}
+</style><style id="plV80CoinStyle">
+#plCoinUI{font-family:system-ui,sans-serif;position:fixed;left:12px;top:65px;z-index:95;pointer-events:none}
+#plCoinsOpen{pointer-events:auto;cursor:pointer;border:2px solid #e7c25b;border-radius:13px;background:#173b31;color:#fff5ce;padding:8px 12px;box-shadow:0 4px 12px #0005;font-size:13px}
+#plCoinsOpen .plCoinSymbol{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:25px;height:25px;background:#f5c84c;color:#694309;font-size:18px;vertical-align:middle;margin-right:4px}
+#plCoinsOpen small{font-size:11px;color:#d7e5d9}
+#plCoinsInventory{display:none;pointer-events:auto;position:fixed;left:12px;top:115px;width:min(420px,calc(100vw - 24px));max-height:65dvh;overflow:auto;background:#16392f;color:white;border:2px solid #d2ae54;border-radius:14px;padding:14px;box-shadow:0 12px 35px #0008;box-sizing:border-box}
+#plCoinsInventory header{display:flex;justify-content:space-between;align-items:center;font-size:18px}
+#plCoinsInventory p{font-size:12px;line-height:1.5;color:#e0e9de}
+#plCoinsInventory button,.plCoinBuyCard button{background:#e5c35e;border:0;border-radius:8px;padding:7px 10px;font-weight:700;cursor:pointer;color:#1d2b23}
+#plCoinsInventory button:disabled{opacity:.4;cursor:default}
+.plCoinRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid #ffffff38;font-size:12px}
+.plCoinRow span{flex:1}
+#plCoinsBuy{display:none;pointer-events:auto;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:250}
+.plCoinBuyCard{background:#173a31;border:2px solid #e7c25b;color:#fff9df;border-radius:18px;padding:22px;text-align:center;max-width:min(330px,calc(100vw - 40px));box-shadow:0 10px 40px #0009}
+.plCoinBuyCard b{font-size:21px}.plCoinBuyCard p{line-height:1.5}.plCoinBuyCard div{display:flex;justify-content:center;gap:12px}
+@media(max-width:750px){#plCoinUI{left:7px;top:58px}#plCoinsOpen{padding:6px 7px;font-size:12px}#plCoinsOpen small{display:none}}
 </style></head><body><div id="plTouchControls" aria-label="Pekskärmskontroller"><div id="plStickBase" aria-label="Styrspak"><div id="plStickKnob"></div></div><button type="button" id="plJump" aria-label="Hoppa">HOPPA</button><button type="button" id="plWalkPlace" aria-label="Placera byggplatta">BYGG</button></div><div id="plCoasterQuestion" role="dialog" aria-modal="true" aria-label="Vill du åka berg- och dalbanan?" aria-hidden="true"><strong>🎢 Vill du åka?</strong><span>Du står på påstigningsplattformen.</span><div class="answers"><button type="button" id="plCoasterYes" class="on">Ja, åk!</button><button type="button" id="plCoasterNo">Nej</button></div></div><button type="button" id="plCoasterExit" aria-label="Hoppa av berg- och dalbanan">🎢 Hoppa av</button><div id="plParkRideQuestion" role="dialog" aria-label="Vill du åka?" style="display:none"><strong id="plParkRideTitle">Vill du åka?</strong><p>Välj Ja för att sätta dig och åka.</p><div class="answers"><button id="plParkRideYes" type="button">Ja, åk!</button><button id="plParkRideNo" type="button">Nej</button></div></div><button type="button" id="plParkRideExit">🎠 Hoppa av</button><div id="plLogin"><div class="panel"><h1 class="plStartTitle"><span class="plGreenTile" aria-hidden="true"></span>Plattan</h1><label>Spelarnamn</label><input id="plName" maxlength="18" placeholder="Ditt namn"><label>Välj en ledig tomt i spelvärlden</label><div id="plSlotMap" role="group" aria-label="Fyra spelarplatser"><button type="button" class="plPlot" data-slot="1"><b>Tomt 1</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="2"><b>Tomt 2</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="3"><b>Tomt 3</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="4"><b>Tomt 4</b><span>Kontrollerar…</span></button></div><input type="hidden" id="plSlot" value="1"><label>Lösenord</label><input id="plPassword" type="password" placeholder="Lösenord"><button id="plJoin">Gå in i spelet</button><p id="plError"></p><small>Bygget sparas lokalt och kan exporteras till en fil. Välj samma spelare nästa gång.</small></div></div><div id="plRoster"></div><div id="plChat"><strong>💬 Gemensam chatt</strong><div id="plMessages"></div><form id="plChatForm"><input id="plChatText" maxlength="300" placeholder="Skriv ett meddelande…"><button>Skicka</button></form></div>
 <div id="bar"><button id="menuToggle" title="Meny">☰ Meny</button><button id="modeBuild" class="on">▣ Bygg</button><button id="modeWalk">🚶 Gå</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkZoomToggle" style="display:none" title="Växla kamerans avstånd">🔭 Utzoomat</button><button id="goHomePlot" style="display:none" title="Spring till en plats eller spelare">📍 Gå till</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><input id="file" type="file" accept=".json" hidden></div>
 <div id="palette" style="position:fixed;top:55px;left:10px;width:min(320px,90vw);max-height:75vh;overflow:auto;z-index:5;background:#fffffff2;border:2px solid #5a9584;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0003"><strong>🧲 Välj byggplatta</strong><p style="font-size:12px">Välj form, stående/liggande och färg. Placera direkt på valfri ledig kant. Den markerade plattan används när du bygger.</p><div id="pieceChoices" class="visualChoices"><button data-shape="square" aria-label="Stor fyrkant"></button><button data-shape="half" aria-label="Halv rektangel"></button><button data-shape="small" aria-label="Liten fyrkant"></button><button data-shape="triangle" aria-label="Triangel"></button><button data-shape="roof" aria-label="Snedtak"></button></div><p><strong>Ställ eller lägg plattan</strong></p><div id="orientChoices" class="visualChoices"><button data-orient="wall" aria-label="Stående platta"></button><button data-orient="floor" aria-label="Liggande platta"></button></div><p id="spinLabel"><strong>Välj långsida eller kortsida</strong></p><div id="spinChoices" class="visualChoices"><button data-spin="0" aria-label="Triangel vänster"></button><button data-spin="4" aria-label="Spegelvänd triangel höger"></button><button data-spin="2" aria-label="Triangel vriden 180 grader"></button><button data-spin="6" aria-label="Spegelvänd triangel vriden 180 grader"></button></div><p id="spinHelp" style="font-size:12px">Välj långsida eller kortsida för halvor. Klicka sedan på en kant i bygget och välj sida med musen.</p><p style="display:none"><strong>Halvans sida</strong></p><div id="halfChoices" style="display:none" style="display:flex;gap:5px"><button data-sub="0">Halva A</button><button data-sub="1">Halva B</button></div><p><strong>Plattans färg</strong></p><div id="plColorPreview" aria-label="Förhandsvisning av genomskinlig platta"><div id="plColorShape"></div></div><button id="plChooseColor" type="button">🎨 Byt färg</button><input id="paletteColor" type="color" value="#42b5ef" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-label="Välj plattfärg"><p style="font-size:11px">🎨 Måla: klicka på en redan placerad platta för att ge den vald färg.</p><button id="closePalette">Stäng fönster</button></div><div id="characterPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:16px;width:min(330px,92vw);max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>👕 Ändra gubben</strong><p style="font-size:12px">Välj kläder, hår och huvudbonad. Ändringarna syns direkt.</p><div id="characterFields" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px"><label for="shirtColor">Tröja</label><input id="shirtColor" type="color" value="#367dc2"><label for="pantsColor">Byxor</label><input id="pantsColor" type="color" value="#263c65"><label for="shoeColor">Skor</label><input id="shoeColor" type="color" value="#32353a"><label for="hairStyle">Hår</label><select id="hairStyle"><option value="none">Utan hår</option><option value="short">Kort hår</option><option value="long">Långt hår</option></select><label for="hairColor">Hårfärg</label><input id="hairColor" type="color" value="#543d32"><label for="headwear">Huvudbonad</label><select id="headwear"><option value="none">Ingen</option><option value="hat">Hatt</option><option value="cap">Keps</option><option value="beanie">Mössa</option></select><label for="headwearColor">Färg på huvudbonad</label><input id="headwearColor" type="color" value="#e85c62"></div><p><button id="closeCharacter">Klart ✓</button></p></div><div id="animalPanel" style="display:none;position:fixed;top:58px;left:10px;z-index:9;background:#fffffff5;border:2px solid #5a9584;border-radius:14px;padding:15px;width:min(310px,92vw);max-height:75vh;overflow:auto;box-shadow:0 8px 30px #0003"><strong>🐾 Lägg till djur</strong><p style="font-size:12px">Lägg till hur många du vill (max 60). Djuren vandrar omkring själva. Använd 🗑 Riv i byggläget och klicka på ett djur för att ta bort det. I gåläge: gå nära ett djur och klicka på det för att sätta på eller ta av grimma/koppel.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><button data-animal="horse">🐴 Stor häst</button><button data-animal="foal">🐎 Föl</button><button data-animal="sheep">🐑 Får</button><button data-animal="cat">🐈 Katt</button><button data-animal="dog">🐕 Hund</button></div><div id="animalCreator"><strong id="animalCreatorTitle">Välj färger</strong><div id="animalPreview"></div><div id="animalCreatorFields"><label for="animalFur">Päls / kropp</label><input type="color" id="animalFur" value="#9b6540"><label class="equineColor" for="animalMane">Man</label><input class="equineColor" type="color" id="animalMane" value="#4a3022"><label class="equineColor" for="animalLegs">Nedre delen av benen</label><input class="equineColor" type="color" id="animalLegs" value="#4b3a32"><label class="equineColor" for="animalTail">Svans</label><input class="equineColor" type="color" id="animalTail" value="#4a3022"></div><div id="animalCreatorActions"><button id="animalCreatorCancel">Tillbaka</button><button id="animalCreatorAdd" class="on">✓ Skapa djur</button></div></div><p><button id="closeAnimals">Klart ✓</button></p></div><div id="message"></div><div id="error"></div><div id="plMenu" style="display:none" role="dialog" aria-label="Spelmeny"><strong>☰ Plattan – meny</strong><div class="plMenuActions"><button id="save">💾 Spara</button><button id="reset">🌱 Ny värld</button><button id="export">📤 Exportera</button><button id="import">📥 Importera</button><button id="showInstructions" aria-expanded="false">❔ Förklaring</button></div><div id="plInstructions" hidden><strong>Så fungerar spelet</strong><p>Bygg: välj platta och klicka på en kant, välj sedan sida och klicka igen. Håll vänster musknapp på en egen platta i två sekunder för att riva den.</p><p>Gå: piltangenter eller WASD, mellanslag för hopp. Peka med musen på marken eller en plattkant och vänsterklicka eller tryck E för att bygga (dator). På iPad används BYGG-knappen. Välj byggplatta i den gröna byggmenyn. Högerklick eller Esc avbryter vald kant.</p></div><button id="closeMenu">Stäng meny</button></div>
@@ -1091,7 +1107,7 @@ function makeAnimal(type,x,z,saveIt=true,savedColor=null,remote=false,extraColor
  const leadMaterial=new THREE.MeshStandardMaterial({color:0xe9273e,emissive:0x61000c,emissiveIntensity:.25,roughness:.7});
  const lead=new THREE.Mesh(new THREE.BufferGeometry(),leadMaterial);lead.visible=false;g.add(lead);
  g.position.set(x,0,z);scene.add(g);
- const a={type,x,z,groundY:0,yaw:Math.random()*Math.PI*2,dir:Math.random()*Math.PI*2,turn:0,speed:.5,stuck:0,leashed:false,color:furColor,mane:colors.mane,legs:colors.legs,tail:colors.tail,group:g,body,harness,lead,leadScale:k,walkingLegs,phase:Math.random()*7};if(!remote)animals.push(a);if(saveIt&&!remote)saveAnimals();return a;
+ const a={type,x,z,groundY:0,yaw:Math.random()*Math.PI*2,dir:Math.random()*Math.PI*2,turn:0,speed:.5,stuck:0,leashed:false,color:furColor,mane:colors.mane,legs:colors.legs,tail:colors.tail,group:g,body,harness,lead,leadScale:k,walkingLegs,phase:Math.random()*7};if(!remote)animals.push(a);if(saveIt&&!remote)saveAnimals();if(!remote)coinRefresh();return a;
 }
 // Världspositioner används så att kopplet verkligen når handen även när djuret vänder sig.
 const plLeadMouth=new THREE.Vector3(),plLeadHand=new THREE.Vector3();
@@ -1114,7 +1130,7 @@ function removeAnimal(a){
  const i=animals.indexOf(a);if(i<0)return;
  animals.splice(i,1);scene.remove(a.group);
  a.group.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});
- saveAnimals();
+ saveAnimals();coinRefresh();
 }
 function saveAnimals(){try{localStorage.setItem(('plattan-animals-slot-'+(window.plattanSlot||1)),JSON.stringify(animals.map(a=>({type:a.type,x:a.x,z:a.z,leashed:a.leashed,color:a.color,mane:a.mane,legs:a.legs,tail:a.tail}))))}catch{}}
 
@@ -1164,6 +1180,7 @@ document.querySelectorAll('[data-animal]').forEach(b=>b.onclick=()=>openAnimalCr
 $('animalCreatorCancel').onclick=()=>{$('animalCreator').style.display='none';$('animalPanel').style.display='none';selectedAnimalType=null;disposePreview();document.getElementById('qClose')?.click()};
 $('animalCreatorAdd').onclick=()=>{
  if(!selectedAnimalType)return;
+ if(!coinOwn(selectedAnimalType)){toast('Du äger inget ledigt '+(COIN_NAMES[selectedAnimalType]||'djur')+' – köp i Djuraffären');return}
  const origin=building?orbitTarget:player;
  let x=0,z=0,found=false;
  for(let attempt=0;attempt<80;attempt++){
@@ -1237,9 +1254,68 @@ const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
 const townBuildings=new THREE.Group();scene.add(townBuildings);
 const townFadeHouses=[];
 const townCollisionWalls=[];
+// v80: butiksvaror i världens koordinater (per spelartomt).
+const shopOffers=[];
+const COIN_PRICES={table:100,chair:20,sofa:100,coffee:50,stove:100,cabinet:50,bed:100,nightstand:20,horse:200,foal:100,dog:50,cat:50,sheep:20};
+const COIN_NAMES={table:'Köksbord',chair:'Köksstol',sofa:'Soffa',coffee:'Soffbord',stove:'Spis',cabinet:'Köksskåp',bed:'Säng',nightstand:'Sängbord',horse:'Häst',foal:'Föl',dog:'Hund',cat:'Katt',sheep:'Får'};
+const COIN_ICONS={table:'🍽️',chair:'🪑',sofa:'🛋️',coffee:'☕',stove:'♨️',cabinet:'🗄️',bed:'🛏️',nightstand:'🗃️',horse:'🐴',foal:'🐎',dog:'🐕',cat:'🐈',sheep:'🐑'};
+function coinKey(){return 'plattan-coins-v80-slot-'+(window.plattanSlot||1)}
+let coinState=null,coinSlot=0;
+function coinLoad(){
+ const slot=window.plattanSlot||1;
+ if(coinSlot===slot&&coinState)return coinState;
+ coinSlot=slot;
+ try{coinState=JSON.parse(localStorage.getItem(coinKey())||'null')}catch(e){coinState=null}
+ if(!coinState||!Number.isFinite(coinState.balance)||!coinState.owned){
+  // Äldre placerade föremål får behållas utan att betalas igen.
+  const owned={};
+  coinLoad();try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+slot)||'[]'))if(COIN_PRICES[d.type])owned[d.type]=(owned[d.type]||0)+1}catch(e){}
+  try{for(const d of JSON.parse(localStorage.getItem('plattan-animals-slot-'+slot)||'[]'))if(COIN_PRICES[d.type])owned[d.type]=(owned[d.type]||0)+1}catch(e){}
+  coinState={balance:2000,owned};coinSave();
+ }
+ return coinState;
+}
+function coinSave(){try{localStorage.setItem(coinKey(),JSON.stringify(coinState))}catch(e){console.warn('Coins kunde inte sparas',e)}coinRefresh()}
+function coinPlaced(type){return furnitureItems.filter(f=>f.type===type).length+animals.filter(a=>a.type===type).length}
+function coinAvailable(type){return Math.max(0,(coinLoad().owned[type]||0)-coinPlaced(type))}
+function coinOwn(type){return !COIN_PRICES[type]||coinAvailable(type)>0}
+function coinRefresh(){const e=document.getElementById('plCoinsBalance');if(e&&coinState)e.textContent=coinState.balance.toLocaleString('sv-SE')+' Coins';if(document.getElementById('plCoinsInventory')?.style.display==='block')coinRenderInventory()}
+function coinBuy(type){const state=coinLoad(),price=COIN_PRICES[type];if(!price||state.balance<price)return false;state.balance-=price;state.owned[type]=(state.owned[type]||0)+1;coinSave();return true}
+function coinReturn(type){const state=coinLoad();if(!COIN_PRICES[type]||coinAvailable(type)<1)return;state.owned[type]--;state.balance+=COIN_PRICES[type];coinSave();toast(COIN_NAMES[type]+' återlämnad – '+COIN_PRICES[type]+' Coins tillbaka')}
+let shopLastOffer=null,shopNear=false;
+function shopCheck(){
+ if(building||coasterRider.active||parkRide.type||goToTarget){shopClose();return}
+ const current=shopOffers.find(o=>Math.hypot(player.x-o.x,player.z-o.z)<o.radius);
+ if(!current){shopNear=false;shopLastOffer=null;shopClose();return}
+ if(shopNear)return;
+ shopNear=true;shopLastOffer=current;shopShow(current);
+}
+function shopClose(){const el=document.getElementById('plCoinsBuy');if(el)el.style.display='none'}
+function shopShow(offer){
+ const el=document.getElementById('plCoinsBuy');if(!el)return;
+ const price=COIN_PRICES[offer.type];if(!price)return;
+ document.getElementById('plCoinsBuyText').textContent='Vill du köpa '+COIN_NAMES[offer.type]+'? Kostar '+price+' Coins.';
+ el.style.display='flex';
+ document.getElementById('plCoinsYes').onclick=()=>{shopClose();if(coinBuy(offer.type)){toast('Du köpte '+COIN_NAMES[offer.type]+'! Finns nu i Mina ägodelar.')}else toast('Du har inte tillräckligt med Coins.')};
+ document.getElementById('plCoinsNo').onclick=shopClose;
+}
+function coinRenderInventory(){
+ const list=document.getElementById('plCoinsInventoryList');if(!list)return;
+ list.replaceChildren();const state=coinLoad();let any=false;
+ for(const [type,total] of Object.entries(state.owned)){
+  if(!total||!COIN_PRICES[type])continue;any=true;
+  const placed=coinPlaced(type),free=Math.max(0,total-placed);
+  const row=document.createElement('div');row.className='plCoinRow';
+  const name=document.createElement('span');name.textContent=(COIN_ICONS[type]||'📦')+' '+COIN_NAMES[type]+' × '+total+' · Utplacerade: '+placed+' · I förråd: '+free;
+  const ret=document.createElement('button');ret.type='button';ret.textContent='Lämna tillbaka +'+COIN_PRICES[type];ret.disabled=free===0;ret.onclick=()=>coinReturn(type);
+  row.append(name,ret);list.append(row);
+ }
+ if(!any){const p=document.createElement('p');p.textContent='Du har inga inköpta saker ännu. Besök affärerna!';list.append(p)}
+}
+
 function rebuildTownBuildings(){
  coasterRider.active=false;coasterTrack=null;coasterCarts.length=0;
- townBuildings.clear();townFadeHouses.length=0;townCollisionWalls.length=0;discoLights.length=0;
+ townBuildings.clear();townFadeHouses.length=0;townCollisionWalls.length=0;shopOffers.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
  const wallMat=new THREE.MeshPhysicalMaterial({color:0xd93832,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});
  const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.8,side:THREE.DoubleSide});
@@ -1326,8 +1402,12 @@ function rebuildTownBuildings(){
     const ctx=c.getContext('2d');ctx.fillStyle='#294d40';ctx.fillRect(0,0,512,96);
     ctx.fillStyle='white';ctx.font='bold 51px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,256,48);
     const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;
-    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,.72),new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide}));
-    mesh.position.set(0,1.72,0);parent.add(mesh);
+    // Liten grön markskylt på en smal pinne, i stället för svävande text.
+    const signWidth=Math.min(2.25,w*.50);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.88,8),new THREE.MeshStandardMaterial({color:0x654b31,roughness:.9}));
+    pole.position.set(0,.48,0);parent.add(pole);
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(signWidth,.46),new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide}));
+    mesh.position.set(0,.99,.025);parent.add(mesh);
    }
    if(name==='Inredningsbutik'){
     const products=[['table','Köksbord'],['chair','Stol'],['stool','Pall'],['stove','Spis'],['cabinet','Köksskåp'],['sofa','Soffa'],['coffee','Soffbord'],['bed','Säng'],['nightstand','Sängbord'],['door','Dörr'],['window','Fönster']];
@@ -1338,12 +1418,15 @@ function rebuildTownBuildings(){
      for(const sx of [-2.7,2.7]){cub(stand,.09,.08,5.4,sx,.10,0,border)}
      for(const sz of [-2.7,2.7]){cub(stand,5.4,.08,.09,0,.10,sz,border)}
      const product=furnitureModel(type);product.position.set(0,.12,0);product.scale.setScalar(type==='door'||type==='window'?1.5:1.8);
-     stand.add(product);storeText(stand,title,4.4);
-     stand.userData.shopItem={type,label:title,kind:'furniture'};
+     stand.add(product);
+     const signSpot=new THREE.Group();signSpot.position.set(0,0,2.35);stand.add(signSpot);
+     storeText(signSpot,title,3.6);
+     stand.userData.shopItem={type,label:title,kind:'furniture'};if(COIN_PRICES[type]){const c=Math.cos(turn),sn=Math.sin(turn);shopOffers.push({type,x:gx-ox+c*x+sn*z,z:gz-oz-sn*x+c*z,radius:2.9})}
     });
    }else{
-    const types=[['horse','Häst',0xa36d40,1.45],['foal','Föl',0xbd8c5b,1.0],['sheep','Får',0xe4ded0,.9],['cat','Katt',0x9a948c,.55],['dog','Hund',0x99704e,.7]];
-    types.forEach(([type,title,color,size],idx)=>{
+    // Samma 3D-modeller som djuren man skapar i sin egen värld.
+    const types=[['horse','Häst',0xa36d40],['foal','Föl',0xbd8c5b],['sheep','Får',0xe4ded0],['cat','Katt',0x9a948c],['dog','Hund',0x99704e]];
+    types.forEach(([type,title,color],idx)=>{
      const x=-8+(idx%3)*8,z=-7+Math.floor(idx/3)*11;
      const pen=new THREE.Group();pen.position.set(x,0,z);g.add(pen);
      cub(pen,7,.08,8,0,.04,0,new THREE.MeshStandardMaterial({color:0xb9a98c}));
@@ -1351,14 +1434,21 @@ function rebuildTownBuildings(){
      for(const side of [-1,1]){for(const pz of [-3.5,-1.5,.5,2.5])cub(pen,.12,1.15,.12,side*3.45,.58,pz,wood);
       cub(pen,.12,.12,7,side*3.45,.7,0,wood)}
      cub(pen,7,.12,.12,0,.7,-3.9,wood);
-     const fur=new THREE.MeshStandardMaterial({color});
-     const animal=new THREE.Group();animal.position.set(0,0,-.7);pen.add(animal);
-     const torso=new THREE.Mesh(new THREE.SphereGeometry(.58,14,10),fur);torso.scale.set(.85*size,.65*size,1.25*size);torso.position.y=.85*size;animal.add(torso);
-     for(const xx of [-.34,.34])for(const zz of [-.48,.48])cub(animal,.17*size,.7*size,.17*size,xx*size,.36*size,zz*size,fur);
-     const head=new THREE.Mesh(new THREE.SphereGeometry(.36*size,12,9),fur);head.position.set(0,1.32*size,-.72*size);animal.add(head);
-     for(const xx of [-.19,.19])cub(animal,.12*size,.3*size,.12*size,xx*size,1.65*size,-.74*size,fur);
-     storeText(pen,title,5.2);
-     pen.userData.shopItem={type,label:title,kind:'animal'};
+     // remote=true skapar bara modellen, utan att lägga den bland spelarens djur
+     // eller spara den. Flytta modellen från scenen till butikens djurbox.
+     const sample=makeAnimal(type,0,0,false,color,true);
+     if(sample){
+      scene.remove(sample.group);
+      sample.group.position.set(0,.08,-.7);
+      sample.group.rotation.y=Math.PI*.16;
+      sample.harness.visible=false;
+      sample.lead.visible=false;
+      pen.add(sample.group);
+     }
+     // Skylten står vid boxens främre kant, inte mitt i djuret.
+     const signSpot=new THREE.Group();signSpot.position.set(0,0,3.05);pen.add(signSpot);
+     storeText(signSpot,title,3.6);
+     pen.userData.shopItem={type,label:title,kind:'animal'};{const c=Math.cos(turn),sn=Math.sin(turn);shopOffers.push({type,x:gx-ox+c*x+sn*z,z:gz-oz-sn*x+c*z,radius:4.2})}
     });
    }
   }
@@ -1826,12 +1916,12 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remot
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
 }
-function loadOwnSlot(){refreshPlotTiles();rebuildPlotFences();rebuildTownBuildings();
+function loadOwnSlot(){coinState=null;coinSlot=0;shopNear=false;shopClose();coinLoad();refreshPlotTiles();rebuildPlotFences();rebuildTownBuildings();
  for(const d of [...parts])remove(d);
  for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-animals-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const a of stored.slice(0,60)){if(animalTypes[a.type]&&Number.isFinite(a.x)&&Number.isFinite(a.z)){const v=makeAnimal(a.type,a.x,a.z,false,a.color,false,a);if(v){v.leashed=!!a.leashed;v.harness.visible=v.leashed}}}}catch(e){console.warn('Kunde inte läsa djur',e)}
- ensureSafePlayerStart();
+ ensureSafePlayerStart();coinRefresh();
 }
 function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw},appearance:{...characterOptions},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,groundY:a.groundY,yaw:a.group.rotation.y,moving:Math.abs(a.walkingLegs[0]?.pivot.rotation.x||0)>.025,color:a.color,mane:a.mane,legs:a.legs,tail:a.tail,leashed:a.leashed}))}}}
 window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
@@ -1882,8 +1972,8 @@ function furnitureModel(type){const g=new THREE.Group(),M=furnitureMaterials;
  if(type==='window'){box(.07,1,1,0,1.05,0,M.white,true);box(.085,.85,.85,.015,1.05,0,M.glass);box(.1,.05,1,0,1.05,0,M.white,true);box(.1,1,.05,0,1.05,0,M.white,true)}
  return g}
 function furnitureSave(){try{localStorage.setItem('plattan-furniture-'+(window.plattanSlot||1),JSON.stringify(furnitureItems.map(x=>({type:x.type,x:x.group.position.x,z:x.group.position.z,rot:x.group.rotation.y,open:!!x.group.userData.open,color:x.group.userData.tint}))))}catch(e){}}
-function furnitureAdd(type,x,z,rot=0,persist=true,open=false,color=null){const group=furnitureModel(type);furnitureTint(group,color||furnitureOriginalColors[type]||'#a8794c');group.position.set(x,0,z);group.rotation.y=rot;if(type==='door'&&open){group.userData.open=true;group.userData.doorHinge.rotation.y=-Math.PI*.52}scene.add(group);furnitureItems.push({type,group});if(persist)furnitureSave()}
-window.plFurniturePlace=(x,y)=>{if(window.plFurnitureEditing)return true;if(!window.plFurnitureMode)return false;const hit=getHit(x,y);if(!hit)return true;const type=window.plFurnitureSelected||'table';let px=hit.point.x,pz=hit.point.z;if(!Number.isFinite(px)||!Number.isFinite(pz))return true;px=Math.round(px*2)/2;pz=Math.round(pz*2)/2;if(Math.abs(px)>24.5||Math.abs(pz)>24.5){toast('Placera inredningen på din egen tomt');return true}furnitureAdd(type,px,pz);toast('Inredning placerad: '+type);return true};
+function furnitureAdd(type,x,z,rot=0,persist=true,open=false,color=null){const group=furnitureModel(type);furnitureTint(group,color||furnitureOriginalColors[type]||'#a8794c');group.position.set(x,0,z);group.rotation.y=rot;if(type==='door'&&open){group.userData.open=true;group.userData.doorHinge.rotation.y=-Math.PI*.52}scene.add(group);furnitureItems.push({type,group});if(persist)furnitureSave();coinRefresh()}
+window.plFurniturePlace=(x,y)=>{if(window.plFurnitureEditing)return true;if(!window.plFurnitureMode)return false;const hit=getHit(x,y);if(!hit)return true;const type=window.plFurnitureSelected||'table';let px=hit.point.x,pz=hit.point.z;if(!Number.isFinite(px)||!Number.isFinite(pz))return true;if(!coinOwn(type)){toast('Du äger ingen ledig '+(COIN_NAMES[type]||type)+' – köp i Inredningsbutiken');return true}px=Math.round(px*2)/2;pz=Math.round(pz*2)/2;if(Math.abs(px)>24.5||Math.abs(pz)>24.5){toast('Placera inredningen på din egen tomt');return true}furnitureAdd(type,px,pz);toast('Inredning placerad: '+type);return true};
 let furnitureActive=null;const furnitureRay=new THREE.Raycaster(),furnitureMouse=new THREE.Vector2(),furniturePlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 // Tydlig streckad kontur runt vald inredning. Uppdateras när föremålet flyttas/roteras.
 let furnitureOutline=null;
@@ -1906,7 +1996,7 @@ window.plFurnitureEditing=false;
 window.plFurnitureSetEditing=enabled=>{window.plFurnitureEditing=!!enabled;if(!enabled){window.plFurnitureCopyTarget=null;furnitureSelect(null)};document.dispatchEvent(new Event('plFurnitureEditingChanged'))};
 function furniturePick(x,y){furnitureMouse.set(x/innerWidth*2-1,-y/innerHeight*2+1);furnitureRay.setFromCamera(furnitureMouse,camera);const hits=furnitureRay.intersectObjects(furnitureItems.map(f=>f.group),true);for(const h of hits){const item=furnitureItems.find(f=>{let obj=h.object;while(obj){if(obj===f.group)return true;obj=obj.parent}return false});if(item)return item}return null}
 function furnitureGround(x,y){furnitureMouse.set(x/innerWidth*2-1,-y/innerHeight*2+1);furnitureRay.setFromCamera(furnitureMouse,camera);const p=new THREE.Vector3();return furnitureRay.ray.intersectPlane(furniturePlane,p)?p:null}
-window.plFurnitureDelete=()=>{if(!furnitureActive){toast('Markera först en möbel');return}const item=furnitureActive;furnitureSelect(null);scene.remove(item.group);furnitureItems.splice(furnitureItems.indexOf(item),1);furnitureSave();toast('Inredning borttagen')};
+window.plFurnitureDelete=()=>{if(!furnitureActive){toast('Markera först en möbel');return}const item=furnitureActive;furnitureSelect(null);scene.remove(item.group);furnitureItems.splice(furnitureItems.indexOf(item),1);furnitureSave();coinRefresh();toast('Möbeln flyttad till Mina ägodelar')};
 window.plFurnitureRotate=()=>{if(!furnitureActive){toast('Markera först en möbel');return}furnitureActive.group.rotation.y+=Math.PI/2;furnitureUpdateOutline();furnitureSave()};
 window.plFurnitureClearSelection=()=>furnitureSelect(null);
 let furnitureDrag=null;
@@ -1935,7 +2025,18 @@ window.plResetAll=()=>{
   refreshGhost();
   toast('Ny tom värld – plattor, djur och möbler borttagna');
 };
-try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false,!!d.open,d.color&&/^#[0-9a-f]{6}$/i.test(d.color)?d.color:furnitureOriginalColors[d.type])}catch(e){}
+try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false,!!d.open,d.color&&/^#[0-9a-f]{6}$/i.test(d.color)?d.color:furnitureOriginalColors[d.type])}catch(e){}coinRefresh();
+
+// Coins: gemensam skärm för dator och iPad.
+const coinUI=document.createElement('div');coinUI.id='plCoinUI';
+coinUI.innerHTML=`<button id="plCoinsOpen" type="button" aria-label="Öppna Mina ägodelar"><span class="plCoinSymbol">👑</span> <strong id="plCoinsBalance">2 000 Coins</strong> <small>· Mina ägodelar</small></button>
+<div id="plCoinsInventory" role="dialog" aria-label="Mina ägodelar"><header><b>👑 Mina ägodelar</b><button id="plCoinsClose" type="button">✕</button></header><p>Utplacerade saker kan tas bort i byggläget eller djurläget. De hamnar då här, och kan placeras igen eller lämnas tillbaka för hela priset.</p><div id="plCoinsInventoryList"></div></div>
+<div id="plCoinsBuy" role="dialog" aria-label="Köp vara"><div class="plCoinBuyCard"><b>🪙 Butiken</b><p id="plCoinsBuyText"></p><div><button id="plCoinsYes" type="button">Ja, köp</button><button id="plCoinsNo" type="button">Nej</button></div></div></div>`;
+document.body.append(coinUI);
+document.getElementById('plCoinsOpen').onclick=()=>{const e=document.getElementById('plCoinsInventory');e.style.display=e.style.display==='block'?'none':'block';coinRefresh()};
+document.getElementById('plCoinsClose').onclick=()=>document.getElementById('plCoinsInventory').style.display='none';
+coinLoad();coinRefresh();
+
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  if(!building&&!coasterRider.active&&!parkRide.type&&!goToTarget&&parkRideQuestion.style.display!=='block'&&coasterQuestion.style.display!=='block'){
@@ -2052,7 +2153,7 @@ function frame(now){
   leftArm.rotation.x=parkRide.type==='carousel'?-1.05:-.65;
   rightArm.rotation.x=parkRide.type==='carousel'?-1.05:-.65;
  }
- animateAnimals(dt);animateRemoteAnimals(dt);
+ animateAnimals(dt);animateRemoteAnimals(dt);shopCheck();
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
  updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
