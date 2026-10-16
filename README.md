@@ -1,5 +1,11 @@
-Plattan v111 – spelarsynk
+Plattan v112 – 200 rutors sikt, dans överallt och möbler online
 
-Servern skickar positioner i hela världen (-220 till 220), även i diskot. Fjärrspelares ben visas korrekt oberoende av lokala avatarens sittläge. Gemensam attraktionstid och platser från v110 bevaras.
+Ändringar:
+- Siktgräns 200 rutor, dimma börjar vid 165 och slutar vid 200.
+- Dansaktivitet och vald dansrörelse synkroniseras även utanför diskot.
+- Möbler synkroniseras mellan spelare (typ, position, rotation, färg, dörrstatus).
+- Servern validerar och skickar möbler i spelarnas världsdata.
+- Befintliga gemensamma attraktioner och övrig synkning bevaras.
 
-Ersätt alla projektfiler på GitHub och vänta på Render-deploy. Testa dator och iPad tillsammans.
+Ladda upp samtliga filer till GitHub och låt Render distribuera. Testa på dator och iPad samtidigt.
+OBS: 200 rutors sikt kan påverka prestandan på äldre iPad-enheter.
