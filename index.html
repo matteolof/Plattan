@@ -233,7 +233,7 @@
 #plCoasterQuestion .answers{display:flex;gap:12px;justify-content:center;margin-top:18px}
 #plCoasterQuestion button{min-width:100px;padding:12px;font-size:17px}
 #plCoasterExit{display:none;position:fixed;z-index:35;bottom:145px;right:18px;background:#bc3641;color:white;border:3px solid white;border-radius:16px;padding:15px 18px;font-size:17px;box-shadow:0 5px 16px #0006}
-@media(pointer:coarse){#plCoasterExit.riding{display:block}}
+#plCoasterExit.riding{display:block}
 @media(pointer:coarse) and (max-width:700px){#plCoasterExit{bottom:110px;right:12px;padding:12px;font-size:15px}}
 #plParkRideQuestion{position:fixed;z-index:46;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100vw - 32px));padding:22px;background:#f4fff8;color:#163d2e;border:3px solid #438a64;border-radius:18px;box-shadow:0 14px 60px #0008;text-align:center}#plParkRideQuestion strong{display:block;font-size:20px}#plParkRideQuestion .answers{display:flex;gap:12px;justify-content:center}#plParkRideQuestion button{padding:12px 22px;font-size:17px}#plParkRideExit{display:none;position:fixed;z-index:36;bottom:145px;right:18px;background:#bc3641;color:white;border:3px solid white;border-radius:16px;padding:15px 18px;font-size:17px}#plParkRideExit.riding{display:block}@media(pointer:coarse) and (max-width:700px){#plParkRideExit{bottom:110px;right:12px;padding:12px;font-size:15px}}
 </style><style id="plV80CoinStyle">
@@ -271,6 +271,12 @@
  #plRoster::before{padding-right:90px!important}
  #plCoinsInventory{top:56px!important;right:7px!important;left:auto!important}
 }
+</style>
+<style id="plV82InventoryModal">
+#plCoinsInventory{position:fixed!important;top:50%!important;left:50%!important;right:auto!important;transform:translate(-50%,-50%)!important;width:min(520px,calc(100vw - 28px))!important;max-height:min(78dvh,720px)!important;z-index:302!important;padding:18px!important;box-shadow:0 0 0 200vmax #0009,0 18px 55px #0009!important}
+#plCoinsInventory header{position:sticky;top:-18px;background:#16392f;z-index:2;padding:8px 0 12px}
+#plCoinsClose{font-size:22px!important;min-width:44px;min-height:42px;position:relative;z-index:3}
+#plCoinUI:has(#plCoinsInventory[style*="display: block"]){z-index:301!important}
 </style>
 </head><body><div id="plTouchControls" aria-label="Pekskärmskontroller"><div id="plStickBase" aria-label="Styrspak"><div id="plStickKnob"></div></div><button type="button" id="plJump" aria-label="Hoppa">HOPPA</button><button type="button" id="plWalkPlace" aria-label="Placera byggplatta">BYGG</button></div><div id="plCoasterQuestion" role="dialog" aria-modal="true" aria-label="Vill du åka berg- och dalbanan?" aria-hidden="true"><strong>🎢 Vill du åka?</strong><span>Du står på påstigningsplattformen.</span><div class="answers"><button type="button" id="plCoasterYes" class="on">Ja, åk!</button><button type="button" id="plCoasterNo">Nej</button></div></div><button type="button" id="plCoasterExit" aria-label="Hoppa av berg- och dalbanan">🎢 Hoppa av</button><div id="plParkRideQuestion" role="dialog" aria-label="Vill du åka?" style="display:none"><strong id="plParkRideTitle">Vill du åka?</strong><p>Välj Ja för att sätta dig och åka.</p><div class="answers"><button id="plParkRideYes" type="button">Ja, åk!</button><button id="plParkRideNo" type="button">Nej</button></div></div><button type="button" id="plParkRideExit">🎠 Hoppa av</button><div id="plLogin"><div class="panel"><h1 class="plStartTitle"><span class="plGreenTile" aria-hidden="true"></span>Plattan</h1><label>Spelarnamn</label><input id="plName" maxlength="18" placeholder="Ditt namn"><label>Välj en ledig tomt i spelvärlden</label><div id="plSlotMap" role="group" aria-label="Fyra spelarplatser"><button type="button" class="plPlot" data-slot="1"><b>Tomt 1</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="2"><b>Tomt 2</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="3"><b>Tomt 3</b><span>Kontrollerar…</span></button><button type="button" class="plPlot" data-slot="4"><b>Tomt 4</b><span>Kontrollerar…</span></button></div><input type="hidden" id="plSlot" value="1"><label>Lösenord</label><input id="plPassword" type="password" placeholder="Lösenord"><button id="plJoin">Gå in i spelet</button><p id="plError"></p><small>Bygget sparas lokalt och kan exporteras till en fil. Välj samma spelare nästa gång.</small></div></div><div id="plRoster"></div><div id="plChat"><strong>💬 Gemensam chatt</strong><div id="plMessages"></div><form id="plChatForm"><input id="plChatText" maxlength="300" placeholder="Skriv ett meddelande…"><button>Skicka</button></form></div>
 <div id="bar"><button id="menuToggle" title="Meny">☰ Meny</button><button id="modeBuild" class="on">▣ Bygg</button><button id="modeWalk">🚶 Gå</button><select id="shape" style="display:none"><option value="square">□ Fyrkant 1×1</option><option value="half">▭ Halv 1×0,5</option><option value="triangle">◺ Triangel</option></select><input id="color" style="display:none" type="color" value="#42b5ef" title="Färg"><button id="rotate" style="display:none">↻ Vrid bit</button><button id="customize">👕 Ändra gubben</button><button id="animalToggle">🐾 Djur</button><button id="walkZoomToggle" style="display:none" title="Växla kamerans avstånd">🔭 Utzoomat</button><button id="goHomePlot" style="display:none" title="Spring till en plats eller spelare">📍 Gå till</button><button id="orient" style="display:none">Vägg / golv</button><button id="paletteToggle">🧩 Plattor & färger</button><button id="paint">🎨 Måla: av</button><button id="delete">🗑 Riv: av</button><input id="file" type="file" accept=".json" hidden></div>
@@ -1032,6 +1038,14 @@ limb(leftArm,shirt,.13,.40,.14,0,-.20,0);limb(rightArm,shirt,.13,.40,.14,0,-.20,
 limb(leftLeg,pants,.16,.44,.17,0,-.22,0);limb(rightLeg,pants,.16,.44,.17,0,-.22,0);
 limb(leftLeg,shoe,.18,.10,.25,0,-.45,-.05);limb(rightLeg,shoe,.18,.10,.25,0,-.45,-.05);
 avatar.add(leftArm,rightArm,leftLeg,rightLeg);scene.add(avatar);
+// Separata böjda sittben: lår framåt (-Z), underben nedåt och skor framåt.
+const seatedLegs=new THREE.Group();seatedLegs.visible=false;avatar.add(seatedLegs);
+for(const x of [-.115,.115]){
+ limb(seatedLegs,pants,.16,.16,.43,x,.50,-.22);
+ limb(seatedLegs,pants,.16,.35,.16,x,.31,-.43);
+ limb(seatedLegs,shoe,.18,.10,.26,x,.115,-.52);
+}
+
 
 // Frigående djur med egna enkla modeller och koppel/grimma.
 const animals=[];const animalTypes={horse:{size:1.35,color:0x9b6540},foal:{size:.87,color:0xb98657},sheep:{size:.76,color:0xece9d9},cat:{size:.42,color:0xb99469},dog:{size:.65,color:0x9b7655}};
@@ -1708,7 +1722,7 @@ function buildAdventurePark(g,cub){
  for(const x of [-2.55,2.55]){
   cub(g,.12,2.1,.12,x,1.1,20,steel);
   cub(g,.12,2.7,.12,x,1.4,25.4,steel);
-  const rail=cub(g,.12,.10,8.8,x,2.1,22.4,steel);rail.rotation.x=.29;
+  const rail=cub(g,.12,.10,8.8,x,2.1,22.4,steel);rail.rotation.x=-.29;
  }
 
 }
@@ -1724,7 +1738,7 @@ function updateCoaster(now){
  }
  if(coasterRider.active){
   const cart=coasterCarts[coasterRider.seat],world=parkWorld(cart.position);
-  player.x=world.x;player.z=world.z;player.y=cart.position.y+.45;player.vy=0;
+  player.x=world.x;player.z=world.z;player.y=cart.position.y+.27;player.vy=0;
   const tan=coasterTrack.getTangentAt((t-coasterSeatOffsets[coasterRider.seat]+1)%1);
   coasterRider.heading=Math.atan2(-tan.z,tan.x);
   player.yaw=coasterRider.heading+coasterRider.cameraOffset;
@@ -1757,14 +1771,14 @@ function updateParkRides(now){
  let local,heading=0;
  if(parkRide.type==='ferris'){
   const basket=ferrisSeats[parkRide.index].basket;
-  const v=new THREE.Vector3(-.78,-1.65,0);basket.localToWorld(v);
+  const v=new THREE.Vector3(-.78,-1.39,0);basket.localToWorld(v);
   // Positioner i parkens lokala koordinater, eftersom åkattraktionerna ligger i husgruppen.
   const root=ferrisRoot.parent;root.worldToLocal(v);
   local=v;heading=0;
  }else{
   const h=carouselHorses[parkRide.index];const v=new THREE.Vector3(0,1.05,0);
   h.localToWorld(v);carouselRoot.parent.worldToLocal(v);
-  local=v;heading=-carouselRoot.rotation.y;
+  local=v;heading=-carouselRoot.rotation.y+Math.PI;
  }
  const p=parkWorld(local);player.x=p.x;player.z=p.z;player.y=local.y;player.vy=0;
  player.yaw=heading+parkRide.offset;
@@ -1798,7 +1812,16 @@ function playObstacleBlocks(x,z,y,radius){
   // Gå till kör med avsikt utan kollisioner, men vanlig gång stoppas här.
   const ferrisBase=Math.hypot(p.x+24,p.z+4)<2.65+radius;
   const carouselBase=Math.hypot(p.x-24,p.z+3)<7.5+radius;
-  return y<2.1&&(ferrisBase||carouselBase);
+  if(y<2.1&&(ferrisBase||carouselBase))return true;
+  // Trappstegen och stationen är solida. Uppstigning är möjlig när nästa
+  // steg ligger högst 0,46 m ovanför fötterna; höga sidor stoppar gubben.
+  const hitBox=(cx,cz,halfX,halfZ)=>Math.max(Math.abs(p.x-cx)-halfX,0)**2+Math.max(Math.abs(p.z-cz)-halfZ,0)**2<radius*radius;
+  if(hitBox(0,28,3,1.5)&&y<2.76-.46&&y+1.62>0)return true;
+  for(let i=0;i<8;i++){
+   const h=(i+1)*.345+.07;
+   if(hitBox(0,18.5+i,2.4,.495)&&y<h-.46&&y+1.62>0)return true;
+  }
+  return false;
  }
  const p=playLocal(x,z);
  // Plattformar och balansplankor är fasta: man kan stå ovanpå dem,
@@ -1819,7 +1842,7 @@ function playGroundHeight(x,z){
   if(Math.abs(p.x)<=2.4){
    for(let i=0;i<8;i++)if(Math.abs(p.z-(18.5+i))<=.51){
     const h=(i+1)*.345+.07;
-    if(h<=player.y+.52)best=Math.max(best,h);
+    if(h<=player.y+.46)best=Math.max(best,h);
    }
   }
   return best;
@@ -2055,6 +2078,14 @@ coinUI.innerHTML=`<button id="plCoinsOpen" type="button" aria-label="Öppna Mina
 document.body.append(coinUI);
 document.getElementById('plCoinsOpen').onclick=()=>{const e=document.getElementById('plCoinsInventory');e.style.display=e.style.display==='block'?'none':'block';coinRefresh()};
 document.getElementById('plCoinsClose').onclick=()=>document.getElementById('plCoinsInventory').style.display='none';
+// Klick utanför ägodelspanelen stänger den, även på iPad.
+document.addEventListener('pointerdown',event=>{
+ const inventory=document.getElementById('plCoinsInventory');
+ if(inventory.style.display!=='block')return;
+ if(inventory.contains(event.target)||document.getElementById('plCoinsOpen').contains(event.target))return;
+ inventory.style.display='none';
+},true);
+
 coinLoad();coinRefresh();
 
 function frame(now){
@@ -2159,17 +2190,23 @@ function frame(now){
   else if(player.y<0){player.y=0;player.vy=0}
   animatePlayland(now);
   const swing=moving?Math.sin(runCycle)*.65:0;
+  seatedLegs.visible=false;leftLeg.children.forEach(m=>m.visible=true);rightLeg.children.forEach(m=>m.visible=true);
   avatar.rotation.x=0;avatar.rotation.z=0;leftArm.rotation.z=0;rightArm.rotation.z=0;
   leftLeg.rotation.x=swing;rightLeg.rotation.x=-swing;
   leftArm.rotation.x=-swing*.75;rightArm.rotation.x=swing*.75;
   avatar.rotation.y=player.yaw;
   avatar.position.set(player.x,player.y-.11,player.z);
  }
- updateGoTo(dt);updateCoaster(now);updateParkRides(now);coasterCheckPlatform();parkRideCheck();if(coasterRider.active||parkRide.type){
+ updateGoTo(dt);updateCoaster(now);updateParkRides(now);coasterCheckPlatform();parkRideCheck();
+ if(!coasterRider.active&&!parkRide.type){seatedLegs.visible=false;leftLeg.children.forEach(m=>m.visible=true);rightLeg.children.forEach(m=>m.visible=true)}
+ if(coasterRider.active||parkRide.type){
   avatar.position.set(player.x,player.y-.11,player.z);
   avatar.rotation.y=parkRide.type?player.yaw-parkRide.offset:coasterRider.heading;
-  leftLeg.rotation.x=parkRide.type==='carousel'?-1.48:-1.15;
-  rightLeg.rotation.x=parkRide.type==='carousel'?-1.48:-1.15;
+  leftLeg.rotation.x=parkRide.type==='carousel'?1.35:1.20;
+  rightLeg.rotation.x=parkRide.type==='carousel'?1.35:1.20;
+  // Knäna böjs framåt mot vagnens/hästens framsida, med underbenen nedåt.
+  leftLeg.children.forEach(m=>m.visible=false);rightLeg.children.forEach(m=>m.visible=false);
+  seatedLegs.visible=true;
   leftArm.rotation.x=parkRide.type==='carousel'?-1.05:-.65;
   rightArm.rotation.x=parkRide.type==='carousel'?-1.05:-.65;
  }
