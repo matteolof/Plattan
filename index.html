@@ -1131,8 +1131,8 @@ const townFadeHouses=[];
 function rebuildTownBuildings(){
  townBuildings.clear();townFadeHouses.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
- const wallMat=new THREE.MeshStandardMaterial({color:0xb73932,roughness:.86});
- const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.85,side:THREE.DoubleSide});
+ const wallMat=new THREE.MeshPhysicalMaterial({color:0xd93832,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});
+ const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.8,side:THREE.DoubleSide});
  const trimMat=new THREE.MeshStandardMaterial({color:0xf5e5c5,roughness:.8});
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
  const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
@@ -1149,6 +1149,8 @@ function rebuildTownBuildings(){
   function wallTile(x,y,z,side){
    const tile=cub(g,side? .12: .98,.98,side? .98:.12,x,y,z,wallMat);
    tile.castShadow=true;
+   const outline=new THREE.LineSegments(new THREE.EdgesGeometry(tile.geometry),new THREE.LineBasicMaterial({color:0xd93832,transparent:true,opacity:.7}));
+   outline.position.copy(tile.position);g.add(outline);
    return tile;
   }
   function windowHole(v){return [-11,-6,6,11].some(q=>Math.abs(v-q)<1.5)}
@@ -1163,23 +1165,11 @@ function rebuildTownBuildings(){
   // Tunn dörrkarm, utan vägg framför öppningen.
   cub(g,.16,2,.22,-1,1,15,trimMat);cub(g,.16,2,.22,1,1,15,trimMat);
   cub(g,2,.16,.22,0,2,15,trimMat);
-  // Sadeltaket byggs av enskilda svarta takplattor i ett rutnät.
-  const roofRise=5, half=15.8, slope=Math.hypot(half,roofRise);
-  for(const side of [-1,1])for(let iz=0;iz<31;iz++)for(let ix=0;ix<16;ix++){
-   const along=(ix+.5)/16;
-   const x=side*(half-along*half),y=4+along*roofRise;
-   const roof=cub(g,slope/16-.025,.14,.98,x,y,iz-15,roofMat);
-   roof.rotation.z=side===-1?Math.atan2(roofRise,half):-Math.atan2(roofRise,half);
-  }
-  // Gavlarna är triangulära röda plattor (inte massiva block).
-  for(const z of [-15,15]){
-   for(let ix=-15;ix<15;ix++){
-    const x=ix+.5,top=4+roofRise*(1-Math.abs(x)/15);
-    const geo=new THREE.BufferGeometry();
-    const lo=ix,hi=ix+1,yl=4+roofRise*(1-Math.abs(lo)/15),yr=4+roofRise*(1-Math.abs(hi)/15);
-    geo.setAttribute('position',new THREE.Float32BufferAttribute([lo,4,z,hi,4,z,lo,yl,z,hi,4,z,hi,yr,z,lo,yl,z],3));
-    geo.computeVertexNormals();g.add(new THREE.Mesh(geo,wallMat));
-   }
+  // Platt tak: en halv platta tjockt, sticker ut en halv platta runtom.
+  // Rutindelade 1x1-takplattor så huset hör till Plattans byggvärld.
+  for(let ix=0;ix<31;ix++)for(let iz=0;iz<31;iz++){
+   const x=ix-15,z=iz-15;
+   cub(g,1,.5,1,x,4.25,z,roofMat);
   }
   // Fönster på framsida, baksida och båda långsidor.
   function windowAt(x,y,z,side){
@@ -1204,7 +1194,7 @@ function rebuildTownBuildings(){
    const isWallOrRoof=material===wallMat||material===roofMat||obj.userData.townSign||
      (obj.geometry?.type==='BufferGeometry'&&material.color?.getHex()===0xb73932);
    if(!isWallOrRoof)return;
-   obj.material=material.clone();obj.material.transparent=true;obj.material.depthWrite=true;
+   obj.material=material.clone();obj.material.userData.townBaseOpacity=material.opacity;obj.material.transparent=true;obj.material.depthWrite=false;
    fadeMeshes.push(obj);
   });
   townFadeHouses.push({outer,turn,gx,gz,fadeMeshes,opacity:1});
@@ -1281,13 +1271,13 @@ function animateTownFade(dt){
   const target=inside?.13:1;
   h.opacity+=(target-h.opacity)*Math.min(1,dt*5);
   if(Math.abs(h.opacity-target)<.003)h.opacity=target;
-  for(const mesh of h.fadeMeshes){mesh.material.opacity=h.opacity;mesh.material.depthWrite=h.opacity>.95;}
+  for(const mesh of h.fadeMeshes){const base=mesh.material.userData?.townBaseOpacity??1;mesh.material.opacity=base*h.opacity;mesh.material.depthWrite=false;}
  }
 }
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
 const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
-function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-75+z-ox,z:-x-oz}}
-function playPosition(){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-(player.z+oz),z:player.x+ox+75}}
+function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:wz,z:-wx-75}}
+function playPosition(){return playLocal(player.x,player.z)}
 function buildPlayland(g,cub){
  playPlatforms.length=0;
  const turquoise=new THREE.MeshStandardMaterial({color:0x19b6b2,roughness:.5,side:THREE.DoubleSide});
@@ -1322,8 +1312,8 @@ function buildPlayland(g,cub){
 function playGroundHeight(x,z){
  const p=playLocal(x,z);let best=0;
  // Rampens yta stiger från 0 till 3.1; en spelare måste gå upp på den.
- if(Math.abs(p.x+9)<1.08&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.34)best=Math.max(best,h)}
- for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.22)best=Math.max(best,s.y)}
+ if(Math.abs(p.x+9)<1.08&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.48)best=Math.max(best,h)}
+ for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.38)best=Math.max(best,s.y)}
  return best;
 }
 function playInteract(){
@@ -1335,7 +1325,7 @@ function playInteract(){
 }
 function animatePlayland(now){
  const pp=playPosition();if(Math.abs(pp.x)<14&&Math.abs(pp.z)<14&&now-playHintTime>18000&&!building){playHintTime=now;toast('Leklandet: gå uppför rampen, hoppa mellan plattorna och tryck E vid rutschkanan!')}
- if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=q.x+p.z;player.z=q.z-p.x;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
+ if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=-75-p.z-q.ox;player.z=p.x-q.oz;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
  if(playSwing?.active){const t=Math.min(1,(now-playSwing.active.start)/1900),u=(1-Math.cos(Math.PI*t))/2,s=playSwing,p=playLocal(0,0);player.x=p.x+s.from.z;player.z=p.z-(s.from.x+(s.to.x-s.from.x)*u);player.y=s.y+Math.sin(Math.PI*t)*1.3;player.vy=0;if(t>=1){playSwing.active=null;toast('Du landade på nästa platta!')}}
 }
 const remoteWorlds=new Map();
@@ -1513,7 +1503,7 @@ function frame(now){
    const speed=4.4;
    const dx=-Math.sin(player.yaw)*f*dt*speed;
    const dz=-Math.cos(player.yaw)*f*dt*speed;
-   const nx=Math.max(-84.5,Math.min(84.5,player.x+dx)),nz=Math.max(-84.5,Math.min(84.5,player.z+dz));
+   const nx=Math.max(-150,Math.min(150,player.x+dx)),nz=Math.max(-150,Math.min(150,player.z+dz));
    // Kontinuerlig kollision: flytta i små steg så att kroppen aldrig passerar genom en tunn vägg.
    // Separera också gubben från väggen om han redan råkat hamna för nära.
    const radius=.30; // Kroppens kollisionscylinder omfattar även huvud och hår (höjd 1,62).
@@ -1584,8 +1574,8 @@ function frame(now){
    const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.07));
    for(let i=0;i<steps;i++){
      const sx=dx/steps,sz=dz/steps;
-     const tx=Math.max(-84.5,Math.min(84.5,player.x+sx));
-     const tz=Math.max(-84.5,Math.min(84.5,player.z+sz));
+     const tx=Math.max(-150,Math.min(150,player.x+sx));
+     const tz=Math.max(-150,Math.min(150,player.z+sz));
      if(!blocked(tx,tz)){player.x=tx;player.z=tz}
      else{
        if(!blocked(tx,player.z))player.x=tx;
