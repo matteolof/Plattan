@@ -1,11 +1,8 @@
-Plattan v112 – 200 rutors sikt, dans överallt och möbler online
+Plattan v113 – 250 rutors sikt och närliggande kollisioner
 
-Ändringar:
-- Siktgräns 200 rutor, dimma börjar vid 165 och slutar vid 200.
-- Dansaktivitet och vald dansrörelse synkroniseras även utanför diskot.
-- Möbler synkroniseras mellan spelare (typ, position, rotation, färg, dörrstatus).
-- Servern validerar och skickar möbler i spelarnas världsdata.
-- Befintliga gemensamma attraktioner och övrig synkning bevaras.
+- Sikten är nu 250 rutor och dimman börjar vid 210 rutor.
+- Vid förflyttning testas väggkollisioner bara för väggar i spelarens närhet (5 rutor marginal från väggsegmentets utsträckning).
+- Möbler långt från spelaren filtreras bort innan dyra 3D-gränsboxar beräknas.
+- Alla multiplayerfunktioner från v112 behålls.
 
-Ladda upp samtliga filer till GitHub och låt Render distribuera. Testa på dator och iPad samtidigt.
-OBS: 200 rutors sikt kan påverka prestandan på äldre iPad-enheter.
+Ladda upp filerna till GitHub och låt Render distribuera dem. Testa prestanda vid affärer och diskot på dator och iPad.
