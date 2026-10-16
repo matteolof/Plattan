@@ -1,1 +1,1 @@
-Plattan v42: Dag/natt med måne och stjärnor, Inred med 11 3D-föremål. Ersätt index.html i GitHub. Inredning sparas lokalt per tomt.
+Plattan v110 – gemensam serverklocka och platser för berg- och dalbana/pariserhjul. Ersätt alla filer i GitHub med innehållet i denna ZIP. Starta om Render. Attraktionerna synkroniseras via /api/ride och /api/update.

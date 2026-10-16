@@ -1560,6 +1560,24 @@ const parkRide={type:null,index:0,offset:0,angle:0};let ferrisRoot=null,carousel
 const coasterRider={active:false,started:0,seat:0,cameraOffset:0,heading:0};
 // v105: Animationer kör bara när minst en ansluten spelare åker.
 const remoteRideStates=new Map();let coasterPhase=0,coasterLastTick=0,ferrisPhase=0,ferrisLastTick=0;
+const sharedRides={coaster:{running:false,phase:0,received:0,speed:.000022},ferris:{running:false,phase:0,received:0,speed:.000095}};
+let serverClockOffset=0,serverClockReady=false,sharedRideReady=false;
+function syncSharedRides(data,received,sent){
+ if(!data?.attractions||!Number.isFinite(data.serverTime))return;
+ const sample=data.serverTime-(sent+received)/2;
+ if(!serverClockReady){serverClockOffset=sample;serverClockReady=true}else serverClockOffset+=Math.max(-40,Math.min(40,sample-serverClockOffset))*.18;
+ const serverNow=received+serverClockOffset;
+ for(const type of ['coaster','ferris']){
+  const v=data.attractions[type],a=sharedRides[type];if(!v)continue;
+  const phase=Number(v.phase)||0, target=phase+(v.running?Math.max(0,serverNow-data.serverTime)*a.speed:0);
+  if(!sharedRideReady||a.running!==!!v.running||Math.abs(a.phase+(a.running?(serverNow-a.received)*a.speed:0)-target)>.07){a.phase=target;a.received=serverNow}
+  else{const current=a.phase+(a.running?(serverNow-a.received)*a.speed:0);a.phase=current+(target-current)*.15;a.received=serverNow}
+  a.running=!!v.running;
+ }
+ sharedRideReady=true;
+}
+function sharedPhase(type){const a=sharedRides[type];return a.phase+(a.running?Math.max(0,Date.now()+serverClockOffset-a.received)*a.speed:0)}
+
 function rideOccupied(type){if(type==='coaster'&&coasterRider.active)return true;if(type==='ferris'&&parkRide.type==='ferris')return true;const now=performance.now();for(const v of remoteRideStates.values())if(now-v.at<6500&&v.activity===(type==='coaster'?'coaster':'ride'))return true;return false;}let coasterTrack=null;const coasterCarts=[];const coasterSeatOffsets=[0,.032,.064,.096];
 function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:-wz,z:wx+75}}
 function playPosition(){return playLocal(player.x,player.z)}
@@ -1685,9 +1703,9 @@ function parkWorld(p){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {
 function updateCoaster(now){
  if(!coasterTrack||!coasterCarts.length)return;
  const dt=coasterLastTick?Math.min(100,now-coasterLastTick):0;coasterLastTick=now;
- if(rideOccupied('coaster'))coasterPhase=(coasterPhase+dt*.000022)%1;
- const t=coasterPhase;
- if(!rideOccupied('coaster')&&!coasterRider.active)return;
+ if(!sharedRideReady&&rideOccupied('coaster'))coasterPhase=(coasterPhase+dt*.000022)%1;
+ const t=sharedRideReady?((sharedPhase('coaster')%1)+1)%1:coasterPhase;
+ if(!(sharedRideReady?sharedRides.coaster.running:rideOccupied('coaster'))&&!coasterRider.active)return;
  for(let i=0;i<coasterCarts.length;i++){
   const u=(t-coasterSeatOffsets[i]+1)%1,p=coasterTrack.getPointAt(u),tan=coasterTrack.getTangentAt(u);
   const cart=coasterCarts[i];cart.position.copy(p);cart.rotation.y=Math.atan2(tan.x,tan.z);
@@ -1856,15 +1874,16 @@ function pinkCourseUpdate(now){
  if(!choice){pinkCourse.visited=false;dialog.style.display='none';return}
  if(!pinkCourse.visited){pinkCourse.visited=true;dialog.dataset.action=choice[0];document.getElementById('plCourseText').textContent=choice[1];dialog.style.display='block'}
 }
-function parkRideStart(type){
+async function parkRideStart(type){
  if(parkRide.type||coasterRider.active)return;
- parkRide.type=type;parkRide.index=type==='ferris'&&ferrisSeats.length?((window.plattanSlot||1)-1)%ferrisSeats.length:0;parkRide.offset=0;
+ const joined=await window.plRideRequest?.(type,'join');if(!joined?.ride){toast('Ingen ledig plats eller anslutning saknas.');return}
+ parkRide.type=type;parkRide.index=joined.ride.seat;parkRide.offset=0;
  parkRideHideQuestion();document.getElementById('plParkRideExit').classList.add('riding');
  toast('Du åker! Dra med fingret eller höger musknapp för att titta runt.');
 }
 function parkRideStop(){
  if(!parkRide.type)return false;
- const type=parkRide.type;parkRide.type=null;
+ const type=parkRide.type;parkRide.type=null;window.plRideRequest?.(type,'leave');
  const p=parkWorld(new THREE.Vector3(type==='ferris'?-24:24,0,type==='ferris'?1:7.5));
  player.x=p.x;player.z=p.z;player.y=0;player.vy=0;
  document.getElementById('plParkRideExit').classList.remove('riding');
@@ -1874,8 +1893,8 @@ function parkRideStop(){
 function updateParkRides(now){
  if(ferrisRoot){
   const dt=ferrisLastTick?Math.min(100,now-ferrisLastTick):0;ferrisLastTick=now;
-  if(rideOccupied('ferris'))ferrisPhase+=dt*.000095;
-  const a=ferrisPhase;ferrisRoot.rotation.z=a;
+  if(!sharedRideReady&&rideOccupied('ferris'))ferrisPhase+=dt*.000095;
+  const a=sharedRideReady?sharedPhase('ferris'):ferrisPhase;ferrisRoot.rotation.z=a;
   for(let i=0;i<ferrisSeats.length;i++)ferrisSeats[i].basket.rotation.z=-a;
  }
 
@@ -1988,16 +2007,17 @@ function coasterOnPlatform(){
  return Math.abs(p.x)<=1.9&&p.z>=26.65&&p.z<=29.35&&player.y>=-.05&&player.y<=.65;
 }
 function coasterHideQuestion(){coasterQuestion.style.display='none';coasterQuestion.setAttribute('aria-hidden','true')}
-function coasterStart(){
+async function coasterStart(){
  if(!coasterOnPlatform())return false;
- coasterRider.active=true;coasterRider.seat=0;coasterRider.cameraOffset=0;
+ const joined=await window.plRideRequest?.('coaster','join');if(!joined?.ride){toast('Ingen ledig vagn eller anslutning saknas.');return false}
+ coasterRider.active=true;coasterRider.seat=joined.ride.seat;coasterRider.cameraOffset=0;
  coasterHideQuestion();coasterExit.classList.add('riding');
  toast('Du sitter i vagnen! Dra för att titta runt. Tryck Å eller Hoppa av för att kliva av.');
  return true;
 }
 function coasterDismount(){
  if(!coasterRider.active)return false;
- coasterRider.active=false;const p=parkWorld(new THREE.Vector3(0,0,28));
+ coasterRider.active=false;window.plRideRequest?.('coaster','leave');const p=parkWorld(new THREE.Vector3(0,0,28));
  player.x=p.x;player.z=p.z;player.y=.16;player.vy=0;
  coasterExit.classList.remove('riding');coasterPlatformVisited=true;coasterHideQuestion();
  toast('Du klev av på stationen!');return true;
@@ -2079,15 +2099,15 @@ function animateRemoteAnimals(dt){
 function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
  const activity=p.state?.player?.activity||'walk';remoteRideStates.set(p.slot,{activity,at:performance.now()});
  let m=remotePlayers.get(p.slot);
- if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=Array.isArray(o.material)?o.material.map(mat=>mat.clone()):o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;
+ if(!m){m=avatar.clone(true);const originals=[],copies=[];avatar.traverse(o=>{if(o.isMesh)originals.push(o)});m.traverse(o=>{if(o.isMesh){o.material=o.material.clone();copies.push(o)}});m.userData.meshCopies=copies;m.userData.meshOriginals=originals;
  const sourceGroups=[],clonedGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)clonedGroups.push(o)});
  m.userData.animationParts={leftLeg:clonedGroups[sourceGroups.indexOf(leftLeg)],rightLeg:clonedGroups[sourceGroups.indexOf(rightLeg)],leftArm:clonedGroups[sourceGroups.indexOf(leftArm)],rightArm:clonedGroups[sourceGroups.indexOf(rightArm)]};scene.add(m);remotePlayers.set(p.slot,m)}
- const incomingLook=p.state?.appearance;const look={...characterDefaults,...(m.userData.remoteLook||{}),...(incomingLook&&typeof incomingLook==='object'?incomingLook:{})};m.userData.remoteLook={...look};m.userData.remoteMotion={...(p.state?.player||{})};m.userData.remoteMotionAt=performance.now();const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
- for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.set(characterDefaults[fields[idx]])}}
+ const look=p.state?.appearance||{};m.userData.remoteLook={...look};m.userData.remoteMotion={...(p.state?.player||{})};m.userData.remoteMotionAt=performance.now();m.userData.remoteSlot=p.slot;const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
+ for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
  const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
- for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else if(src===seatedLegs)dst.visible=false;else if(src===hairGroup)dst.visible=look.hairStyle!=='none';else dst.visible=true}
+ for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else if(src===seatedLegs)dst.visible=false;else dst.visible=src.visible}
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
- const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0);
+ const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.userData.remoteTarget={x,y:(Number(q.y)||0)-.11,z,yaw:Number(q.yaw)||0};if(!m.userData.positionInitialized){m.position.set(x,(Number(q.y)||0)-.11,z);m.userData.positionInitialized=true}m.rotation.y=(Number(q.yaw)||0);
   const parts=m.userData.animationParts;
   if(parts){const moving=!!q.moving,phase=performance.now()*.012;const step=moving?Math.sin(phase)*.55:0;
    parts.leftLeg.rotation.x=step;parts.rightLeg.rotation.x=-step;
@@ -2102,6 +2122,13 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
 function animateRemotePlayers(now){
  for(const m of remotePlayers.values()){
   const q=m.userData.remoteMotion||{},parts=m.userData.animationParts;
+  const ride=q.ride;
+  if(ride?.type==='coaster'&&coasterTrack&&coasterCarts[ride.seat]){
+   const cart=coasterCarts[ride.seat],world=parkWorld(cart.position);m.position.set(world.x,cart.position.y+.16,world.z);
+  }else if(ride?.type==='ferris'&&ferrisSeats[ride.seat]&&ferrisRoot){
+   const basket=ferrisSeats[ride.seat].basket,v=new THREE.Vector3(-.78,-1.39,0);basket.localToWorld(v);ferrisRoot.parent.worldToLocal(v);const world=parkWorld(v);m.position.set(world.x,v.y-.11,world.z);
+  }else if(m.userData.remoteTarget){const target=m.userData.remoteTarget,alpha=Math.min(1,Math.max(0,(now-(m.userData.lastAnimation||now))/1000)*9);m.position.x+=(target.x-m.position.x)*alpha;m.position.y+=(target.y-m.position.y)*alpha;m.position.z+=(target.z-m.position.z)*alpha}
+  m.userData.lastAnimation=now;
   if(!parts)continue;
   const t=now*.001,fast=t*7,slow=t*3;
   const move=q.activity==='dance'&&Number.isInteger(q.dance)?q.dance:-1;
@@ -2140,7 +2167,7 @@ function loadOwnSlot(){collisionRevision++;coinState=null;coinSlot=0;shopNear=fa
  ensureSafePlayerStart();coinRefresh();
 }
 function plSnapshot(){return {player:{x:player.x,z:player.z,y:player.y,yaw:player.yaw,moving:keys.has('w')||keys.has('s')||keys.has('arrowup')||keys.has('arrowdown')||Math.abs(plTouchForward)>.05,activity:coasterRider.active?'coaster':parkRide.type?'ride':pinkCourse.action?'obstacle':window.plZone==='disco'&&danceMove>=0?'dance':'walk',dance:danceMove},appearance:{...characterOptions},world:{parts:parts.map(({mesh,...d})=>d),animals:animals.map(a=>({type:a.type,x:a.x,z:a.z,groundY:a.groundY,yaw:a.group.rotation.y,moving:Math.abs(a.walkingLegs[0]?.pivot.rotation.x||0)>.025,color:a.color,mane:a.mane,legs:a.legs,tail:a.tail,leashed:a.leashed}))}}}
-window.plattanGame={loadOwnSlot,snapshot:plSnapshot,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);remoteRideStates.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
+window.plattanGame={loadOwnSlot,snapshot:plSnapshot,syncRides:syncSharedRides,updatePlayers(players){const seen=new Set();for(const p of players){if(p.slot===window.plattanSlot)continue;seen.add(p.slot);updateRemotePlayer(p);if(p.state?.world){const key=JSON.stringify(p.state.world.parts||[]);if(remotePlayers.get(p.slot).userData.worldKey!==key){remotePlayers.get(p.slot).userData.worldKey=key;updateRemotePlot(p.slot,p.state.world)}updateRemoteAnimals(p.slot,p.state.world.animals)}}for(const [slot,m] of remotePlayers)if(!seen.has(slot)){scene.remove(m);remotePlayers.delete(slot);remoteRideStates.delete(slot);clearRemote(slot);remoteAnimals.delete(slot)}}};
 
 updateCamera();let last=performance.now();
 // Inredning: föremål i samma världskoordinater som magnetplattorna.
