@@ -1127,8 +1127,9 @@ const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
 
 // Fyra fasta gemensamma byggnader runt vägkorset. De tillhör inte spelarnas sparade världar.
 const townBuildings=new THREE.Group();scene.add(townBuildings);
+const townFadeHouses=[];
 function rebuildTownBuildings(){
- townBuildings.clear();
+ townBuildings.clear();townFadeHouses.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
  const wallMat=new THREE.MeshStandardMaterial({color:0xb73932,roughness:.86});
  const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.85,side:THREE.DoubleSide});
@@ -1136,7 +1137,7 @@ function rebuildTownBuildings(){
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
  const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
  function cub(g,w,h,d,x,y,z,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
- function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,3.6,15.46);g.add(m)}
+ function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,4.75,15.46);g.add(m)}
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
@@ -1172,6 +1173,19 @@ function rebuildTownBuildings(){
   for(const z of [-10,-4,4,10]){windowAt(-15.25,2.15,z,true);windowAt(15.25,2.15,z,true)}
   label(g,name);
   if(name==='Leklandet')buildPlayland(g,cub);
+  // Väggar och tak blir diskret genomskinliga när spelaren går in.
+  // Egen materialinstans per hus, så att de andra husen inte påverkas.
+  const fadeMeshes=[];
+  g.traverse(obj=>{
+   if(!obj.isMesh||!obj.material)return;
+   const material=obj.material;
+   const isWallOrRoof=material===wallMat||material===roofMat||
+     (obj.geometry?.type==='BufferGeometry'&&material.color?.getHex()===0xb73932);
+   if(!isWallOrRoof)return;
+   obj.material=material.clone();obj.material.transparent=true;obj.material.depthWrite=true;
+   fadeMeshes.push(obj);
+  });
+  townFadeHouses.push({outer,turn,gx,gz,fadeMeshes,opacity:1});
  }
  // Entréerna och skyltarna vetter inåt mot vägkorset. Husens närmaste vägg är 60 rutor från mitten, helt utanför 50x50-tomterna (som slutar vid 55).
  house('Djuraffär',0,-75,0);
@@ -1180,6 +1194,21 @@ function rebuildTownBuildings(){
  house('Leklandet',-75,0,Math.PI/2);
 }
 
+// Mjuk övergång vid entrén: husets skal tonas ned, men möbler, skyltar
+// och hinderbanan förblir tydliga. Alla koordinater räknas i världens mittsystem.
+function animateTownFade(dt){
+ const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
+ const wx=player.x+ox,wz=player.z+oz;
+ for(const h of townFadeHouses){
+  const dx=wx-h.gx,dz=wz-h.gz,c=Math.cos(h.turn),s=Math.sin(h.turn);
+  const lx=c*dx-s*dz,lz=s*dx+c*dz;
+  const inside=Math.abs(lx)<15&&Math.abs(lz)<15;
+  const target=inside?.13:1;
+  h.opacity+=(target-h.opacity)*Math.min(1,dt*5);
+  if(Math.abs(h.opacity-target)<.003)h.opacity=target;
+  for(const mesh of h.fadeMeshes){mesh.material.opacity=h.opacity;mesh.material.depthWrite=h.opacity>.95;}
+ }
+}
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
 const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
 function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-75+z-ox,z:-x-oz}}
@@ -1505,7 +1534,7 @@ function frame(now){
  animateAnimals(dt);animateRemoteAnimals(dt);
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
- updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
+ animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
