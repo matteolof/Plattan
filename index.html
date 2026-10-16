@@ -2105,7 +2105,7 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;
  const look=p.state?.appearance||{};m.userData.remoteLook={...look};m.userData.remoteMotion={...(p.state?.player||{})};m.userData.remoteMotionAt=performance.now();m.userData.remoteSlot=p.slot;const originalMaterials=[shirt,pants,shoe,hairMaterial,headwearMaterial];const fields=['shirtColor','pantsColor','shoeColor','hairColor','headwearColor'];
  for(let i=0;i<m.userData.meshCopies.length;i++){const source=m.userData.meshOriginals[i],dest=m.userData.meshCopies[i];const idx=originalMaterials.indexOf(source.material);if(idx>=0){const color=look[fields[idx]];if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color))dest.material.color.set(color);else dest.material.color.copy(source.material.color)}}
  const sourceGroups=[],destGroups=[];avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
- for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else if(src===seatedLegs)dst.visible=false;else dst.visible=src.visible}
+ for(let i=0;i<sourceGroups.length;i++){const src=sourceGroups[i],dst=destGroups[i];if(src===hairGroup)dst.visible=look.hairStyle!=='none';else if(src===longHair)dst.visible=look.hairStyle==='long';else if(src===headwearGroup)dst.visible=look.headwear&&look.headwear!=='none';else if(src===hatGroup)dst.visible=look.headwear==='hat';else if(src===capGroup)dst.visible=look.headwear==='cap';else if(src===beanieGroup)dst.visible=look.headwear==='beanie';else if(src===seatedLegs)dst.visible=activity==='coaster'||activity==='ride';else if(src===leftLeg||src===rightLeg)dst.visible=true;else dst.visible=src.visible}
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.userData.remoteTarget={x,y:(Number(q.y)||0)-.11,z,yaw:Number(q.yaw)||0};if(!m.userData.positionInitialized){m.position.set(x,(Number(q.y)||0)-.11,z);m.userData.positionInitialized=true}m.rotation.y=(Number(q.yaw)||0);
   const parts=m.userData.animationParts;
@@ -2123,6 +2123,15 @@ function animateRemotePlayers(now){
  for(const m of remotePlayers.values()){
   const q=m.userData.remoteMotion||{},parts=m.userData.animationParts;
   const ride=q.ride;
+  // Fjärrspelarens ben ska inte ärva den lokala spelarens dolda sittben.
+  const seated=ride?.type==='coaster'||ride?.type==='ferris';
+  const sourceGroups=[],destGroups=[];
+  avatar.traverse(o=>{if(o.isGroup)sourceGroups.push(o)});
+  m.traverse(o=>{if(o.isGroup)destGroups.push(o)});
+  for(const [src,show] of [[leftLeg,!seated],[rightLeg,!seated],[seatedLegs,seated]]){
+   const dst=destGroups[sourceGroups.indexOf(src)];
+   if(dst){dst.visible=show;if(src!==seatedLegs)dst.children.forEach(child=>{child.visible=true})}
+  }
   if(ride?.type==='coaster'&&coasterTrack&&coasterCarts[ride.seat]){
    const cart=coasterCarts[ride.seat],world=parkWorld(cart.position);m.position.set(world.x,cart.position.y+.16,world.z);
   }else if(ride?.type==='ferris'&&ferrisSeats[ride.seat]&&ferrisRoot){
