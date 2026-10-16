@@ -1124,6 +1124,61 @@ function animateAnimals(dt){
 // Plattan Online: safe read-only snapshots of other plots, own plot remains in local coordinates.
 const PLOT_CENTERS={1:[-30,-30],2:[30,-30],3:[-30,30],4:[30,30]};
 const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
+
+// Fyra fasta gemensamma byggnader runt vägkorset. De tillhör inte spelarnas sparade världar.
+const townBuildings=new THREE.Group();scene.add(townBuildings);
+function rebuildTownBuildings(){
+ townBuildings.clear();
+ const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
+ const wallMat=new THREE.MeshStandardMaterial({color:0xb73932,roughness:.86});
+ const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.85,side:THREE.DoubleSide});
+ const trimMat=new THREE.MeshStandardMaterial({color:0xf5e5c5,roughness:.8});
+ const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
+ const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
+ function cub(g,w,h,d,x,y,z,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
+ function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,3.6,-15.10);g.add(m)}
+ function house(name,gx,gz,turn){
+  const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
+  const g=new THREE.Group();outer.add(g);
+  // 30 x 30 rutor, fyra rutor höga väggar. Framsidan är -Z.
+  cub(g,30,.15,30,0,.075,0,new THREE.MeshStandardMaterial({color:0xbab7a7}));
+  cub(g,30,4,.35,0,2,15,wallMat);
+  cub(g,.35,4,30,-15,2,0,wallMat);cub(g,.35,4,30,15,2,0,wallMat);
+  // 2 x 2 öppen ingång i mitten av framsidan.
+  cub(g,14,4,.35,-8,2,-15,wallMat);cub(g,14,4,.35,8,2,-15,wallMat);
+  cub(g,2,2,.35,0,3,-15,wallMat);
+  cub(g,.18,2,.5,-1,1,-15,trimMat);cub(g,.18,2,.5,1,1,-15,trimMat);
+  cub(g,2,.18,.5,0,2,-15,trimMat);
+  // Sadeltak med nock längs Z, svarta takfall och röda gavlar.
+  const roofRise=5, half=15.8, slope=Math.hypot(half,roofRise);
+  for(const side of [-1,1]){
+   const roof=cub(g,slope,.24,31.2,side*half/2,4+roofRise/2,0,roofMat);
+   roof.rotation.z=side===-1?Math.atan2(roofRise,half):-Math.atan2(roofRise,half);
+  }
+  for(const z of [-15,15]){
+   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute([-15,4,z,15,4,z,0,9,z],3));geo.computeVertexNormals();
+   const tri=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xb73932,side:THREE.DoubleSide}));g.add(tri);
+  }
+  // Fönster på framsida, baksida och båda långsidor.
+  function windowAt(x,y,z,side){
+   const pane=cub(g,2.5,1.6,.08,x,y,z,glassMat);
+   const frame=new THREE.Group();frame.position.set(x,y,z);g.add(frame);
+   cub(frame,2.7,.14,.17,0,.86,0,trimMat);cub(frame,2.7,.14,.17,0,-.86,0,trimMat);
+   cub(frame,.14,1.75,.17,-1.32,0,0,trimMat);cub(frame,.14,1.75,.17,1.32,0,0,trimMat);
+   cub(frame,.12,1.7,.17,0,0,0,trimMat);cub(frame,2.5,.10,.17,0,0,0,trimMat);
+   if(side){pane.rotation.y=Math.PI/2;frame.rotation.y=Math.PI/2}
+  }
+  for(const x of [-11,-6,6,11]){windowAt(x,2.15,-15.25,false);windowAt(x,2.15,15.25,false)}
+  for(const z of [-10,-4,4,10]){windowAt(-15.25,2.15,z,true);windowAt(15.25,2.15,z,true)}
+  label(g,name);
+ }
+ // Entréerna vetter mot gråa krysset. Främre vägg 10 rutor från mitten.
+ house('Djuraffär',0,-25,0);
+ house('Inredningsbutik',25,0,-Math.PI/2);
+ house('Disco',0,25,Math.PI);
+ house('Leklandet',-25,0,Math.PI/2);
+}
+
 const remoteWorlds=new Map();
 const remoteCollision=new Map();
 const remotePlayers=new Map();
@@ -1178,7 +1233,7 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remot
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
 }
-function loadOwnSlot(){refreshPlotTiles();
+function loadOwnSlot(){refreshPlotTiles();rebuildTownBuildings();
  for(const d of [...parts])remove(d);
  for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
