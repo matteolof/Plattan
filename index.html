@@ -240,6 +240,65 @@ const grid=new THREE.GridHelper(230,230,0xb4b7ba,0xadb0b4);grid.position.y=.006;
 const plotTiles=new THREE.Group();scene.add(plotTiles);
 function refreshPlotTiles(){plotTiles.clear();const own=window.plattanSlot||1;for(let slot=1;slot<=4;slot++){const [cx,cz]=PLOT_CENTERS[slot],[ox,oz]=PLOT_CENTERS[own];const tile=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:slot===own?0x75bd65:0x84ba79,roughness:1}));tile.rotation.x=-Math.PI/2;tile.position.set(cx-ox,.012,cz-oz);tile.receiveShadow=true;plotTiles.add(tile);const g=new THREE.GridHelper(50,50,0xc4e8b8,0xa7d49c);g.position.set(cx-ox,.018,cz-oz);plotTiles.add(g)}}
 
+// V68: Låga röda staket runt alla fyra tomter, med tre rutors öppning mot vägkorset.
+const plotFenceGroup=new THREE.Group();scene.add(plotFenceGroup);
+const plotFenceSegments=[];
+function rebuildPlotFences(){
+ plotFenceGroup.clear();plotFenceSegments.length=0;
+ const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
+ const red=new THREE.MeshStandardMaterial({color:0xc43d35,roughness:.74});
+ const dark=new THREE.MeshStandardMaterial({color:0x942a25,roughness:.78});
+ function beam(x,y,z,w,h,d,mat=red){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;plotFenceGroup.add(mesh)}
+ function section(ax,az,bx,bz){
+  const x1=ax-ox,z1=az-oz,x2=bx-ox,z2=bz-oz;
+  const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
+  if(len<.01)return;
+  plotFenceSegments.push({ax:x1,az:z1,bx:x2,bz:z2});
+  const horizontal=Math.abs(dx)>Math.abs(dz);
+  const midx=(x1+x2)/2,midz=(z1+z2)/2;
+  for(const y of [.34,.70])beam(midx,y,midz,horizontal?len:.105,.105,horizontal?.105:len);
+ }
+ for(let slot=1;slot<=4;slot++){
+  const [cx,cz]=PLOT_CENTERS[slot],xmin=cx-25,xmax=cx+25,zmin=cz-25,zmax=cz+25;
+  // Varje entré vetter mot korsningen. Hem-knappen placerar gubben på denna väg.
+  const gateX=cx<0?xmax:xmin;
+  for(let z=zmin;z<zmax;z++){
+   section(xmin,z,xmin,z+1); // Vänster sida
+   section(xmax,z,xmax,z+1); // Höger sida
+  }
+  // Ersätt tre sektioner mitt på den inåtvända sidan med en öppen grind.
+  const side=gateX-ox;
+  for(let i=plotFenceSegments.length-100;i<plotFenceSegments.length;i++){
+   const q=plotFenceSegments[i];
+   if(q&&Math.abs(q.ax-side)<.01&&Math.abs(q.bx-side)<.01&&((q.az+q.bz)/2 >= cz-oz-1 && (q.az+q.bz)/2 < cz-oz+2))q.gate=true;
+  }
+  for(let x=xmin;x<xmax;x++){section(x,zmin,x+1,zmin);section(x,zmax,x+1,zmax)}
+  // Bygg om de tre grindsektionernas synliga balkar genom att dölja motsvarande mesh.
+  // Enklare och robustare: balkar och stolpar skapas nedan från segmentlistan.
+ }
+ // Rensa första omgångens balkar och bygg bara de riktiga staketdelarna.
+ plotFenceGroup.clear();
+ const kept=plotFenceSegments.filter(s=>!s.gate);plotFenceSegments.length=0;plotFenceSegments.push(...kept);
+ const posts=new Set();
+ for(const s of plotFenceSegments){
+  const dx=s.bx-s.ax,dz=s.bz-s.az,len=Math.hypot(dx,dz),horizontal=Math.abs(dx)>.1;
+  for(const y of [.34,.70])beam((s.ax+s.bx)/2,y,(s.az+s.bz)/2,horizontal?len+.025:.09,.09,horizontal?.09:len+.025);
+  for(const [x,z] of [[s.ax,s.az],[s.bx,s.bz]]){
+   const k=x.toFixed(2)+','+z.toFixed(2);if(posts.has(k))continue;posts.add(k);
+   beam(x,.46,z,.15,.92,.15,dark);
+  }
+ }
+}
+function plotFenceBlocks(x,z,height){
+ if(height>=.95)return false; // Hoppa över det låga staketet.
+ const radius=.30;
+ for(const s of plotFenceSegments){
+  const dx=s.bx-s.ax,dz=s.bz-s.az,len2=dx*dx+dz*dz;
+  const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/len2));
+  if(Math.hypot(x-s.ax-t*dx,z-s.az-t*dz)<radius)return true;
+ }
+ return false;
+}
 const objects=[],parts=[];const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let building=true,erase=false,paint=false,shape='square',hex='#42b5ef',rot=0,spin=0,sub=0,orientation='wall';
 const player={x:0,z:5,y:0,vy:0,yaw:0,pitch:0};let walkZoom=1;const keys=new Set();let pointerDown=null,lookDrag=false,hover={x:innerWidth/2,y:innerHeight/2},candidate=null;let orbitYaw=0,orbitPitch=.55,orbitDistance=9,orbitTarget=new THREE.Vector3(0,0,0),touches=new Map();
 function toast(t){$('message').textContent=t;$('message').style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>$('message').style.display='none',2400)}
@@ -1137,7 +1196,7 @@ function rebuildTownBuildings(){
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
  const signMat=new THREE.MeshStandardMaterial({color:0x224b3d});
  function cub(g,w,h,d,x,y,z,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
- function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,4.75,15.46);m.userData.townSign=true;g.add(m)}
+ function label(g,name){const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,160);ctx.fillStyle='#fff5da';ctx.font='bold 86px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,512,83);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(13,2.05),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide}));m.position.set(0,4.75,16.25);m.userData.townSign=true;g.add(m)}
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
@@ -1246,12 +1305,12 @@ function updatePlZone(){
  if(window.plZone!==zone){window.plZone=zone;document.dispatchEvent(new CustomEvent('plZoneChanged',{detail:{zone}}))}
 }
 const danceNames=['Snurra','Twerka','Skaka rumpan','Moonwalk','Robot','Discofeber','Hoppa','Vågen','Sidosteg','Fågeldansen'];
-let danceMove=-1,danceStarted=0;
+let danceMove=-1,danceStarted=0,danceLocked=false;
 window.plDanceMoves=danceNames;
-window.plDanceSelect=i=>{danceMove=i===danceMove?-1:i;danceStarted=performance.now();document.dispatchEvent(new CustomEvent('plDanceSelected',{detail:{move:danceMove}}))};
+window.plDanceSelect=(i,lock=false)=>{if(i<0||i===danceMove&&!lock){danceMove=-1;danceLocked=false;}else{danceMove=i;danceLocked=!!lock;danceStarted=performance.now();}document.dispatchEvent(new CustomEvent('plDanceSelected',{detail:{move:danceMove,locked:danceLocked}}))};
 function animateDance(now){
  if(danceMove<0)return;
- if(now-danceStarted>=3000){window.plDanceSelect(-1);return;}
+ if(!danceLocked&&now-danceStarted>=3000){window.plDanceSelect(-1);return;}
  const t=(now-danceStarted)/1000,fast=t*7,slow=t*3;
  // Rörelserna läggs ovanpå gånganimationen och återställs nästa bildruta.
  const sway=Math.sin(fast),bounce=Math.abs(Math.sin(fast));
@@ -1285,56 +1344,70 @@ function animateTownFade(dt){
 }
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
 const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
-function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:wz,z:-wx-75}}
+function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:-wz,z:wx+75}}
 function playPosition(){return playLocal(player.x,player.z)}
 function buildPlayland(g,cub){
  playPlatforms.length=0;
  const turquoise=new THREE.MeshStandardMaterial({color:0x19b6b2,roughness:.5,side:THREE.DoubleSide});
  const yellow=new THREE.MeshStandardMaterial({color:0xffc442,roughness:.6,side:THREE.DoubleSide});
  const pink=new THREE.MeshStandardMaterial({color:0xf15b91,roughness:.6,side:THREE.DoubleSide});
- const purple=new THREE.MeshStandardMaterial({color:0x8164d9,roughness:.6});
+ const purple=new THREE.MeshStandardMaterial({color:0x8164d9,roughness:.6,side:THREE.DoubleSide});
  const platform=(x,z,y,w=1.2,d=1.2,mat=yellow)=>{cub(g,w,.16,d,x,y-.08,z,mat);playPlatforms.push({x,z,y,w,d})};
- // Start: gå upp på rampen till en plattform tre plattor ovanför golvet.
- const rampTop=3, rampLength=11;
+ // Entrén är vid +Z. Börja längst till vänster, gå uppför rampen till tre plattors höjd.
+ const rampTop=3,rampLength=11;
  const ramp=new THREE.Mesh(new THREE.BoxGeometry(2.2,.16,Math.hypot(rampLength,rampTop)),turquoise);
- ramp.position.set(-9,rampTop/2,-5.5);ramp.rotation.x=-Math.atan2(rampTop,rampLength);g.add(ramp);
- for(const x of [-10.2,-7.8])cub(g,.12,.48,11.4,x,1.7,-5.5,purple);
- platform(-9,.5,3,2.6,2.6,purple);
- // Hinderbanan: små fristående plattor med luckor mellan. Missar man en platta faller man ned.
- const steps=[[-7,2.1],[-5,3.4],[-3,2.1],[-1,3.5],[1,2.1],[3,3.5],[5,2.1],[7,3.5],[9,5.2]];
- steps.forEach(([x,z],i)=>platform(x,z,3,1.2,1.2,i%2?turquoise:yellow));
- platform(9,7,3,2.6,2.6,purple);
- // Målet: rak rutschkana från tre plattors höjd ned till marken.
- const start=new THREE.Vector3(9,3,8),end=new THREE.Vector3(9,.17,13.2);
+ ramp.position.set(-10,rampTop/2,-5.5);ramp.rotation.x=-Math.atan2(rampTop,rampLength);g.add(ramp);
+ platform(-10,.7,3,2.5,2.5,purple);
+ // Smala plankor kräver balans, men fungerar som riktiga gångytor.
+ // Första sektionen löper längs den vänstra väggen.
+ platform(-10,3.7,3,.65,3.6,yellow);
+ platform(-10,7.5,3,.65,3.6,turquoise);
+ platform(-10,10.2,3,2.1,1.7,purple);
+ // Vänd över rummets bredd på en rad plankor och små hoppytor.
+ platform(-7.9,10.2,3,2.7,.55,yellow);
+ platform(-5.5,10.2,3,1.2,1.2,turquoise);
+ platform(-3.4,10.2,3,2.5,.55,pink);
+ platform(-1.1,10.2,3,1.1,1.1,yellow);
+ platform(1.0,10.2,3,2.6,.55,turquoise);
+ platform(3.4,10.2,3,1.1,1.1,pink);
+ platform(5.5,10.2,3,2.5,.55,yellow);
+ platform(8,10.2,3,2.3,2.3,purple);
+ // En sista smal balanssträcka och en hoppplattform fram till rutschkanan.
+ platform(8,7.6,3,.55,3.0,turquoise);
+ platform(8,5.2,3,1.25,1.25,yellow);
+ platform(10,3.7,3,1.2,1.2,pink);
+ platform(11.3,5.5,3,2.1,2.1,purple);
+ // Rak rutschkana: banan och BÅDA sidokanterna lutar i samma vinkel.
+ const start=new THREE.Vector3(11.3,3,6.3),end=new THREE.Vector3(11.3,.17,12.9);
  const delta=end.clone().sub(start),len=delta.length(),mid=start.clone().add(end).multiplyScalar(.5);
- const slide=new THREE.Mesh(new THREE.BoxGeometry(2,.14,len),pink);
- slide.position.copy(mid);slide.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),delta.clone().normalize());g.add(slide);
+ const slideGroup=new THREE.Group();slideGroup.position.copy(mid);
+ slideGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),delta.clone().normalize());g.add(slideGroup);
+ const slide=new THREE.Mesh(new THREE.BoxGeometry(2.25,.14,len),pink);slideGroup.add(slide);
  for(const side of [-1,1]){
-  const rail=new THREE.Mesh(new THREE.BoxGeometry(.13,.48,len),purple);
-  rail.position.copy(mid).add(new THREE.Vector3(side*1.04,.27,0));rail.quaternion.copy(slide.quaternion);g.add(rail);
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.52,len),purple);
+  rail.position.set(side*1.16,.28,0);slideGroup.add(rail);
  }
- // Tydlig start- och målskylt.
- cub(g,2.5,.22,.25,-9,3.75,.5,yellow);
- cub(g,2.5,.22,.25,9,3.75,7,pink);
+ cub(g,2.5,.22,.25,-10,3.75,.7,yellow);
+ cub(g,2.5,.22,.25,11.3,3.75,5.3,pink);
  playRide={path:[start,end]};playSwing=null;
 }
 function playGroundHeight(x,z){
  const p=playLocal(x,z);let best=0;
  // Rampens yta stiger från 0 till 3.1; en spelare måste gå upp på den.
  if(Math.abs(p.x+9)<1.08&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.48)best=Math.max(best,h)}
- for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.38)best=Math.max(best,s.y)}
+ for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.55)best=Math.max(best,s.y)}
  return best;
 }
 function playInteract(){
  if(building)return false;
  const p=playPosition();
- if(playRide&&!playRide.active&&Math.hypot(p.x-9,p.z-7)<1.8&&player.y>2.6){playRide.active={start:performance.now()};toast('Du åker den raka rutschkanan!');return true}
+ if(playRide&&!playRide.active&&Math.hypot(p.x-11.3,p.z-5.5)<1.9&&player.y>2.6){playRide.active={start:performance.now()};toast('Du åker den raka rutschkanan!');return true}
  if(playSwing&&!playSwing.active&&Math.hypot(p.x-playSwing.from.x,p.z-playSwing.from.z)<1.6&&player.y>2.3){playSwing.active={start:performance.now()};toast('Du svingar dig i kopplet!');return true}
  return false;
 }
 function animatePlayland(now){
- const pp=playPosition();if(Math.abs(pp.x)<14&&Math.abs(pp.z)<14&&now-playHintTime>18000&&!building){playHintTime=now;toast('Leklandet: gå uppför rampen, hoppa mellan plattorna och tryck E vid rutschkanan!')}
- if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=-75-p.z-q.ox;player.z=p.x-q.oz;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
+ const pp=playPosition();if(Math.abs(pp.x)<14&&Math.abs(pp.z)<14&&now-playHintTime>18000&&!building){playHintTime=now;toast('Leklandet: gå uppför rampen, balansera på de smala plankorna, hoppa och tryck E vid rutschkanan!')}
+ if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=-75+p.z-q.ox;player.z=-p.x-q.oz;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
  if(playSwing?.active){const t=Math.min(1,(now-playSwing.active.start)/1900),u=(1-Math.cos(Math.PI*t))/2,s=playSwing,p=playLocal(0,0);player.x=p.x+s.from.z;player.z=p.z-(s.from.x+(s.to.x-s.from.x)*u);player.y=s.y+Math.sin(Math.PI*t)*1.3;player.vy=0;if(t>=1){playSwing.active=null;toast('Du landade på nästa platta!')}}
 }
 const remoteWorlds=new Map();
@@ -1391,7 +1464,7 @@ function updateRemotePlayer(p){if(p.slot===window.plattanSlot)return;let m=remot
  const originalHair=[shortHair];const copiedHair=m.userData.meshCopies[m.userData.meshOriginals.indexOf(shortHair)];if(copiedHair)copiedHair.visible=look.hairStyle==='short';
  const q=p.state?.player;if(q&&Number.isFinite(q.x)&&Number.isFinite(q.z)){const [x,z]=toLocalPlot(p.slot,q.x,q.z);m.position.set(x,(Number(q.y)||0)-.11,z);m.rotation.y=(Number(q.yaw)||0)+PLOT_ROT[p.slot]-PLOT_ROT[window.plattanSlot||1]}
 }
-function loadOwnSlot(){refreshPlotTiles();rebuildTownBuildings();
+function loadOwnSlot(){refreshPlotTiles();rebuildPlotFences();rebuildTownBuildings();
  for(const d of [...parts])remove(d);
  for(const a of [...animals]){scene.remove(a.group);animals.splice(animals.indexOf(a),1)}
  try{const stored=JSON.parse(localStorage.getItem('plattan-online-world-slot-'+window.plattanSlot)||'[]');if(Array.isArray(stored))for(const d of stored.slice(0,1500)){if(['square','half','small','triangle','roof'].includes(d.shape)&&Number.isFinite(d.x)&&Number.isFinite(d.y)&&Number.isFinite(d.z)&&/^#[0-9a-f]{6}$/i.test(d.color))add(d,false)}}catch(e){console.warn('Kunde inte läsa bygge',e)}
@@ -1543,7 +1616,7 @@ function frame(now){
      const cz=Math.max(b.min.z,Math.min(z,b.max.z));
      return (x-cx)**2+(z-cz)**2<radius*radius;
    })}
-   function blocked(x,z){return furnitureBlocked(x,z)||walls.some(w=>{
+   function blocked(x,z){return plotFenceBlocks(x,z,player.y)||furnitureBlocked(x,z)||walls.some(w=>{
      if(player.y>=w.high||player.y+1.62<=w.low)return false;
      const q=closest(w,x,z);return (x-q.x)**2+(z-q.z)**2<radius*radius;
    })}
@@ -1594,10 +1667,12 @@ function frame(now){
    avatar.rotation.y=player.yaw;
    runCycle+=dt*(keys.has('r')?52:13);
   }
-  const ground=floorHeight(player.x,player.z);
+  const previousY=player.y;
   player.y+=player.vy*dt;
   player.vy-=15*dt;
-  if(player.y<=ground){player.y=ground;player.vy=0}
+  const ground=floorHeight(player.x,player.z);
+  if(player.vy<=0&&player.y<=ground&&previousY>=ground-.12){player.y=ground;player.vy=0}
+  else if(player.y<0){player.y=0;player.vy=0}
   animatePlayland(now);
   const swing=moving?Math.sin(runCycle)*.65:0;
   avatar.rotation.x=0;avatar.rotation.z=0;leftArm.rotation.z=0;rightArm.rotation.z=0;
@@ -1628,7 +1703,7 @@ window.plFurnitureSelected='door';window.plFurnitureMode=false;
 const animals=[['horse','🐴','Stor häst'],['foal','🐎','Föl'],['sheep','🐑','Får'],['cat','🐈','Katt'],['dog','🐕','Hund']];
 const clothing=[['headwear','🧢','Huvudbonad'],['hairStyle','💇','Hår'],['shirtColor','👕','Tröja'],['pantsColor','👖','Byxor'],['shoeColor','👟','Skor']];
 let mode='bygga',selected='square',opened=null,chosenVariant={};
-let danceOpen=false;const danceIcons=['🌀','🍑','💃','🌙','🤖','🪩','🦘','🌊','↔️','🐦'];
+let danceOpen=false,lastDanceTap={index:-1,time:0};const danceIcons=['🌀','🍑','💃','🌙','🤖','🪩','🦘','🌊','↔️','🐦'];
 window.plQuickBuildActive=true;
 function setQuickMode(next){mode=next;window.plQuickBuildActive=mode==='bygga';window.plFurnitureMode=mode==='inred';if(mode!=='inred')window.plFurnitureSetEditing?.(false);if(mode!=='inred')window.plFurnitureClearSelection?.();if(mode!=='bygga'){document.querySelectorAll('.plSwatches,.plClothesOptions').forEach(x=>x.remove());if($('delete').classList.contains('on'))$('delete').click();}document.dispatchEvent(new Event('plQuickModeChanged'));}
 function button(parent,label,icon,click,active=false,hideLabel=false){const b=document.createElement('button');b.type='button';b.className='qbtn'+(active?' active':'')+(hideLabel?' qicononly':'');b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<span>'+icon+'</span>'+(hideLabel?'':'<small>'+label+'</small>');b.onclick=(event)=>{showButtonDescription(b);click(event)};b.addEventListener('pointerenter',()=>showButtonDescription(b));b.addEventListener('focus',()=>showButtonDescription(b));parent.append(b);return b}
@@ -1725,15 +1800,13 @@ function renderVariants(){
 function showShape(key){selected=key;close();const btn=document.querySelector('[data-shape="'+key+'"]');if(btn)btn.click();render()}
 function showAnimal(key,label){selected=key;openPanel('animalPanel',label);$('animalCreator').style.display='none';const b=document.querySelector('[data-animal="'+key+'"]');if(b)b.click();render()}
 function render(){const zone=window.plZone||'plot';const m=$('qModes'),i=$('qItems'),t=$('qFurnitureTools');t.replaceChildren();t.hidden=mode!=='inred'||zone!=='plot'||danceOpen;document.querySelectorAll('.plClothesOptions').forEach(x=>x.remove());m.replaceChildren();i.replaceChildren();i.classList.remove('qFurnitureGrid');
- if(zone==='disco')danceOpen=true;
  // Gubbe och Dans visas alltid överst. Bygg, Inred och Djur bara på den egna tomten.
  const avatarMode=modes.find(x=>x[0]==='gubbe');
  button(m,avatarMode[2],avatarMode[1],()=>{danceOpen=false;const next=mode==='gubbe'?null:'gubbe';setQuickMode(next);selected=next?'headwear':null;close()},mode==='gubbe'&&!danceOpen);
  const danceToggle=button(m,'Dansrörelser','🪩',()=>{danceOpen=!danceOpen;if(danceOpen&&mode!=='gubbe')setQuickMode(null);render()},danceOpen,true);
  if(zone==='plot')for(const [key,icon,label] of modes.filter(x=>x[0]!=='gubbe'))button(m,label,icon,()=>{danceOpen=false;const next=mode===key?null:key;setQuickMode(next);selected=next==='bygga'?'square':next==='inred'?'door':next==='djur'?'horse':null;close()},mode===key&&!danceOpen);
  if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);
- if(zone==='disco')danceOpen=true;
- if(danceOpen){for(let d=0;d<window.plDanceMoves.length;d++)button(i,window.plDanceMoves[d],danceIcons[d],()=>{window.plDanceSelect(d);render()},window.plDanceCurrent===d,true);
+ if(danceOpen){for(let d=0;d<window.plDanceMoves.length;d++)button(i,window.plDanceMoves[d],danceIcons[d],()=>{const now=performance.now();const doubleTap=lastDanceTap.index===d&&now-lastDanceTap.time<400;lastDanceTap={index:d,time:now};if(doubleTap)window.plDanceSelect(d,true);else window.plDanceSelect(d);},window.plDanceCurrent===d,true);
  }else if(mode==='gubbe'){
  for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
  }else if(mode==='bygga'){
@@ -1752,8 +1825,8 @@ function render(){const zone=window.plZone||'plot';const m=$('qModes'),i=$('qIte
 }else if(mode==='gubbe'){
  for(const [key,icon,label] of clothing){const b=button(i,label,icon,()=>showClothing(key),selected===key&&opened==='clothes',true);b.dataset.clothing=key}
 }if(zone==='plot'&&!danceOpen)renderVariants();else $('qVariants').hidden=true;updateButtonDescription()}
-window.addEventListener('plZoneChanged',e=>{const zone=e.detail.zone;danceOpen=zone==='disco';if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);close();});
-window.addEventListener('plDanceSelected',e=>{window.plDanceCurrent=e.detail.move;render()});
+document.addEventListener('plZoneChanged',e=>{const zone=e.detail.zone;danceOpen=zone==='disco';if(zone!=='plot'&&mode!=='gubbe')setQuickMode(null);close();});
+document.addEventListener('plDanceSelected',e=>{window.plDanceCurrent=e.detail.move;render()});
 window.addEventListener('resize',updateButtonDescription);$('qClose').onclick=close;
 window.plQuickIcon=kind=>{const path={square:'M5 5H29V29H5Z',triangle:'M5 29L29 29L5 5Z',half:'M4 10H30V22H4Z',small:'M10 10H22V22H10Z',roof:'M3 23L16 5L29 23L29 28H3Z'}[kind];return '<svg viewBox="0 0 34 34"><path d="'+path+'" fill="'+$('paletteColor').value+'" fill-opacity=".47" stroke="#dff8ff" stroke-width="2"/></svg>'};
 for(const id of ['palette','characterPanel','animalPanel'])$(id).style.display='none';
@@ -1801,6 +1874,7 @@ render();
  tidy();obs.observe(roster,{subtree:true,childList:true,characterData:true});
 })();</script><style id="plV59Style">
 #plQuick .qbtn[aria-label="Dansrörelser"]{background:#51337e;color:#fff}
+#plQuick #qItems .qbtn.active{background:#173e2c!important;border:3px solid #a7ffbd!important;box-shadow:0 0 0 2px #0a2119,0 0 12px #79ffa899!important;color:#fff!important}
 body.plInDisco::after{content:"";position:fixed;inset:0;pointer-events:none;background:rgba(5,3,22,.23);z-index:2}
 body.plInDisco #plQuick{z-index:30}
 </style>
