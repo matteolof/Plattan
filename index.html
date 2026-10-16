@@ -1187,8 +1187,9 @@ const PLOT_ROT={1:Math.PI/2,2:Math.PI,3:0,4:-Math.PI/2};
 // Fyra fasta gemensamma byggnader runt vägkorset. De tillhör inte spelarnas sparade världar.
 const townBuildings=new THREE.Group();scene.add(townBuildings);
 const townFadeHouses=[];
+const townCollisionWalls=[];
 function rebuildTownBuildings(){
- townBuildings.clear();townFadeHouses.length=0;discoLights.length=0;
+ townBuildings.clear();townFadeHouses.length=0;townCollisionWalls.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
  const wallMat=new THREE.MeshPhysicalMaterial({color:0xd93832,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});
  const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.8,side:THREE.DoubleSide});
@@ -1209,6 +1210,12 @@ function rebuildTownBuildings(){
   function wallTile(x,y,z,side){
    const tile=cub(g,side? .12: .98,.98,side? .98:.12,x,y,z,wallMat);
    tile.castShadow=true;
+   // Samma platta används som synlig vägg och som fysisk kollisionsyta.
+   const localA=side?{x,z:z-.5}:{x:x-.5,z};
+   const localB=side?{x,z:z+.5}:{x:x+.5,z};
+   const c=Math.cos(turn),sn=Math.sin(turn);
+   const toWorld=p=>({x:gx-ox+c*p.x+sn*p.z,z:gz-oz-sn*p.x+c*p.z});
+   townCollisionWalls.push({a:toWorld(localA),b:toWorld(localB),low:y-.5,high:y+.5});
    const outline=new THREE.LineSegments(new THREE.EdgesGeometry(tile.geometry),new THREE.LineBasicMaterial({color:0xd93832,transparent:true,opacity:.7}));
    outline.position.copy(tile.position);g.add(outline);
    return tile;
@@ -1391,10 +1398,22 @@ function buildPlayland(g,cub){
  cub(g,2.5,.22,.25,11.3,3.75,5.3,pink);
  playRide={path:[start,end]};playSwing=null;
 }
+function playObstacleBlocks(x,z,y,radius){
+ const p=playLocal(x,z);
+ // Plattformar och balansplankor är fasta: man kan stå ovanpå dem,
+ // men inte gå rakt genom deras kanter från sidan eller underifrån.
+ for(const s of playPlatforms){
+  if(y>=s.y-.20||y+1.62<=s.y-.18)continue;
+  const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0);
+  const dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);
+  if(dx*dx+dz*dz<radius*radius)return true;
+ }
+ return false;
+}
 function playGroundHeight(x,z){
  const p=playLocal(x,z);let best=0;
  // Rampens yta stiger från 0 till 3.1; en spelare måste gå upp på den.
- if(Math.abs(p.x+9)<1.08&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.48)best=Math.max(best,h)}
+ if(Math.abs(p.x+10)<1.10&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.48)best=Math.max(best,h)}
  for(const s of playPlatforms){if(Math.abs(p.x-s.x)<=s.w/2&&Math.abs(p.z-s.z)<=s.d/2&&s.y<=player.y+.55)best=Math.max(best,s.y)}
  return best;
 }
@@ -1595,6 +1614,7 @@ function frame(now){
      for(const q of v)for(const r of v){const d=(q.x-r.x)**2+(q.z-r.z)**2;if(d>longest){longest=d;a=q;b=r}}
      return {a,b,low,high};
    });
+   walls.push(...townCollisionWalls);
    function closest(w,x,z){
      const vx=w.b.x-w.a.x,vz=w.b.z-w.a.z,len=vx*vx+vz*vz;
      const t=len>1e-8?Math.max(0,Math.min(1,((x-w.a.x)*vx+(z-w.a.z)*vz)/len)):0;
@@ -1616,7 +1636,7 @@ function frame(now){
      const cz=Math.max(b.min.z,Math.min(z,b.max.z));
      return (x-cx)**2+(z-cz)**2<radius*radius;
    })}
-   function blocked(x,z){return plotFenceBlocks(x,z,player.y)||furnitureBlocked(x,z)||walls.some(w=>{
+   function blocked(x,z){return plotFenceBlocks(x,z,player.y)||furnitureBlocked(x,z)||playObstacleBlocks(x,z,player.y,radius)||walls.some(w=>{
      if(player.y>=w.high||player.y+1.62<=w.low)return false;
      const q=closest(w,x,z);return (x-q.x)**2+(z-q.z)**2<radius*radius;
    })}
