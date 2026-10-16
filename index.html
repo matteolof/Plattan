@@ -761,6 +761,19 @@ const shirt=new THREE.MeshStandardMaterial({color:0x367dc2}),skin=new THREE.Mesh
 function limb(parent,material,w,h,d,x,y,z){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);parent.add(mesh);return mesh}
 limb(avatar,shirt,.38,.48,.23,0,.83,0);
 const head=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),skin);head.position.y=1.31;avatar.add(head);
+// Enkelt ansikte på framsidan (-Z), följer huvudet även hos andra spelare.
+const eyeMaterial=new THREE.MeshStandardMaterial({color:0x20232b,roughness:.85});
+for(const x of [-.072,.072]){
+ const eye=new THREE.Mesh(new THREE.SphereGeometry(.019,12,10),eyeMaterial);
+ eye.position.set(x,.025,-.177);head.add(eye);
+}
+const smilePoints=[];
+for(let i=0;i<=12;i++){
+ const x=-.063+i*.126/12;
+ smilePoints.push(new THREE.Vector3(x,-.060-.015*(1-(x/.063)**2),-.180+(.019*(Math.abs(x)/.063)**2)));
+}
+const smile=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(smilePoints),16,.006,6,false),eyeMaterial);
+head.add(smile);
 const hairMaterial=new THREE.MeshStandardMaterial({color:0x543d32});
 const headwearMaterial=new THREE.MeshStandardMaterial({color:0xe85c62});
 const hairGroup=new THREE.Group();head.add(hairGroup);
