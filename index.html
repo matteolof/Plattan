@@ -1189,6 +1189,7 @@ const townBuildings=new THREE.Group();scene.add(townBuildings);
 const townFadeHouses=[];
 const townCollisionWalls=[];
 function rebuildTownBuildings(){
+ coasterRider.active=false;coasterTrack=null;coasterCarts.length=0;
  townBuildings.clear();townFadeHouses.length=0;townCollisionWalls.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
  const wallMat=new THREE.MeshPhysicalMaterial({color:0xd93832,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});
@@ -1201,8 +1202,9 @@ function rebuildTownBuildings(){
  function house(name,gx,gz,turn){
   const outer=new THREE.Group();outer.position.set(gx-ox,0,gz-oz);outer.rotation.y=turn;townBuildings.add(outer);
   const g=new THREE.Group();outer.add(g);
-  const wallHeight=name==='Leklandet'?10:5;
-  // 30 x 30 rutor. Leklandet har tio plattors vägghöjd, övriga hus fem. Framsidan är +Z.
+  if(name==='Leklandet'){buildAdventurePark(g,cub);return;}
+  const wallHeight=5;
+  // Butik och disco: 30x30, fem plattor höga.
   cub(g,30,.15,30,0,.075,0,new THREE.MeshStandardMaterial({color:0xbab7a7}));
   // Varje vägg består av separata 1 x 1-plattor, med synliga fogar
   // och samma tunna, tvåsidiga känsla som spelarens byggplattor.
@@ -1257,7 +1259,60 @@ function rebuildTownBuildings(){
    }
   }
   label(g,name);
-  if(name==='Leklandet')buildPlayland(g,cub);
+  // Förberedda butiker: montrar och djurboxar är gemensam inredning,
+  // inte spelarens egna möbler/djur och kräver ännu inga köp eller mynt.
+  if(name==='Djuraffär'||name==='Inredningsbutik'){
+   const wood=new THREE.MeshStandardMaterial({color:0x9a704a,roughness:.8});
+   const counterTop=new THREE.MeshStandardMaterial({color:0xe4d7ba,roughness:.7});
+   const grey=new THREE.MeshStandardMaterial({color:0x858b90,roughness:.95});
+   const border=new THREE.MeshStandardMaterial({color:0x5d6368,roughness:.85});
+   const register=new THREE.MeshStandardMaterial({color:0x353b42,roughness:.5});
+   // Kassa på sidan av ingången; mittgången från dörren lämnas fri.
+   cub(g,3.3,.95,1.3,-10,.475,10.9,wood);
+   cub(g,3.5,.13,1.48,-10,1.01,10.9,counterTop);
+   cub(g,.65,.45,.55,-10,1.3,10.7,register);
+   cub(g,.9,.12,.55,-10,1.1,11.3,register);
+   function storeText(parent,name,w=3.8){
+    const c=document.createElement('canvas');c.width=512;c.height=96;
+    const ctx=c.getContext('2d');ctx.fillStyle='#294d40';ctx.fillRect(0,0,512,96);
+    ctx.fillStyle='white';ctx.font='bold 51px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,256,48);
+    const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,.72),new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide}));
+    mesh.position.set(0,1.72,0);parent.add(mesh);
+   }
+   if(name==='Inredningsbutik'){
+    const products=[['table','Köksbord'],['chair','Stol'],['stool','Pall'],['stove','Spis'],['cabinet','Köksskåp'],['sofa','Soffa'],['coffee','Soffbord'],['bed','Säng'],['nightstand','Sängbord'],['door','Dörr'],['window','Fönster']];
+    products.forEach(([type,title],idx)=>{
+     const col=idx%4,row=Math.floor(idx/4),x=-10+col*6.6,z=-8+row*6.8;
+     const stand=new THREE.Group();stand.position.set(x,0,z);g.add(stand);
+     cub(stand,5.4,.055,5.4,0,.055,0,grey);
+     for(const sx of [-2.7,2.7]){cub(stand,.09,.08,5.4,sx,.10,0,border)}
+     for(const sz of [-2.7,2.7]){cub(stand,5.4,.08,.09,0,.10,sz,border)}
+     const product=furnitureModel(type);product.position.set(0,.12,0);product.scale.setScalar(type==='door'||type==='window'?1.5:1.8);
+     stand.add(product);storeText(stand,title,4.4);
+     stand.userData.shopItem={type,label:title,kind:'furniture'};
+    });
+   }else{
+    const types=[['horse','Häst',0xa36d40,1.45],['foal','Föl',0xbd8c5b,1.0],['sheep','Får',0xe4ded0,.9],['cat','Katt',0x9a948c,.55],['dog','Hund',0x99704e,.7]];
+    types.forEach(([type,title,color,size],idx)=>{
+     const x=-8+(idx%3)*8,z=-7+Math.floor(idx/3)*11;
+     const pen=new THREE.Group();pen.position.set(x,0,z);g.add(pen);
+     cub(pen,7,.08,8,0,.04,0,new THREE.MeshStandardMaterial({color:0xb9a98c}));
+     // Låga boxväggar och en öppen sida mot mittgången.
+     for(const side of [-1,1]){for(const pz of [-3.5,-1.5,.5,2.5])cub(pen,.12,1.15,.12,side*3.45,.58,pz,wood);
+      cub(pen,.12,.12,7,side*3.45,.7,0,wood)}
+     cub(pen,7,.12,.12,0,.7,-3.9,wood);
+     const fur=new THREE.MeshStandardMaterial({color});
+     const animal=new THREE.Group();animal.position.set(0,0,-.7);pen.add(animal);
+     const torso=new THREE.Mesh(new THREE.SphereGeometry(.58,14,10),fur);torso.scale.set(.85*size,.65*size,1.25*size);torso.position.y=.85*size;animal.add(torso);
+     for(const xx of [-.34,.34])for(const zz of [-.48,.48])cub(animal,.17*size,.7*size,.17*size,xx*size,.36*size,zz*size,fur);
+     const head=new THREE.Mesh(new THREE.SphereGeometry(.36*size,12,9),fur);head.position.set(0,1.32*size,-.72*size);animal.add(head);
+     for(const xx of [-.19,.19])cub(animal,.12*size,.3*size,.12*size,xx*size,1.65*size,-.74*size,fur);
+     storeText(pen,title,5.2);
+     pen.userData.shopItem={type,label:title,kind:'animal'};
+    });
+   }
+  }
   if(name==='Disco')buildDisco(g,cub);
   // Väggar och tak blir diskret genomskinliga när spelaren går in.
   // Egen materialinstans per hus, så att de andra husen inte påverkas.
@@ -1273,11 +1328,11 @@ function rebuildTownBuildings(){
   });
   townFadeHouses.push({outer,turn,gx,gz,fadeMeshes,opacity:1});
  }
- // Entréerna och skyltarna vetter inåt mot vägkorset. Husens närmaste vägg är 60 rutor från mitten, helt utanför 50x50-tomterna (som slutar vid 55).
+ // Tre hus ligger kvar; Leklandet blir en 110x90 stor öppen äventyrspark väster om vägkorset.
  house('Djuraffär',0,-75,0);
  house('Inredningsbutik',75,0,-Math.PI/2);
  house('Disco',0,75,Math.PI);
- house('Leklandet',-75,0,Math.PI/2);
+ house('Leklandet',-110,0,Math.PI/2);
 }
 
 // Diskolampor i taket och mörkt dansgolv, enbart inne i discot.
@@ -1351,54 +1406,114 @@ function animateTownFade(dt){
 }
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
 const playPlatforms=[];let playRide=null,playSwing=null,playHintTime=0;
+const coasterRider={active:false,started:0,seat:0};let coasterTrack=null;const coasterCarts=[];const coasterSeatOffsets=[0,.032,.064,.096];
 function playLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:-wz,z:wx+75}}
 function playPosition(){return playLocal(player.x,player.z)}
-function buildPlayland(g,cub){
- playPlatforms.length=0;
- const turquoise=new THREE.MeshStandardMaterial({color:0x19b6b2,roughness:.5,side:THREE.DoubleSide});
- const yellow=new THREE.MeshStandardMaterial({color:0xffc442,roughness:.6,side:THREE.DoubleSide});
- const pink=new THREE.MeshStandardMaterial({color:0xf15b91,roughness:.6,side:THREE.DoubleSide});
- const purple=new THREE.MeshStandardMaterial({color:0x8164d9,roughness:.6,side:THREE.DoubleSide});
- const platform=(x,z,y,w=1.2,d=1.2,mat=yellow)=>{cub(g,w,.16,d,x,y-.08,z,mat);playPlatforms.push({x,z,y,w,d})};
- // Entrén är vid +Z. Börja längst till vänster, gå uppför rampen till tre plattors höjd.
- const rampTop=3,rampLength=11;
- const ramp=new THREE.Mesh(new THREE.BoxGeometry(2.2,.16,Math.hypot(rampLength,rampTop)),turquoise);
- ramp.position.set(-10,rampTop/2,-5.5);ramp.rotation.x=-Math.atan2(rampTop,rampLength);g.add(ramp);
- platform(-10,.7,3,2.5,2.5,purple);
- // Smala plankor kräver balans, men fungerar som riktiga gångytor.
- // Första sektionen löper längs den vänstra väggen.
- platform(-10,3.7,3,.65,3.6,yellow);
- platform(-10,7.5,3,.65,3.6,turquoise);
- platform(-10,10.2,3,2.1,1.7,purple);
- // Vänd över rummets bredd på en rad plankor och små hoppytor.
- platform(-7.9,10.2,3,2.7,.55,yellow);
- platform(-5.5,10.2,3,1.2,1.2,turquoise);
- platform(-3.4,10.2,3,2.5,.55,pink);
- platform(-1.1,10.2,3,1.1,1.1,yellow);
- platform(1.0,10.2,3,2.6,.55,turquoise);
- platform(3.4,10.2,3,1.1,1.1,pink);
- platform(5.5,10.2,3,2.5,.55,yellow);
- platform(8,10.2,3,2.3,2.3,purple);
- // En sista smal balanssträcka och en hoppplattform fram till rutschkanan.
- platform(8,7.6,3,.55,3.0,turquoise);
- platform(8,5.2,3,1.25,1.25,yellow);
- platform(10,3.7,3,1.2,1.2,pink);
- platform(11.3,5.5,3,2.1,2.1,purple);
- // Rak rutschkana: banan och BÅDA sidokanterna lutar i samma vinkel.
- const start=new THREE.Vector3(11.3,3,6.3),end=new THREE.Vector3(11.3,.17,12.9);
- const delta=end.clone().sub(start),len=delta.length(),mid=start.clone().add(end).multiplyScalar(.5);
- const slideGroup=new THREE.Group();slideGroup.position.copy(mid);
- slideGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),delta.clone().normalize());g.add(slideGroup);
- const slide=new THREE.Mesh(new THREE.BoxGeometry(2.25,.14,len),pink);slideGroup.add(slide);
- for(const side of [-1,1]){
-  const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.52,len),purple);
-  rail.position.set(side*1.16,.28,0);slideGroup.add(rail);
+function buildAdventurePark(g,cub){
+ // Leklandet är en öppen äventyrspark: 110 rutor bred och 90 djup.
+ // Lokal +Z pekar mot vägen och världens mitt, där stationen ligger.
+ coasterCarts.length=0;coasterTrack=null;playPlatforms.length=0;
+ const grass=new THREE.MeshStandardMaterial({color:0x6cae6c,roughness:1});
+ const gravel=new THREE.MeshStandardMaterial({color:0xb6ad98,roughness:1});
+ const red=new THREE.MeshStandardMaterial({color:0xd53e38,roughness:.65});
+ const dark=new THREE.MeshStandardMaterial({color:0x343b45,metalness:.55,roughness:.4});
+ const steel=new THREE.MeshStandardMaterial({color:0x778894,metalness:.55,roughness:.45});
+ const wood=new THREE.MeshStandardMaterial({color:0x9a744a,roughness:.9});
+ cub(g,110,.13,90,0,.035,0,grass);
+ // En tydlig gångväg från gatukorset till påstigningsstationen.
+ cub(g,5,.035,15,0,.12,37,gravel);
+ cub(g,14,.16,8,0,.17,31,gravel);
+ // Lågt rött staket runt området, öppning vid entrén mot mitten.
+ for(let x=-55;x<=55;x+=2){
+  for(const z of [-45,45]){
+   if(z===45&&Math.abs(x)<3.5)continue;
+   cub(g,.13,1.15,.13,x,.64,z,red);
+   if(x<55)cub(g,1.96,.12,.12,x+1,.66,z,red);
+  }
  }
- cub(g,2.5,.22,.25,-10,3.75,.7,yellow);
- cub(g,2.5,.22,.25,11.3,3.75,5.3,pink);
- playRide={path:[start,end]};playSwing=null;
+ for(let z=-45;z<=45;z+=2)for(const x of [-55,55]){
+  cub(g,.13,1.15,.13,x,.64,z,red);
+  if(z<45)cub(g,.12,.12,1.96,x,.66,z+1,red);
+ }
+ // En sluten bana längs ytterkanten med backar, nedförsbackar och kurvor.
+ const points=[
+  [0,3.0,31],[12,3.1,31],[32,5.8,31],[47,8.3,26],
+  [49,7.4,8],[49,4.2,-16],[44,2.8,-32],[22,4.5,-35],
+  [0,8.8,-35],[-22,6.0,-35],[-45,3.0,-30],[-49,3.5,-10],
+  [-49,7.7,13],[-42,6.4,30],[-20,3.4,32],[-7,3.0,31]
+ ].map(v=>new THREE.Vector3(...v));
+ coasterTrack=new THREE.CatmullRomCurve3(points,true,'centripetal',.4);
+ const railMaterials=[dark,steel];
+ for(let r=0;r<2;r++){
+  const railPoints=[];
+  for(let i=0;i<=440;i++){
+   const t=i/440,p=coasterTrack.getPointAt(t),tangent=coasterTrack.getTangentAt(t);
+   const sideways=new THREE.Vector3(tangent.z,0,-tangent.x).normalize();
+   railPoints.push(p.clone().addScaledVector(sideways,r===0?-.56:.56));
+  }
+  const railCurve=new THREE.CatmullRomCurve3(railPoints,false);
+  const rail=new THREE.Mesh(new THREE.TubeGeometry(railCurve,440,.085,7,false),railMaterials[r]);g.add(rail);
+ }
+ // Tvärslipers och pelare gör banan synligt sammanhängande.
+ for(let i=0;i<175;i++){
+  const t=i/175,p=coasterTrack.getPointAt(t),tan=coasterTrack.getTangentAt(t);
+  const sleeper=cub(g,1.6,.12,.22,p.x,p.y-.12,p.z,wood);
+  sleeper.rotation.y=Math.atan2(tan.z,tan.x);
+  if(i%4===0){
+   cub(g,.24,Math.max(.3,p.y-.18),.24,p.x,(p.y-.18)/2,p.z,steel);
+   cub(g,1.6,.14,1.6,p.x,.09,p.z,steel);
+  }
+ }
+ // Fyra egna vagnar som rör sig ihop; gubben får åka i en av dem.
+ const cartColors=[0xe83e42,0xffcc42,0x3c9de3,0x8c5ac9];
+ for(let i=0;i<4;i++){
+  const cart=new THREE.Group();g.add(cart);
+  const paint=new THREE.MeshStandardMaterial({color:cartColors[i],metalness:.18,roughness:.4});
+  cub(cart,1.35,.48,1.65,0,.25,0,paint);
+  cub(cart,1.38,.48,.15,0,.62,-.74,paint);
+  cub(cart,1.38,.38,.13,0,.56,.74,paint);
+  cub(cart,.13,.38,1.5,-.66,.55,0,paint);
+  cub(cart,.13,.38,1.5,.66,.55,0,paint);
+  cub(cart,1.1,.09,.72,0,.52,.1,dark);
+  for(const x of [-.65,.65])for(const z of [-.49,.49]){
+   const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.12,12),dark);
+   wheel.rotation.z=Math.PI/2;wheel.position.set(x,-.06,z);cart.add(wheel);
+  }
+  coasterCarts.push(cart);
+ }
+ // Stationsskylt synlig från vägen.
+ const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=192;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#224b3d';ctx.fillRect(0,0,1024,192);
+ ctx.fillStyle='#fff6d6';ctx.font='bold 93px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ÄVENTYRSPARKEN',512,99);
+ const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+ const sign=new THREE.Mesh(new THREE.PlaneGeometry(15,2.8),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));
+ sign.position.set(0,4.6,44.2);g.add(sign);
+ for(const x of [-7.4,7.4])cub(g,.22,4.2,.22,x,2.1,44.2,wood);
+ // Påstigningsplattform nära spåret och skylt för E.
+ cub(g,6,.22,3,0,2.65,28,wood);
+ const board=document.createElement('canvas');board.width=512;board.height=128;
+ const b=board.getContext('2d');b.fillStyle='#24493f';b.fillRect(0,0,512,128);b.fillStyle='white';b.font='bold 55px system-ui';b.textAlign='center';b.textBaseline='middle';b.fillText('TRYCK E FÖR ATT ÅKA',256,65);
+ const bt=new THREE.CanvasTexture(board);bt.colorSpace=THREE.SRGBColorSpace;
+ const bs=new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.5),new THREE.MeshBasicMaterial({map:bt,transparent:true,side:THREE.DoubleSide}));bs.position.set(0,3.6,26);g.add(bs);
+}
+function parkLocal(x,z){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];const wx=x+ox,wz=z+oz;return {x:-wz,z:wx+110}}
+function parkWorld(p){const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return {x:-110+p.z-ox,z:-p.x-oz}}
+function updateCoaster(now){
+ if(!coasterTrack||!coasterCarts.length)return;
+ const t=(now*.000022)%1;
+ for(let i=0;i<coasterCarts.length;i++){
+  const u=(t-coasterSeatOffsets[i]+1)%1,p=coasterTrack.getPointAt(u),tan=coasterTrack.getTangentAt(u);
+  const cart=coasterCarts[i];cart.position.copy(p);cart.rotation.y=Math.atan2(tan.x,tan.z);
+  cart.rotation.x=-Math.atan2(tan.y,Math.hypot(tan.x,tan.z));
+ }
+ if(coasterRider.active){
+  const cart=coasterCarts[coasterRider.seat],world=parkWorld(cart.position);
+  player.x=world.x;player.z=world.z;player.y=cart.position.y+.62;player.vy=0;
+  player.yaw=cart.rotation.y+Math.PI/2;
+ }
 }
 function playObstacleBlocks(x,z,y,radius){
+ if(coasterTrack)return false;
  const p=playLocal(x,z);
  // Plattformar och balansplankor är fasta: man kan stå ovanpå dem,
  // men inte gå rakt genom deras kanter från sidan eller underifrån.
@@ -1411,6 +1526,7 @@ function playObstacleBlocks(x,z,y,radius){
  return false;
 }
 function playGroundHeight(x,z){
+ if(coasterTrack)return 0;
  const p=playLocal(x,z);let best=0;
  // Rampens yta stiger från 0 till 3.1; en spelare måste gå upp på den.
  if(Math.abs(p.x+10)<1.10&&p.z>=-11&&p.z<=0){const h=(p.z+11)/11*3;if(h<=player.y+.48)best=Math.max(best,h)}
@@ -1419,12 +1535,18 @@ function playGroundHeight(x,z){
 }
 function playInteract(){
  if(building)return false;
+ if(coasterTrack){
+  if(coasterRider.active){coasterRider.active=false;const p=parkWorld(new THREE.Vector3(0,0,27));player.x=p.x;player.z=p.z;player.y=0;player.vy=0;toast('Du klev av berg- och dalbanan!');return true;}
+  const p=parkLocal(player.x,player.z);
+  if(Math.abs(p.x)<7&&p.z>24&&p.z<43){coasterRider.active=true;coasterRider.seat=0;toast('Du åker berg- och dalbana! Tryck E för att kliva av.');return true;}
+ }
  const p=playPosition();
  if(playRide&&!playRide.active&&Math.hypot(p.x-11.3,p.z-5.5)<1.9&&player.y>2.6){playRide.active={start:performance.now()};toast('Du åker den raka rutschkanan!');return true}
  if(playSwing&&!playSwing.active&&Math.hypot(p.x-playSwing.from.x,p.z-playSwing.from.z)<1.6&&player.y>2.3){playSwing.active={start:performance.now()};toast('Du svingar dig i kopplet!');return true}
  return false;
 }
 function animatePlayland(now){
+ if(coasterTrack)return;
  const pp=playPosition();if(Math.abs(pp.x)<14&&Math.abs(pp.z)<14&&now-playHintTime>18000&&!building){playHintTime=now;toast('Leklandet: gå uppför rampen, balansera på de smala plankorna, hoppa och tryck E vid rutschkanan!')}
  if(playRide?.active){const t=Math.min(1,(now-playRide.active.start)/2200),idx=t*(playRide.path.length-1),i=Math.floor(idx),a=playRide.path[i],b=playRide.path[Math.min(i+1,playRide.path.length-1)],p=a.clone().lerp(b,idx-i),q=playLocal(0,0);player.x=-75+p.z-q.ox;player.z=-p.x-q.oz;player.y=p.y+.14;player.vy=0;if(t>=1){playRide.active=null;toast('Vilken åktur!')}}
  if(playSwing?.active){const t=Math.min(1,(now-playSwing.active.start)/1900),u=(1-Math.cos(Math.PI*t))/2,s=playSwing,p=playLocal(0,0);player.x=p.x+s.from.z;player.z=p.z-(s.from.x+(s.to.x-s.from.x)*u);player.y=s.y+Math.sin(Math.PI*t)*1.3;player.vy=0;if(t>=1){playSwing.active=null;toast('Du landade på nästa platta!')}}
@@ -1595,7 +1717,7 @@ window.plResetAll=()=>{
 try{for(const d of JSON.parse(localStorage.getItem('plattan-furniture-'+(window.plattanSlot||1))||'[]'))if(['door','window','table','chair','stool','stove','cabinet','sofa','coffee','bed','nightstand'].includes(d.type)&&Number.isFinite(d.x)&&Number.isFinite(d.z))furnitureAdd(d.type,d.x,d.z,d.rot||0,false,!!d.open,d.color&&/^#[0-9a-f]{6}$/i.test(d.color)?d.color:furnitureOriginalColors[d.type])}catch(e){}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
- if(!building){
+ if(!building&&!coasterRider.active){
   const f=Math.max(-1,Math.min(1,(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0)+plTouchForward));
   const turn=Math.max(-1,Math.min(1,(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+plTouchTurn));
   player.yaw-=turn*dt*2.5;
@@ -1604,7 +1726,7 @@ function frame(now){
    const speed=keys.has('r')?17.6:4.4; // Håll R för att springa fyra gånger snabbare
    const dx=-Math.sin(player.yaw)*f*dt*speed;
    const dz=-Math.cos(player.yaw)*f*dt*speed;
-   const nx=Math.max(-150,Math.min(150,player.x+dx)),nz=Math.max(-150,Math.min(150,player.z+dz));
+   const nx=Math.max(-220,Math.min(220,player.x+dx)),nz=Math.max(-220,Math.min(220,player.z+dz));
    // Kontinuerlig kollision: flytta i små steg så att kroppen aldrig passerar genom en tunn vägg.
    // Separera också gubben från väggen om han redan råkat hamna för nära.
    const radius=.30; // Kroppens kollisionscylinder omfattar även huvud och hår (höjd 1,62).
@@ -1676,8 +1798,8 @@ function frame(now){
    const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.07));
    for(let i=0;i<steps;i++){
      const sx=dx/steps,sz=dz/steps;
-     const tx=Math.max(-150,Math.min(150,player.x+sx));
-     const tz=Math.max(-150,Math.min(150,player.z+sz));
+     const tx=Math.max(-220,Math.min(220,player.x+sx));
+     const tz=Math.max(-220,Math.min(220,player.z+sz));
      if(!blocked(tx,tz)){player.x=tx;player.z=tz}
      else{
        if(!blocked(tx,player.z))player.x=tx;
@@ -1701,6 +1823,7 @@ function frame(now){
   avatar.rotation.y=player.yaw;
   avatar.position.set(player.x,player.y-.11,player.z);
  }
+ updateCoaster(now);if(coasterRider.active){avatar.position.set(player.x,player.y-.11,player.z);avatar.rotation.y=player.yaw;}
  animateAnimals(dt);animateRemoteAnimals(dt);
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
