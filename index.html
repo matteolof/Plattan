@@ -1653,6 +1653,11 @@ function buildAdventurePark(g,cub){
   [-49,7.7,13],[-42,6.4,30],[-20,3.4,32],[-7,3.0,31]
  ].map(([x,y,z])=>new THREE.Vector3(x,3+(y-3)*2,z));
  coasterTrack=new THREE.CatmullRomCurve3(points,true,'centripetal',.4);
+ coasterWalkSegments.length=0;
+ for(let i=0;i<700;i++){
+  const a=coasterTrack.getPointAt(i/700),b=coasterTrack.getPointAt((i+1)/700);
+  coasterWalkSegments.push({ax:a.x,ay:a.y,az:a.z,bx:b.x,by:b.y,bz:b.z});
+ }
  const railMaterials=[dark,steel];
  for(let r=0;r<2;r++){
   const railPoints=[];
@@ -2001,6 +2006,21 @@ function playObstacleBlocks(x,z,y,radius){
  }
  return false;
 }
+// v102: träsliprarna fungerar som en smal gångyta. Vagnarna har ingen spelarkollision.
+// Samma kurva används som för räls och sliprar; sampling gör att även backarna följs.
+const coasterWalkSegments=[];
+function coasterWalkSurface(x,z){
+ if(!coasterTrack||!coasterWalkSegments.length)return null;
+ const p=parkLocal(x,z);let nearest=null,bestDist=Infinity;
+ for(const seg of coasterWalkSegments){
+  const dx=seg.bx-seg.ax,dz=seg.bz-seg.az,den=dx*dx+dz*dz;
+  const u=den?Math.max(0,Math.min(1,((p.x-seg.ax)*dx+(p.z-seg.az)*dz)/den)):0;
+  const px=seg.ax+u*dx,pz=seg.az+u*dz,d2=(p.x-px)**2+(p.z-pz)**2;
+  if(d2<bestDist){bestDist=d2;nearest=seg.ay+u*(seg.by-seg.ay)}
+ }
+ // Den synliga slipern är 1,6 bred. En liten marginal gör gång på rälsen lättare.
+ return bestDist<=.77*.77?nearest-.06:null;
+}
 function playGroundHeight(x,z){
  if(coasterTrack){
   const p=parkLocal(x,z);
@@ -2008,6 +2028,10 @@ function playGroundHeight(x,z){
   for(const f of pinkCourseFloors){
    if(Math.abs(p.x-f.x)<=f.w/2+.04&&Math.abs(p.z-f.z)<=f.d/2+.04&&f.y<=player.y+.65)best=Math.max(best,f.y);
   }
+  const railY=coasterWalkSurface(x,z);
+  // Endast landning ovanifrån: spelaren kan fortfarande hoppa upp underifrån
+  // utan att plötsligt lyftas upp genom rälsen.
+  if(railY!==null&&railY<=player.y+.30)best=Math.max(best,railY);
   return best;
  }
  const p=playLocal(x,z);let best=0;
