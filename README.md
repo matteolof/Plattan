@@ -1,12 +1,7 @@
-Plattan v117 – Gåläge som standard och snabbare glas
+Plattan v118 – InstancedMesh för byggplattornas kantstänger
 
-- Spelet startar alltid i Gåläge, både på dator och iPad.
-- 0–8 rutor: genomskinliga byggplattor.
-- 8–16 rutor: enklare, helt solida plattor.
-- 16–250 rutor: helt solida plattor.
-- Liten marginal runt 8 rutor för att undvika blinkande vid gränsen.
-- Kontroll av avstånd sker som tidigare var 400:e millisekund.
-- Byggläget finns kvar via knappen Bygg.
-- Affärernas särskilda väggfunktion från v115 behålls.
+Utgår från v117. Byggplattornas cylindriska kantstänger ritas nu i InstancedMesh-grupper, sorterade efter färg. Det minskar antalet draw calls för stora byggen, som huset och ladan.
 
-Ladda upp filerna i ZIP-paketet till GitHub och distribuera på Render.
+Grupperna byggs om bara när plattor läggs till/tas bort eller en annan spelares bygge uppdateras. Plattornas ytor, kollisionskontroller, byggläge, import/export och avståndsstyrd genomskinlighet från v117 behålls. Ingen FPS-mätare.
+
+OBS: Inte alla byggplattors ytor är instansierade ännu; den här versionen är ett första säkert prestandatest för kantgeometrin. Testa gärna samma importerade bygge i v117 och v118 på samma enhet.
