@@ -417,64 +417,12 @@ function plUpdateAdaptivePanels(now){
   }
  }
 }
-// v118: Kantstängerna på byggplattor ritas i grupper med InstancedMesh.
-// Samma geometri används för tusentals stänger, även på andra spelares tomter.
-// Grupperna uppdateras bara när plattor läggs till eller tas bort.
-const plBarBatchRoot=new THREE.Group();
-scene.add(plBarBatchRoot);
-const plBarUnitGeometry=new THREE.CylinderGeometry(.025,.025,1,6);
-const plBarAxis=new THREE.Vector3(0,1,0);
-const plBarA=new THREE.Vector3(),plBarB=new THREE.Vector3(),plBarMid=new THREE.Vector3();
-const plBarQuat=new THREE.Quaternion(),plBarScale=new THREE.Vector3();
-const plBarMatrix=new THREE.Matrix4(),plBarLocalMatrix=new THREE.Matrix4();
-let plBarBatchRevision=0,plBarBuiltRevision=-1;
-function plRebuildBarInstances(){
- if(plBarBuiltRevision===plBarBatchRevision)return;
- plBarBuiltRevision=plBarBatchRevision;
- for(const old of [...plBarBatchRoot.children]){plBarBatchRoot.remove(old);old.material.dispose()}
- const batches=new Map();
- scene.updateMatrixWorld(true);
- for(const face of plAdaptivePanels){
-  if(!face.parent)continue;
-  let parent=face,attached=false;
-  while(parent){if(parent===scene){attached=true;break}parent=parent.parent}
-  if(!attached)continue;
-  const color=face.userData.plBarColor;
-  if(!color)continue;
-  let matrices=batches.get(color);
-  if(!matrices){matrices=[];batches.set(color,matrices)}
-  const edges=face.userData.plBarEdges;
-  if(!edges)continue;
-  const pos=edges.getAttribute('position');
-  for(let i=0;i<pos.count;i+=2){
-   plBarA.fromBufferAttribute(pos,i).applyMatrix4(face.matrixWorld);
-   plBarB.fromBufferAttribute(pos,i+1).applyMatrix4(face.matrixWorld);
-   const length=plBarA.distanceTo(plBarB);
-   if(length<.0001)continue;
-   plBarMid.copy(plBarA).add(plBarB).multiplyScalar(.5);
-   plBarQuat.setFromUnitVectors(plBarAxis,plBarB.clone().sub(plBarA).normalize());
-   plBarScale.set(1,length,1);
-   plBarMatrix.compose(plBarMid,plBarQuat,plBarScale);
-   matrices.push(plBarMatrix.clone());
-  }
- }
- for(const [color,matrices] of batches){
-  const material=new THREE.MeshStandardMaterial({color,roughness:.35,metalness:.1});
-  const mesh=new THREE.InstancedMesh(plBarUnitGeometry,material,matrices.length);
-  mesh.frustumCulled=false;
-  for(let i=0;i<matrices.length;i++)mesh.setMatrixAt(i,matrices[i]);
-  mesh.instanceMatrix.needsUpdate=true;
-  plBarBatchRoot.add(mesh);
- }
-}
 function makePanel(d){const group=new THREE.Group(),geo=d.shape==='roof'?roofGeometry(d):panelGeometry(d.shape,!!d.mirror);const mat=new THREE.MeshPhysicalMaterial({color:d.color,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});const face=new THREE.Mesh(geo,mat);face.userData.part=d;face.userData.plGlassActive=true;plAdaptivePanels.add(face);face.castShadow=true;group.add(face);
 const edges=new THREE.EdgesGeometry(geo);const lines=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:d.color,linewidth:2}));group.add(lines);
-face.userData.plBarColor=d.color;
-face.userData.plBarEdges=edges;
-plBarBatchRevision++;
+const edgePositions=edges.getAttribute('position');for(let i=0;i<edgePositions.count;i+=2){const a=new THREE.Vector3().fromBufferAttribute(edgePositions,i),b=new THREE.Vector3().fromBufferAttribute(edgePositions,i+1);const diff=b.clone().sub(a),mid=a.clone().add(b).multiplyScalar(.5);const bar=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,diff.length(),6),new THREE.MeshStandardMaterial({color:d.color,roughness:.35,metalness:.1}));bar.position.copy(mid);bar.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),diff.normalize());group.add(bar)}
  panelPose(d,group);group.userData.part=d;scene.add(group);objects.push(face);return group}
 function add(d,persist=true){window.plStaticRevision=(window.plStaticRevision||0)+1;d.id=d.id||Math.random().toString(36).slice(2);d.mesh=makePanel(d);parts.push(d);window.plCollisionEpoch=(window.plCollisionEpoch||0)+1;if(persist)save(true)}
-function remove(d){plAdaptivePanels.delete(d.mesh?.children?.[0]);d.mesh?.children?.[0]?.userData?.plBarEdges?.dispose();plBarBatchRevision++;window.plStaticRevision=(window.plStaticRevision||0)+1;scene.remove(d.mesh);d.mesh.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});const i=parts.indexOf(d);if(i>=0)parts.splice(i,1);window.plCollisionEpoch=(window.plCollisionEpoch||0)+1;const j=objects.indexOf(d.mesh.children[0]);if(j>=0)objects.splice(j,1);save(true)}
+function remove(d){plAdaptivePanels.delete(d.mesh?.children?.[0]);window.plStaticRevision=(window.plStaticRevision||0)+1;scene.remove(d.mesh);d.mesh.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});const i=parts.indexOf(d);if(i>=0)parts.splice(i,1);window.plCollisionEpoch=(window.plCollisionEpoch||0)+1;const j=objects.indexOf(d.mesh.children[0]);if(j>=0)objects.splice(j,1);save(true)}
 function save(silent=false){try{localStorage.setItem(('plattan-online-world-slot-'+(window.plattanSlot||1)),JSON.stringify(parts.map(({mesh,...d})=>d)));if(!silent)toast('Världen sparad!')}catch(e){toast('Sparning misslyckades – exportera filen')}}
 
 function updateCamera(){
@@ -2148,7 +2096,7 @@ const remotePlayers=new Map();
 const remoteAnimals=new Map();
 let collisionRevision=0,cachedWalls=null,cachedWallRevision=-1,cachedFloors=null,cachedFloorRevision=-1;
 function toLocalPlot(slot,x,z){const [cx,cz]=PLOT_CENTERS[slot], [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];return [cx-ox+x,cz-oz+z]}
-function clearRemote(slot){plBarBatchRevision++;remoteCollision.delete(slot);collisionRevision++;const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{if(o.userData?.plRemotePanel){plAdaptivePanels.delete(o);o.userData?.plBarEdges?.dispose();o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}}});remoteWorlds.delete(slot)}}
+function clearRemote(slot){remoteCollision.delete(slot);collisionRevision++;const old=remoteWorlds.get(slot);if(old){scene.remove(old);old.traverse(o=>{if(o.userData?.plRemotePanel){plAdaptivePanels.delete(o);o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}}});remoteWorlds.delete(slot)}}
 function updateRemotePlot(slot,world){if(slot===window.plattanSlot)return;clearRemote(slot);const root=new THREE.Group(),[cx,cz]=toLocalPlot(slot,0,0);root.position.set(cx,0,cz);root.rotation.y=0;
  const collision=[];const rot=root.rotation.y,cr=Math.cos(rot),sr=Math.sin(rot);
  for(const d of (world.parts||[]).slice(0,1500)){if(!['square','half','small','triangle','roof'].includes(d.shape)||!Number.isFinite(d.x)||!Number.isFinite(d.z)||!Number.isFinite(d.y)||!/^#[0-9a-f]{6}$/i.test(d.color))continue;try{const g=makePanel({...d});scene.remove(g);objects.pop();g.traverse(o=>{if(o.isMesh)o.userData.plRemotePanel=true});root.add(g);
@@ -2581,7 +2529,7 @@ function frame(now){
  animateAnimals(dt);animateRemoteAnimals(dt);animateRemotePlayers(now);shopCheck();
  for(const a of animals)updateAnimalLead(a,avatar);
  for(const [slot,list] of remoteAnimals){const owner=remotePlayers.get(slot);for(const a of list)if(a)updateAnimalLead(a,owner)}
- updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();plUpdateVisibility(now);plUpdateAdaptivePanels(now);plRebuildBarInstances();renderer.render(scene,camera);requestAnimationFrame(frame);
+ updatePlZone();updateDiscoLights(now);animateDance(now);animateTownFade(dt);updateCamera();refreshGhost();if(window.plFurnitureMode||window.plFurnitureEditing)ghost.visible=false;if(furnitureActive)furnitureUpdateOutline();plUpdateVisibility(now);plUpdateAdaptivePanels(now);renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 // Börja alltid i gåläge, även vid första besöket på iPad.
 setGameMode(false);
