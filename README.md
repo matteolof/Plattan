@@ -1,9 +1,12 @@
-Plattan v114 – byggsynk bara vid ändringar
+Plattan v115 – Test med solida affärsväggar
 
-- 250 rutors sikt och närliggande kollisioner från v113 behålls.
-- Plattor och möbler cachas lokalt och skickas endast när bygget ändras.
-- Servern behåller senaste byggdata och skickar dem till en annan spelare vid ny anslutning eller ny version.
-- Rörelser, djur och attraktioner fortsätter att synkroniseras normalt.
-- Möbler som flyttas, roteras, färgas eller tas bort uppdaterar byggversionen.
+Ändrat:
+- Affärernas och diskots röda väggplattor är nu helt ogenomskinliga utifrån.
+- Tak och ytterväggar använder ogenomskinliga material utifrån, med depthWrite aktiverat.
+- När spelaren går in i en affär eller diskot blir väggarna/taket genomskinliga som tidigare.
+- När spelaren går ut återställs de direkt till helt solida material.
+- Väggmaterialet är förenklat från MeshPhysicalMaterial till MeshStandardMaterial.
+- Sikten 250 rutor, byggsynk och övrig multiplayer från v114 behålls.
 
-Byt ut samtliga filer på GitHub och låt Render starta om. Servern lagrar fortfarande byggdata i minnet; egna byggen sparas lokalt som tidigare.
+Detta är ett jämförelsetest, inte en garanterad prestandaförbättring.
+Installera samtliga filer i GitHub och testa samma väg förbi två affärer på dator och iPad.

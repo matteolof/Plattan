@@ -1328,7 +1328,7 @@ function rebuildTownBuildings(){
  coasterRider.active=false;coasterTrack=null;coasterCarts.length=0;
  townBuildings.clear();townFadeHouses.length=0;townCollisionWalls.length=0;shopOffers.length=0;discoLights.length=0;
  const [ox,oz]=PLOT_CENTERS[window.plattanSlot||1];
- const wallMat=new THREE.MeshPhysicalMaterial({color:0xd93832,transparent:true,opacity:.47,roughness:.17,metalness:0,side:THREE.DoubleSide,depthWrite:false});
+ const wallMat=new THREE.MeshStandardMaterial({color:0xd93832,transparent:false,opacity:1,roughness:.75,metalness:0,side:THREE.FrontSide,depthWrite:true});
  const roofMat=new THREE.MeshStandardMaterial({color:0x202329,roughness:.8,side:THREE.DoubleSide});
  const trimMat=new THREE.MeshStandardMaterial({color:0xf5e5c5,roughness:.8});
  const glassMat=new THREE.MeshStandardMaterial({color:0x9bdaf4,transparent:true,opacity:.46,metalness:.12,roughness:.18,side:THREE.DoubleSide,depthWrite:false});
@@ -1473,7 +1473,7 @@ function rebuildTownBuildings(){
    const isWallOrRoof=material===wallMat||material===roofMat||obj.userData.townSign||
      (obj.geometry?.type==='BufferGeometry'&&material.color?.getHex()===0xb73932);
    if(!isWallOrRoof)return;
-   obj.material=material.clone();obj.material.userData.townBaseOpacity=material.opacity;obj.material.transparent=true;obj.material.depthWrite=false;
+   obj.material=material.clone();obj.material.userData.townBaseOpacity=1;obj.material.transparent=false;obj.material.opacity=1;obj.material.depthWrite=true;
    fadeMeshes.push(obj);
   });
   townFadeHouses.push({outer,turn,gx,gz,fadeMeshes,opacity:1});
@@ -1548,10 +1548,22 @@ function animateTownFade(dt){
   const dx=wx-h.gx,dz=wz-h.gz,c=Math.cos(h.turn),s=Math.sin(h.turn);
   const lx=c*dx-s*dz,lz=s*dx+c*dz;
   const inside=Math.abs(lx)<15&&Math.abs(lz)<15;
-  const target=inside?.13:1;
-  h.opacity+=(target-h.opacity)*Math.min(1,dt*5);
-  if(Math.abs(h.opacity-target)<.003)h.opacity=target;
-  for(const mesh of h.fadeMeshes){const base=mesh.material.userData?.townBaseOpacity??1;if(Math.abs(mesh.material.opacity-base*h.opacity)>.002)mesh.material.opacity=base*h.opacity;if(mesh.material.depthWrite)mesh.material.depthWrite=false;}
+  // v115-test: helt ogenomskinligt utanför butiken. Genomskinlighet
+  // aktiveras ENDAST när spelaren går in, så att två affärer på avstånd
+  // inte tvingar grafikkortet att rita genom hundratals väggplattor.
+  if(!inside){
+   if(h.opacity!==1){
+    h.opacity=1;
+    for(const mesh of h.fadeMeshes){const m=mesh.material;m.opacity=1;m.transparent=false;m.depthWrite=true;m.needsUpdate=true;}
+   }
+   continue;
+  }
+  if(h.opacity===1){
+   for(const mesh of h.fadeMeshes){const m=mesh.material;m.transparent=true;m.depthWrite=false;m.needsUpdate=true;}
+  }
+  h.opacity+=(.13-h.opacity)*Math.min(1,dt*5);
+  if(Math.abs(h.opacity-.13)<.003)h.opacity=.13;
+  for(const mesh of h.fadeMeshes){mesh.material.opacity=h.opacity;}
  }
 }
 // Leklandet: fasta lekredskap som inte tar plats på spelarnas tomter.
