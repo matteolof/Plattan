@@ -1,12 +1,12 @@
-Plattan v115 – Test med solida affärsväggar
+Plattan v117 – Gåläge som standard och snabbare glas
 
-Ändrat:
-- Affärernas och diskots röda väggplattor är nu helt ogenomskinliga utifrån.
-- Tak och ytterväggar använder ogenomskinliga material utifrån, med depthWrite aktiverat.
-- När spelaren går in i en affär eller diskot blir väggarna/taket genomskinliga som tidigare.
-- När spelaren går ut återställs de direkt till helt solida material.
-- Väggmaterialet är förenklat från MeshPhysicalMaterial till MeshStandardMaterial.
-- Sikten 250 rutor, byggsynk och övrig multiplayer från v114 behålls.
+- Spelet startar alltid i Gåläge, både på dator och iPad.
+- 0–8 rutor: genomskinliga byggplattor.
+- 8–16 rutor: enklare, helt solida plattor.
+- 16–250 rutor: helt solida plattor.
+- Liten marginal runt 8 rutor för att undvika blinkande vid gränsen.
+- Kontroll av avstånd sker som tidigare var 400:e millisekund.
+- Byggläget finns kvar via knappen Bygg.
+- Affärernas särskilda väggfunktion från v115 behålls.
 
-Detta är ett jämförelsetest, inte en garanterad prestandaförbättring.
-Installera samtliga filer i GitHub och testa samma väg förbi två affärer på dator och iPad.
+Ladda upp filerna i ZIP-paketet till GitHub och distribuera på Render.
